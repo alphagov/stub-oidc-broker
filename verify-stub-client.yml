@@ -1,0 +1,16 @@
+server:
+  applicationConnectors:
+    - type: http
+      port: 6610
+  adminConnectors:
+    - type: http
+      port: 6611
+
+
+authorisationEndpointURI: "http://localhost:5510/authorize"
+
+redirectURI: "http://localhost:6610/authenticationCallback"
+
+providerTokenURI: "http://localhost:5510/token"
+
+providerUserInfoURI: "http://localhost:5510/userinfo"
