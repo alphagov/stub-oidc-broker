@@ -7,8 +7,10 @@ import com.nimbusds.openid.connect.sdk.AuthenticationResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationResponseParser;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
+import io.dropwizard.views.View;
 import uk.gov.ida.verifystubclient.configuration.VerifyStubClientConfiguration;
 import uk.gov.ida.verifystubclient.services.ClientService;
+import uk.gov.ida.verifystubclient.views.StartPageView;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -29,6 +31,12 @@ public class AuthenticationRequestResource {
             ClientService clientService) {
         this.stubClientConfiguration = stubClientConfiguration;
         this.clientService = clientService;
+    }
+
+    @GET
+    @Path("/")
+    public View startPage() {
+        return new StartPageView();
     }
 
     @GET

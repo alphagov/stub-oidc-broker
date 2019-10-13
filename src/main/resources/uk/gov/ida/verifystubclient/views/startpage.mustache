@@ -1,0 +1,70 @@
+<html>
+<head>
+    <title>Verify Stub Client Start Page</title>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width,initial-scale=1.0" name="viewport"/>
+</head>
+<style>
+    .main {
+        color: rgb(51, 51, 51);
+        font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+        text-align: center;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    .title {
+        font-weight: 700;
+        font-size: 3em;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    .issues {
+        font-weight: 300;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    .help {
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    .submitBtn {
+      display: inline-block;
+      font-family: Arial, sans-serif;
+      color: #fff;
+      padding: 10px;
+      margin: 9px 5px;
+      font-size: 1em;
+      line-height: 1.25;
+      border: none;
+      cursor: pointer;
+      text-decoration: unset;
+    }
+    .submitBtnGreen {
+        background-color: #00823b;
+        box-shadow: 0 2px 0 #003618;
+    }
+    .submitBtnGreen:hover, .submitBtnGreen:focus {
+      background-color: #00692f;
+    }
+    .submitBtnRed {
+        background-color: #E30707;
+        box-shadow: 0 2px 0 #9A0000;
+    }
+    .submitBtnRed:hover, .submitBtnRed:focus {
+      background-color: #D60C0C;
+    }
+    .action-label {
+      margin-bottom: 10px;
+    }
+</style>
+<body class="main">
+<div>
+    <div class="logo"></div>
+    <h1>Welcome to the Verify Stub Client</h1>
+    <p class="action-label">To send an OpenID Authentication Request press the button below</p>
+    <div>
+        <a href="./serviceAuthenticationRequest" class="submitBtn submitBtnGreen">Send Request</a>
+    </div>
+</div>
+</body>
+</html>

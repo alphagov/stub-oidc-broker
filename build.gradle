@@ -19,8 +19,8 @@ dependencies {
     compile(
         "com.nimbusds:oauth2-oidc-sdk:6.14",
         "io.dropwizard:dropwizard-core:$dropwizardVersion",
-        "javax.xml.bind:jaxb-api:2.3.0"
-
+        "javax.xml.bind:jaxb-api:2.3.1",
+        "io.dropwizard:dropwizard-views-mustache:$dropwizardVersion"
     )
 
     testCompile( 
