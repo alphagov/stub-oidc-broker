@@ -10,9 +10,10 @@ You can find the Stub OpenID Connect Provider [here](https://github.com/JHjava/v
 * Receive an Access Token and use it to request user information from an OpenID Connect Provider.
 
 
-### To start up verify-stub-client
+### To use verify-stub-client
+* Ensure you have [Stub OP](https://github.com/JHjava/verify-stub-op) up and running
 * Run startup.sh
-* Send an authentication request by hitting the http://localhost:6610/serviceAuthenticationRequest in your browser
+* Go to http://localhost:6610/ in your browser and click Send request
 
 ### For more information about Open ID Connect - 
 * Open ID Connect Spec - https://openid.net/specs/openid-connect-core-1_0.html
