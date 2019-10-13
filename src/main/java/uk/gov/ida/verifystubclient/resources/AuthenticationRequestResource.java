@@ -64,8 +64,8 @@ public class AuthenticationRequestResource {
             AuthenticationResponse authenticationResponse = AuthenticationResponseParser.parse(uriInfo.getRequestUri());
             AuthorizationCode authorizationCode = authenticationResponse.toSuccessResponse().getAuthorizationCode();
             UserInfo userInfo = getClaims(authorizationCode);
-
-            return Response.ok(userInfo).build();
+            String userInfoToJson = userInfo.toJSONObject().toJSONString();
+            return Response.ok(userInfoToJson).build();
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
