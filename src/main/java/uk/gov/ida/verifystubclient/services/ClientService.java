@@ -15,6 +15,8 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
+import com.nimbusds.openid.connect.sdk.Nonce;
+import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
 import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import com.nimbusds.openid.connect.sdk.UserInfoResponse;
@@ -42,8 +44,8 @@ public class ClientService {
 
         AuthenticationRequest authenticationRequest = new AuthenticationRequest(
                 URI.create(requestUri),
-                new ResponseType(ResponseType.Value.CODE),
-                scope, clientID, URI.create(redirectUri), null, null);
+                new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN),
+                scope, clientID, URI.create(redirectUri), null, new Nonce());
 
         return authenticationRequest;
     }
