@@ -1,0 +1,100 @@
+<html>
+<head>
+    <title>Verify Stub Client Start Page</title>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width,initial-scale=1.0" name="viewport"/>
+</head>
+<style>
+    .main {
+        color: rgb(51, 51, 51);
+        font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+        text-align: center;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    .title {
+        font-weight: 700;
+        font-size: 3em;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    .issues {
+        font-weight: 300;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    .help {
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    .submitBtn {
+      display: inline-block;
+      font-family: Arial, sans-serif;
+      color: #fff;
+      padding: 10px;
+      margin: 9px 5px;
+      font-size: 1em;
+      line-height: 1.25;
+      border: none;
+      cursor: pointer;
+      text-decoration: unset;
+    }
+    .submitBtnGreen {
+        background-color: #00823b;
+        box-shadow: 0 2px 0 #003618;
+    }
+    .submitBtnGreen:hover, .submitBtnGreen:focus {
+      background-color: #00692f;
+    }
+    .submitBtnRed {
+        background-color: #E30707;
+        box-shadow: 0 2px 0 #9A0000;
+    }
+    .submitBtnRed:hover, .submitBtnRed:focus {
+      background-color: #D60C0C;
+    }
+    .action-label {
+      margin-bottom: 10px;
+    }
+</style>
+<body class="main">
+<div>
+    <script type="text/javascript">
+
+      // First, parse the query string
+      var params = {}, postBody = location.hash.substring(1),
+          regex = /([^&=]+)=([^&]*)/g, m;
+      while (m = regex.exec(postBody)) {
+        params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+      }
+
+      // And send the token over to the server
+      var req = new XMLHttpRequest();
+      // using POST so query isn't logged
+      req.open('POST', 'http://' + window.location.host +
+                       '/validateAuthenticationResponse', true);
+      req.setRequestHeader('Content-Type',
+                           'application/x-www-form-urlencoded');
+
+      req.onreadystatechange = function (e) {
+        if (req.readyState == 4) {
+          if (req.status == 200) {
+      // If the response from the POST is 200 OK, perform a redirect
+            window.location = 'http://'
+              + window.location.host + '/retrieveTokenAndUserInfo?code=' + req.responseText
+          }
+      // if the OAuth response is invalid, generate an error message
+          else if (req.status == 400) {
+            alert('There was an error processing the token')
+          } else {
+            console.log(req);
+            alert('Something other than 200 was returned ' + req.status)
+          }
+        }
+      };
+      req.send(postBody);
+
+    </script>
+</div>
+</body>
+</html>

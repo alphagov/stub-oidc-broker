@@ -13,6 +13,7 @@ import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.Nonce;
@@ -45,7 +46,7 @@ public class ClientService {
         AuthenticationRequest authenticationRequest = new AuthenticationRequest(
                 URI.create(requestUri),
                 new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN),
-                scope, clientID, URI.create(redirectUri), null, new Nonce());
+                scope, clientID, URI.create(redirectUri), new State(), new Nonce());
 
         return authenticationRequest;
     }
