@@ -1,21 +1,18 @@
 package uk.gov.ida.verifystubclient.resources;
 
-import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.id.ClientID;
-import com.nimbusds.openid.connect.sdk.AuthenticationResponse;
-import com.nimbusds.openid.connect.sdk.AuthenticationResponseParser;
-import com.nimbusds.openid.connect.sdk.claims.CodeHash;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
-import com.sun.net.httpserver.HttpContext;
 import io.dropwizard.views.View;
 import uk.gov.ida.verifystubclient.configuration.VerifyStubClientConfiguration;
+import uk.gov.ida.verifystubclient.services.AuthnRequestService;
 import uk.gov.ida.verifystubclient.services.ClientService;
+import uk.gov.ida.verifystubclient.services.AuthnResponseReceiverService;
 import uk.gov.ida.verifystubclient.views.AuthenticationCallbackView;
 import uk.gov.ida.verifystubclient.views.StartPageView;
 
@@ -29,8 +26,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URL;
 import java.net.URLDecoder;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -38,14 +33,18 @@ import java.util.Map;
 @Path("/")
 public class AuthenticationRequestResource {
 
+    private static final ClientID CLIENT_ID = new ClientID("verify-stub-client");
     private final VerifyStubClientConfiguration stubClientConfiguration;
     private final ClientService clientService;
+    private final AuthnRequestService authnRequestService;
 
     public AuthenticationRequestResource(
             VerifyStubClientConfiguration stubClientConfiguration,
-            ClientService clientService) {
+            ClientService clientService,
+            AuthnRequestService authnRequestService) {
         this.stubClientConfiguration = stubClientConfiguration;
         this.clientService = clientService;
+        this.authnRequestService = authnRequestService;
     }
 
     @GET
@@ -59,13 +58,11 @@ public class AuthenticationRequestResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response serviceAuthenticationRequest() {
 
-        ClientID clientID = new ClientID("stub-client");
-
         return Response
                 .status(302)
-                .location(clientService.generateAuthenticationRequest(
+                .location(authnRequestService.generateAuthenticationRequest(
                         stubClientConfiguration.getAuthorisationEndpointURI(),
-                        clientID,
+                        CLIENT_ID,
                         stubClientConfiguration.getRedirectURI()).toURI())
                         .build();
     }
@@ -84,22 +81,31 @@ public class AuthenticationRequestResource {
         //TODO: Validate that the ID token contains the correct nonce
         //TODO: Validate the signature of the ID token
 
+
         Map<String, String> authenticationParams = splitQuery(postBody);
 
-        String id_token = authenticationParams.get("id_token");
         String authCode = authenticationParams.get("code");
-
         AuthorizationCode authorizationCode = new AuthorizationCode(authCode);
-        CodeHash authCodeHash = CodeHash.compute(authorizationCode, JWSAlgorithm.RS256);
 
+        String id_token = authenticationParams.get("id_token");
         SignedJWT signedJWT = SignedJWT.parse(id_token);
         JWTClaimsSet jwtClaimsSet = signedJWT.getJWTClaimsSet();
-        IDTokenClaimsSet idTokenClaimsSet = new IDTokenClaimsSet(jwtClaimsSet);
-        CodeHash idTokencodeHash = idTokenClaimsSet.getCodeHash();
+        IDTokenClaimsSet idToken = new IDTokenClaimsSet(jwtClaimsSet);
 
-        if (!authCodeHash.equals(idTokencodeHash)) {
-            throw new RuntimeException("CodeHashes are not equal");
-        }
+        AuthnResponseReceiverService authResponseReveiverService = new AuthnResponseReceiverService(idToken);
+
+        authResponseReveiverService.validateCHash(authorizationCode);
+
+        String state = authenticationParams.get("state");
+        String nonce = clientService.getNonce(state);
+        authResponseReveiverService.validateNonce(nonce);
+        authResponseReveiverService.validateNonceUsageCount(clientService.getNonceUsageCount(nonce));
+
+        authResponseReveiverService.validateIssuer();
+
+        authResponseReveiverService.validateAudience(CLIENT_ID);
+
+        authResponseReveiverService.validateIDTokenSignature(signedJWT);
 
         return Response.ok(authCode).build();
     }
@@ -111,10 +117,11 @@ public class AuthenticationRequestResource {
 
             String query = uriInfo.getRequestUri().getQuery();
             Map<String, String> authenticationParams = splitQuery(query);
-
             String authCode = authenticationParams.get("code");
 
-            UserInfo userInfo = getClaims(new AuthorizationCode(authCode));
+            OIDCTokens tokens = clientService.getTokens(new AuthorizationCode(authCode), CLIENT_ID);
+            UserInfo userInfo = clientService.getUserInfo(tokens.getBearerAccessToken());
+
             String userInfoToJson = userInfo.toJSONObject().toJSONString();
             return Response.ok(userInfoToJson).build();
     }
@@ -128,16 +135,4 @@ public class AuthenticationRequestResource {
         }
         return query_pairs;
     }
-
-    private UserInfo getClaims(AuthorizationCode authorizationCode) {
-        //Gets the ID token and Access token from the OpenID Provider
-        OIDCTokens tokens = clientService.getTokens(authorizationCode);
-
-        //Get the user info from the OpenID Provider using the Access Token/Bearer Token
-        UserInfo userInfo = clientService.getUserInfo(tokens.getBearerAccessToken());
-
-
-        return userInfo;
-    }
-
 }

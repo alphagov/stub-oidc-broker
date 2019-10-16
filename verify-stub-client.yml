@@ -14,3 +14,5 @@ redirectURI: "http://localhost:6610/authenticationCallback"
 providerTokenURI: "http://localhost:5510/token"
 
 providerUserInfoURI: "http://localhost:5510/userinfo"
+
+redisURI: "192.168.204.170:6380"

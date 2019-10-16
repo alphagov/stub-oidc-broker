@@ -30,29 +30,16 @@ import java.net.URI;
 
 public class ClientService {
 
-    private static final ClientID CLIENT_ID = new ClientID("stub-client");
+    private final RedisService redisService;
     private VerifyStubClientConfiguration configuration;
 
-    public ClientService(VerifyStubClientConfiguration configuration) {
+    public ClientService(VerifyStubClientConfiguration configuration, RedisService redisService) {
         this.configuration = configuration;
+        this.redisService = redisService;
     }
 
-    public AuthenticationRequest generateAuthenticationRequest(
-            String requestUri,
-            ClientID clientID,
-            String redirectUri) {
-        Scope scope = new Scope("openid");
-
-        AuthenticationRequest authenticationRequest = new AuthenticationRequest(
-                URI.create(requestUri),
-                new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN),
-                scope, clientID, URI.create(redirectUri), new State(), new Nonce());
-
-        return authenticationRequest;
-    }
-
-    public OIDCTokens getTokens(AuthorizationCode authorizationCode) {
-        ClientSecretBasic clientSecretBasic = new ClientSecretBasic(CLIENT_ID, new Secret());
+    public OIDCTokens getTokens(AuthorizationCode authorizationCode, ClientID clientID) {
+        ClientSecretBasic clientSecretBasic = new ClientSecretBasic(clientID, new Secret());
 
         TokenRequest tokenRequest = new TokenRequest(
                 URI.create(configuration.getProviderTokenURI()),
@@ -90,6 +77,18 @@ public class ClientService {
         } catch (ParseException e) {
             throw new RuntimeException("Unable to parse HTTP Response to UserInfoResponse", e);
         }
+    }
+
+    public String getNonce(String state) {
+        String nonce = redisService.get("state::" + state);
+        if (nonce == null || nonce.length() < 1) {
+            throw new RuntimeException("Nonce not found in data store");
+        }
+        return nonce;
+    }
+
+    public Long getNonceUsageCount(String nonce) {
+        return redisService.incr("nonce::" + nonce);
     }
 
     private HTTPResponse sendHTTPRequest(HTTPRequest request) {
