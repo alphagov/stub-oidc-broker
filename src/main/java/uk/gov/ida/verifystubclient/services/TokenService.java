@@ -28,12 +28,12 @@ import uk.gov.ida.verifystubclient.configuration.VerifyStubClientConfiguration;
 import java.io.IOException;
 import java.net.URI;
 
-public class ClientService {
+public class TokenService {
 
     private final RedisService redisService;
-    private VerifyStubClientConfiguration configuration;
+    private final VerifyStubClientConfiguration configuration;
 
-    public ClientService(VerifyStubClientConfiguration configuration, RedisService redisService) {
+    public TokenService(VerifyStubClientConfiguration configuration, RedisService redisService) {
         this.configuration = configuration;
         this.redisService = redisService;
     }

@@ -11,8 +11,8 @@ import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.dropwizard.views.View;
 import uk.gov.ida.verifystubclient.configuration.VerifyStubClientConfiguration;
 import uk.gov.ida.verifystubclient.services.AuthnRequestService;
-import uk.gov.ida.verifystubclient.services.ClientService;
-import uk.gov.ida.verifystubclient.services.AuthnResponseReceiverService;
+import uk.gov.ida.verifystubclient.services.TokenService;
+import uk.gov.ida.verifystubclient.services.AuthnResponseService;
 import uk.gov.ida.verifystubclient.views.AuthenticationCallbackView;
 import uk.gov.ida.verifystubclient.views.StartPageView;
 
@@ -31,19 +31,19 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Path("/")
-public class AuthenticationRequestResource {
+public class StubClientResource {
 
     private static final ClientID CLIENT_ID = new ClientID("verify-stub-client");
     private final VerifyStubClientConfiguration stubClientConfiguration;
-    private final ClientService clientService;
+    private final TokenService tokenService;
     private final AuthnRequestService authnRequestService;
 
-    public AuthenticationRequestResource(
+    public StubClientResource(
             VerifyStubClientConfiguration stubClientConfiguration,
-            ClientService clientService,
+            TokenService tokenService,
             AuthnRequestService authnRequestService) {
         this.stubClientConfiguration = stubClientConfiguration;
-        this.clientService = clientService;
+        this.tokenService = tokenService;
         this.authnRequestService = authnRequestService;
     }
 
@@ -78,7 +78,6 @@ public class AuthenticationRequestResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
     public Response validateAuthenticationResponse(String postBody) throws UnsupportedEncodingException, java.text.ParseException, ParseException {
-        //TODO: Validate that the ID token contains the correct nonce
         //TODO: Validate the signature of the ID token
 
 
@@ -92,14 +91,14 @@ public class AuthenticationRequestResource {
         JWTClaimsSet jwtClaimsSet = signedJWT.getJWTClaimsSet();
         IDTokenClaimsSet idToken = new IDTokenClaimsSet(jwtClaimsSet);
 
-        AuthnResponseReceiverService authResponseReveiverService = new AuthnResponseReceiverService(idToken);
+        AuthnResponseService authResponseReveiverService = new AuthnResponseService(idToken);
 
         authResponseReveiverService.validateCHash(authorizationCode);
 
         String state = authenticationParams.get("state");
-        String nonce = clientService.getNonce(state);
+        String nonce = tokenService.getNonce(state);
         authResponseReveiverService.validateNonce(nonce);
-        authResponseReveiverService.validateNonceUsageCount(clientService.getNonceUsageCount(nonce));
+        authResponseReveiverService.validateNonceUsageCount(tokenService.getNonceUsageCount(nonce));
 
         authResponseReveiverService.validateIssuer();
 
@@ -119,8 +118,8 @@ public class AuthenticationRequestResource {
             Map<String, String> authenticationParams = splitQuery(query);
             String authCode = authenticationParams.get("code");
 
-            OIDCTokens tokens = clientService.getTokens(new AuthorizationCode(authCode), CLIENT_ID);
-            UserInfo userInfo = clientService.getUserInfo(tokens.getBearerAccessToken());
+            OIDCTokens tokens = tokenService.getTokens(new AuthorizationCode(authCode), CLIENT_ID);
+            UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());
 
             String userInfoToJson = userInfo.toJSONObject().toJSONString();
             return Response.ok(userInfoToJson).build();

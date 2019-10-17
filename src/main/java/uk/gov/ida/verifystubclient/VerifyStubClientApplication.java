@@ -1,14 +1,14 @@
 package uk.gov.ida.verifystubclient;
 
-import com.nimbusds.oauth2.sdk.id.ClientID;
 import io.dropwizard.Application;
 import io.dropwizard.jersey.jackson.JsonProcessingExceptionMapper;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
 import uk.gov.ida.verifystubclient.configuration.VerifyStubClientConfiguration;
-import uk.gov.ida.verifystubclient.resources.AuthenticationRequestResource;
-import uk.gov.ida.verifystubclient.services.ClientService;
+import uk.gov.ida.verifystubclient.resources.StubClientResource;
+import uk.gov.ida.verifystubclient.services.AuthnRequestService;
+import uk.gov.ida.verifystubclient.services.TokenService;
 import uk.gov.ida.verifystubclient.services.RedisService;
 
 public class VerifyStubClientApplication extends Application<VerifyStubClientConfiguration> {
@@ -21,7 +21,10 @@ public class VerifyStubClientApplication extends Application<VerifyStubClientCon
     public void run(VerifyStubClientConfiguration configuration, Environment environment) {
         RedisService redisService = new RedisService(configuration);
 
-        environment.jersey().register(new AuthenticationRequestResource(configuration, new ClientService(configuration, redisService)));
+        TokenService tokenService = new TokenService(configuration, redisService);
+        AuthnRequestService authnRequestService = new AuthnRequestService(redisService);
+
+        environment.jersey().register(new StubClientResource(configuration, tokenService, authnRequestService));
         environment.jersey().register(new JsonProcessingExceptionMapper(true));
     }
 
