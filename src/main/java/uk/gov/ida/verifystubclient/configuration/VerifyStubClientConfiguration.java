@@ -9,6 +9,8 @@ public class VerifyStubClientConfiguration extends Configuration {
     private String providerTokenURI;
     private String providerUserInfoURI;
     private String redisURI;
+    private String redirectFormPostURI;
+    private String authorisationEndpointFormPostURI;
 
     public String getAuthorisationEndpointURI() {
         return authorisationEndpointURI;
@@ -28,5 +30,13 @@ public class VerifyStubClientConfiguration extends Configuration {
 
     public String getRedisURI() {
         return redisURI;
+    }
+
+    public String getRedirectFormPostURI() {
+        return redirectFormPostURI;
+    }
+
+    public String getAuthorisationEndpointFormPostURI() {
+        return authorisationEndpointFormPostURI;
     }
 }

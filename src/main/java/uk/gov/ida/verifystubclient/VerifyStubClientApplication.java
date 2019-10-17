@@ -6,6 +6,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
 import uk.gov.ida.verifystubclient.configuration.VerifyStubClientConfiguration;
+import uk.gov.ida.verifystubclient.resources.StubClientFormPostResource;
 import uk.gov.ida.verifystubclient.resources.StubClientResource;
 import uk.gov.ida.verifystubclient.services.AuthnRequestService;
 import uk.gov.ida.verifystubclient.services.TokenService;
@@ -25,6 +26,7 @@ public class VerifyStubClientApplication extends Application<VerifyStubClientCon
         AuthnRequestService authnRequestService = new AuthnRequestService(redisService);
 
         environment.jersey().register(new StubClientResource(configuration, tokenService, authnRequestService));
+        environment.jersey().register(new StubClientFormPostResource(configuration, tokenService, authnRequestService));
         environment.jersey().register(new JsonProcessingExceptionMapper(true));
     }
 

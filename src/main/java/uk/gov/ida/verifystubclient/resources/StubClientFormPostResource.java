@@ -8,37 +8,32 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
-import io.dropwizard.views.View;
 import uk.gov.ida.verifystubclient.configuration.VerifyStubClientConfiguration;
 import uk.gov.ida.verifystubclient.services.AuthnRequestService;
-import uk.gov.ida.verifystubclient.services.TokenService;
 import uk.gov.ida.verifystubclient.services.AuthnResponseService;
-import uk.gov.ida.verifystubclient.views.AuthenticationCallbackView;
-import uk.gov.ida.verifystubclient.views.StartPageView;
+import uk.gov.ida.verifystubclient.services.TokenService;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 import static uk.gov.ida.verifystubclient.services.QueryParameterHelper.splitQuery;
 
-@Path("/")
-public class StubClientResource {
+@Path("/formPost")
+public class StubClientFormPostResource {
 
     private static final ClientID CLIENT_ID = new ClientID("verify-stub-client");
     private final VerifyStubClientConfiguration stubClientConfiguration;
     private final TokenService tokenService;
     private final AuthnRequestService authnRequestService;
 
-    public StubClientResource(
+    public StubClientFormPostResource(
             VerifyStubClientConfiguration stubClientConfiguration,
             TokenService tokenService,
             AuthnRequestService authnRequestService) {
@@ -48,27 +43,7 @@ public class StubClientResource {
     }
 
     @GET
-    @Path("/")
-    public View startPage() {
-        return new StartPageView();
-    }
-
-    @GET
     @Path("/serviceAuthenticationRequest")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response serviceAuthenticationRequest() {
-
-        return Response
-                .status(302)
-                .location(authnRequestService.generateAuthenticationRequest(
-                        stubClientConfiguration.getAuthorisationEndpointURI(),
-                        CLIENT_ID,
-                        stubClientConfiguration.getRedirectURI()).toURI())
-                        .build();
-    }
-
-    @GET
-    @Path("/formPostAuthenticationRequest")
     @Produces(MediaType.APPLICATION_JSON)
     public Response formPostAuthenticationRequest() {
 
@@ -81,19 +56,12 @@ public class StubClientResource {
                         .build();
     }
 
-    @GET
-    @Path("/authenticationCallback")
-    public View authenticationCallback() {
-        return new AuthenticationCallbackView();
-    }
-
     @POST
     @Path("/validateAuthenticationResponse")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
     public Response validateAuthenticationResponse(String postBody) throws UnsupportedEncodingException, java.text.ParseException, ParseException {
         //TODO: Validate the signature of the ID token
-
 
         Map<String, String> authenticationParams = splitQuery(postBody);
 
@@ -120,23 +88,18 @@ public class StubClientResource {
 
         authResponseReveiverService.validateIDTokenSignature(signedJWT);
 
-        return Response.ok(authCode).build();
+        String userInfoInJson = retrieveTokenAndUserInfo(authorizationCode);
+
+        return Response.ok(userInfoInJson).build();
     }
 
-    @GET
-    @Path("/retrieveTokenAndUserInfo")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response retrieveTokenAndUserInfo(@Context UriInfo uriInfo) throws UnsupportedEncodingException {
 
-            String query = uriInfo.getRequestUri().getQuery();
-            Map<String, String> authenticationParams = splitQuery(query);
-            String authCode = authenticationParams.get("code");
+    public String retrieveTokenAndUserInfo(AuthorizationCode authCode) {
 
-            OIDCTokens tokens = tokenService.getTokens(new AuthorizationCode(authCode), CLIENT_ID);
+            OIDCTokens tokens = tokenService.getTokens(authCode, CLIENT_ID);
             UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());
 
             String userInfoToJson = userInfo.toJSONObject().toJSONString();
-            return Response.ok(userInfoToJson).build();
+            return userInfoToJson;
     }
-
 }
