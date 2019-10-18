@@ -6,7 +6,9 @@ import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.id.Audience;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Issuer;
+import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.openid.connect.sdk.Nonce;
+import com.nimbusds.openid.connect.sdk.claims.AccessTokenHash;
 import com.nimbusds.openid.connect.sdk.claims.CodeHash;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 
@@ -95,5 +97,15 @@ public class AuthnResponseService {
 
         //TODO - Create Signing key pair and validate
         //Feels that this falls more into layer 4 once we have started looking into PKI
+    }
+
+    public void validateAccessTokenHash(AccessToken accessToken) {
+        //3.2.2.9 - The value of at_hash in the ID Token MUST match that produced by the client.
+        AccessTokenHash accessTokenHash = AccessTokenHash.compute(accessToken, JWSAlgorithm.RS256);
+        AccessTokenHash idTokenAccessTokenHash = idToken.getAccessTokenHash();
+
+        if (!accessTokenHash.equals(idTokenAccessTokenHash)) {
+            throw new RuntimeException("AccessTokenHashes are not equal");
+        }
     }
 }

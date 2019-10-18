@@ -29,7 +29,7 @@ public class AuthnRequestService {
         Nonce nonce = new Nonce();
         AuthenticationRequest authenticationRequest = new AuthenticationRequest(
                 URI.create(requestUri),
-                new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN),
+                new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN),
                 scope, clientID, URI.create(redirectUri), state, nonce);
 
         redisService.set("state::" + state.getValue(), nonce.getValue());
@@ -48,7 +48,7 @@ public class AuthnRequestService {
         Nonce nonce = new Nonce();
 
         AuthenticationRequest authenticationRequest = new AuthenticationRequest.Builder(
-                new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN),
+                new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN),
                 scope, clientID, URI.create(redirectUri))
                 .responseMode(ResponseMode.FORM_POST)
                 .endpointURI(URI.create(requestUri))

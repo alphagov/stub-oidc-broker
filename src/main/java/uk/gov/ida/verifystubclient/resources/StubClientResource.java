@@ -5,6 +5,7 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
@@ -105,20 +106,25 @@ public class StubClientResource {
         JWTClaimsSet jwtClaimsSet = signedJWT.getJWTClaimsSet();
         IDTokenClaimsSet idToken = new IDTokenClaimsSet(jwtClaimsSet);
 
-        AuthnResponseService authResponseReveiverService = new AuthnResponseService(idToken);
+        AuthnResponseService authResponseReceiverService = new AuthnResponseService(idToken);
 
-        authResponseReveiverService.validateCHash(authorizationCode);
+        authResponseReceiverService.validateCHash(authorizationCode);
+
+        String stringAccessToken = authenticationParams.get("access_token");
+        if (stringAccessToken != null && stringAccessToken.length() > 0) {
+            authResponseReceiverService.validateAccessTokenHash(new BearerAccessToken(stringAccessToken));
+        }
 
         String state = authenticationParams.get("state");
         String nonce = tokenService.getNonce(state);
-        authResponseReveiverService.validateNonce(nonce);
-        authResponseReveiverService.validateNonceUsageCount(tokenService.getNonceUsageCount(nonce));
+        authResponseReceiverService.validateNonce(nonce);
+        authResponseReceiverService.validateNonceUsageCount(tokenService.getNonceUsageCount(nonce));
 
-        authResponseReveiverService.validateIssuer();
+        authResponseReceiverService.validateIssuer();
 
-        authResponseReveiverService.validateAudience(CLIENT_ID);
+        authResponseReceiverService.validateAudience(CLIENT_ID);
 
-        authResponseReveiverService.validateIDTokenSignature(signedJWT);
+        authResponseReceiverService.validateIDTokenSignature(signedJWT);
 
         return Response.ok(authCode).build();
     }

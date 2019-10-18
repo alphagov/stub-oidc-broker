@@ -1,13 +1,16 @@
 package uk.gov.ida.verifystubclient.resources;
 
+import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
+import net.minidev.json.JSONObject;
 import uk.gov.ida.verifystubclient.configuration.VerifyStubClientConfiguration;
 import uk.gov.ida.verifystubclient.services.AuthnRequestService;
 import uk.gov.ida.verifystubclient.services.AuthnResponseService;
@@ -73,20 +76,26 @@ public class StubClientFormPostResource {
         JWTClaimsSet jwtClaimsSet = signedJWT.getJWTClaimsSet();
         IDTokenClaimsSet idToken = new IDTokenClaimsSet(jwtClaimsSet);
 
-        AuthnResponseService authResponseReveiverService = new AuthnResponseService(idToken);
+        AuthnResponseService authResponseReceiverService = new AuthnResponseService(idToken);
 
-        authResponseReveiverService.validateCHash(authorizationCode);
+        authResponseReceiverService.validateCHash(authorizationCode);
+
+        String stringAccessToken = authenticationParams.get("access_token");
+        if (stringAccessToken != null && stringAccessToken.length() > 0) {
+            JSONObject accessTokenJson = JSONObjectUtils.parse(stringAccessToken);
+            authResponseReceiverService.validateAccessTokenHash(AccessToken.parse(accessTokenJson));
+        }
 
         String state = authenticationParams.get("state");
         String nonce = tokenService.getNonce(state);
-        authResponseReveiverService.validateNonce(nonce);
-        authResponseReveiverService.validateNonceUsageCount(tokenService.getNonceUsageCount(nonce));
+        authResponseReceiverService.validateNonce(nonce);
+        authResponseReceiverService.validateNonceUsageCount(tokenService.getNonceUsageCount(nonce));
 
-        authResponseReveiverService.validateIssuer();
+        authResponseReceiverService.validateIssuer();
 
-        authResponseReveiverService.validateAudience(CLIENT_ID);
+        authResponseReceiverService.validateAudience(CLIENT_ID);
 
-        authResponseReveiverService.validateIDTokenSignature(signedJWT);
+        authResponseReceiverService.validateIDTokenSignature(signedJWT);
 
         String userInfoInJson = retrieveTokenAndUserInfo(authorizationCode);
 
