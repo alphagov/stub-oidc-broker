@@ -1,12 +1,8 @@
 package uk.gov.ida.verifystubclient.resources;
 
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.id.ClientID;
-import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.dropwizard.views.View;
@@ -26,6 +22,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
@@ -38,14 +35,17 @@ public class StubClientResource {
     private final VerifyStubClientConfiguration stubClientConfiguration;
     private final TokenService tokenService;
     private final AuthnRequestService authnRequestService;
+    private final AuthnResponseService authnResponseService;
 
     public StubClientResource(
             VerifyStubClientConfiguration stubClientConfiguration,
             TokenService tokenService,
-            AuthnRequestService authnRequestService) {
+            AuthnRequestService authnRequestService,
+            AuthnResponseService authnResponseService) {
         this.stubClientConfiguration = stubClientConfiguration;
         this.tokenService = tokenService;
         this.authnRequestService = authnRequestService;
+        this.authnResponseService = authnResponseService;
     }
 
     @GET
@@ -92,41 +92,11 @@ public class StubClientResource {
     @Path("/validateAuthenticationResponse")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response validateAuthenticationResponse(String postBody) throws UnsupportedEncodingException, java.text.ParseException, ParseException {
+    public Response validateAuthenticationResponse(String postBody) throws IOException, java.text.ParseException, ParseException {
         //TODO: Validate the signature of the ID token
-
-
-        Map<String, String> authenticationParams = splitQuery(postBody);
-
-        String authCode = authenticationParams.get("code");
-        AuthorizationCode authorizationCode = new AuthorizationCode(authCode);
-
-        String id_token = authenticationParams.get("id_token");
-        SignedJWT signedJWT = SignedJWT.parse(id_token);
-        JWTClaimsSet jwtClaimsSet = signedJWT.getJWTClaimsSet();
-        IDTokenClaimsSet idToken = new IDTokenClaimsSet(jwtClaimsSet);
-
-        AuthnResponseService authResponseReceiverService = new AuthnResponseService(idToken);
-
-        authResponseReceiverService.validateCHash(authorizationCode);
-
-        String stringAccessToken = authenticationParams.get("access_token");
-        if (stringAccessToken != null && stringAccessToken.length() > 0) {
-            authResponseReceiverService.validateAccessTokenHash(new BearerAccessToken(stringAccessToken));
-        }
-
-        String state = authenticationParams.get("state");
-        String nonce = tokenService.getNonce(state);
-        authResponseReceiverService.validateNonce(nonce);
-        authResponseReceiverService.validateNonceUsageCount(tokenService.getNonceUsageCount(nonce));
-
-        authResponseReceiverService.validateIssuer();
-
-        authResponseReceiverService.validateAudience(CLIENT_ID);
-
-        authResponseReceiverService.validateIDTokenSignature(signedJWT);
-
-        return Response.ok(authCode).build();
+        AuthorizationCode authorizationCode = authnResponseService.handleAuthenticationResponse(postBody, CLIENT_ID);
+        ;
+        return Response.ok(authorizationCode.getValue()).build();
     }
 
     @GET
@@ -144,5 +114,4 @@ public class StubClientResource {
             String userInfoToJson = userInfo.toJSONObject().toJSONString();
             return Response.ok(userInfoToJson).build();
     }
-
 }

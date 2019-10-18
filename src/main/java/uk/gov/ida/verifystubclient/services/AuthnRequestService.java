@@ -58,7 +58,7 @@ public class AuthnRequestService {
 
         redisService.set("state::" + state.getValue(), nonce.getValue());
         redisService.incr("nonce::" + nonce.getValue());
+
         return authenticationRequest;
     }
-
 }
