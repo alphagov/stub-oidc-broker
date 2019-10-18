@@ -1,14 +1,14 @@
 # verify-stub-client
 
-Verify Stub OP is a very simple stub implementation of an OpenID Connect client which uses the Authentication flow. There is currently no Trust Infrastructure in this implementation and it is very much a work in progress.
+Verify Stub Client is a very simple stub implementation of an OpenID Connect client which uses the Hybrid flow. There is currently no Trust Infrastructure in this implementation and it is very much a work in progress.
 
 You can find the Stub OpenID Connect Provider [here](https://github.com/JHjava/verify-stub-op)
 
-### Verify Stub OP can currently peforms 3 main functions 
-* Generate an Authentication Request using OpenID Connect and send it to a OpenID Connect Provider.
-* Receive an Authentication Code and use that code to request an Access and ID Token from an OpenID Connect Provider.
+### Verify Stub Client can currently peforms the following functions 
+* Generate an Authentication Request using OpenID Connect with Response Type (code, id_token, token) and sends it to a OpenID Connect Provider.
+* Receive an Authentication Code, ID Token and Access Token and performs some validation as per the Open ID Connect Spec. 
+* Makes a request to the OpenID Connect Provider using the Authentication code to request an Access and ID Token.
 * Receive an Access Token and use it to request user information from an OpenID Connect Provider.
-
 
 ### To use verify-stub-client
 * Ensure you have [Stub OP](https://github.com/JHjava/verify-stub-op) up and running
