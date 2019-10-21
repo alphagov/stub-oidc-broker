@@ -25,10 +25,10 @@
           }
       // if the OAuth response is invalid, generate an error message
           else if (req.status == 400) {
-            alert('There was an error processing the token')
+            alert('There was an issue with the Client Request:  ' + req.responseText)
           } else {
             console.log(req);
-            alert('Something other than 200 was returned ' + req.status)
+            alert('Something other than 200 was returned ' + req.status + req.responseText)
           }
         }
       };

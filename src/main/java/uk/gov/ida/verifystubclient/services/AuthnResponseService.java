@@ -16,7 +16,9 @@ import com.nimbusds.openid.connect.sdk.claims.CodeHash;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Map;
+import java.util.Optional;
 
 import static uk.gov.ida.verifystubclient.services.QueryParameterHelper.splitQuery;
 
@@ -61,6 +63,15 @@ public class AuthnResponseService {
         validateAudience(clientID, idToken);
 
         return authorizationCode;
+    }
+
+    public Optional<String> checkResponseForErrors(String postBody) throws UnsupportedEncodingException {
+        Map<String, String> authenticationParams = splitQuery(postBody);
+
+        if (authenticationParams.get("error") != null) {
+            return Optional.of(authenticationParams.get("error") + " : " + authenticationParams.get("error_description"));
+        }
+        return Optional.empty();
     }
 
     private void validateCHash(AuthorizationCode authCode, IDTokenClaimsSet idToken) {

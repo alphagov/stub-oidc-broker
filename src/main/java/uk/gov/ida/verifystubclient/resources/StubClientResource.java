@@ -27,6 +27,7 @@ import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
+import java.util.Optional;
 
 import static uk.gov.ida.verifystubclient.services.QueryParameterHelper.splitQuery;
 
@@ -83,8 +84,17 @@ public class StubClientResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
     public Response validateAuthenticationResponse(String postBody) throws IOException, java.text.ParseException, ParseException {
-        AuthorizationCode authorizationCode = authnResponseService.handleAuthenticationResponse(postBody, CLIENT_ID);
+        if (postBody == null || postBody.isEmpty()) {
+            return Response.status(500).entity("PostBody is empty").build();
+        }
 
+        Optional<String> errors = authnResponseService.checkResponseForErrors(postBody);
+
+        if (errors.isPresent()) {
+            return Response.status(400).entity(errors.get()).build();
+        }
+
+        AuthorizationCode authorizationCode = authnResponseService.handleAuthenticationResponse(postBody, CLIENT_ID);
         return Response.ok(authorizationCode.getValue()).build();
     }
 

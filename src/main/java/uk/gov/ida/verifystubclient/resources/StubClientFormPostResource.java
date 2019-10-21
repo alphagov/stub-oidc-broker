@@ -20,6 +20,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.Optional;
 
 @Path("/formPost")
 public class StubClientFormPostResource {
@@ -78,6 +79,16 @@ public class StubClientFormPostResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
     public Response validateAuthenticationResponse(String postBody) throws IOException, java.text.ParseException, ParseException {
+        if (postBody == null || postBody.isEmpty()) {
+            return Response.status(500).entity("PostBody is empty").build();
+        }
+
+        Optional<String> errors = authnResponseService.checkResponseForErrors(postBody);
+
+        if (errors.isPresent()) {
+            return Response.status(400).entity(errors.get()).build();
+        }
+
         AuthorizationCode authorizationCode = authnResponseService.handleAuthenticationResponse(postBody, CLIENT_ID);
 
         String userInfoInJson = retrieveTokenAndUserInfo(authorizationCode);
