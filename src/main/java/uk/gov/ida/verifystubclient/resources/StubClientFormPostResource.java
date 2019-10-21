@@ -58,7 +58,6 @@ public class StubClientFormPostResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
     public Response validateAuthenticationResponse(String postBody) throws IOException, java.text.ParseException, ParseException {
-        //TODO: Validate the signature of the ID token
         AuthorizationCode authorizationCode = authnResponseService.handleAuthenticationResponse(postBody, CLIENT_ID);
 
         String userInfoInJson = retrieveTokenAndUserInfo(authorizationCode);
@@ -66,7 +65,7 @@ public class StubClientFormPostResource {
         return Response.ok(userInfoInJson).build();
     }
 
-    public String retrieveTokenAndUserInfo(AuthorizationCode authCode) {
+    private String retrieveTokenAndUserInfo(AuthorizationCode authCode) {
 
             OIDCTokens tokens = tokenService.getTokens(authCode, CLIENT_ID);
             UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());

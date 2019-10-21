@@ -93,7 +93,6 @@ public class StubClientResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
     public Response validateAuthenticationResponse(String postBody) throws IOException, java.text.ParseException, ParseException {
-        //TODO: Validate the signature of the ID token
         AuthorizationCode authorizationCode = authnResponseService.handleAuthenticationResponse(postBody, CLIENT_ID);
         ;
         return Response.ok(authorizationCode.getValue()).build();

@@ -43,17 +43,19 @@ public class AuthnResponseService {
         SignedJWT signedJWT = SignedJWT.parse(id_token);
         JWTClaimsSet jwtClaimsSet = signedJWT.getJWTClaimsSet();
         IDTokenClaimsSet idToken = new IDTokenClaimsSet(jwtClaimsSet);
+
         String stringAccessToken = authenticationParams.get("access_token");
 
-        validateCHash(authorizationCode, idToken);
-
         if (stringAccessToken != null && stringAccessToken.length() > 0) {
-            AccessToken accessToken = retrieveAccessToken(stringAccessToken);
+            AccessToken accessToken = new BearerAccessToken(stringAccessToken);
             validateAccessTokenHash(accessToken, idToken);
         }
 
         String state = authenticationParams.get("state");
         String nonce = tokenService.getNonce(state);
+
+        validateCHash(authorizationCode, idToken);
+
         validateNonce(nonce, idToken);
         validateNonceUsageCount(tokenService.getNonceUsageCount(nonce));
 
@@ -61,28 +63,7 @@ public class AuthnResponseService {
 
         validateAudience(clientID, idToken);
 
-        validateIDTokenSignature(signedJWT);
-
         return authorizationCode;
-    }
-
-    private AccessToken retrieveAccessToken(String stringAccessToken) throws ParseException {
-
-    if (isJSONValid(stringAccessToken)) {
-        JSONObject accessTokenJson = JSONObjectUtils.parse(stringAccessToken);
-        return AccessToken.parse(accessTokenJson);
-    }
-        return new BearerAccessToken(stringAccessToken);
-    }
-
-    private static boolean isJSONValid(String jsonInString ) {
-        try {
-            final ObjectMapper mapper = new ObjectMapper();
-            mapper.readTree(jsonInString);
-            return true;
-        } catch (IOException e) {
-            return false;
-        }
     }
 
     private void validateCHash(AuthorizationCode authCode, IDTokenClaimsSet idToken) {
