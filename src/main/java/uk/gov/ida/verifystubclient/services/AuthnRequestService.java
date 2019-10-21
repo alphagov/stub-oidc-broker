@@ -7,7 +7,6 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.Nonce;
-import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 
 import java.net.URI;
 
@@ -22,14 +21,15 @@ public class AuthnRequestService {
     public AuthenticationRequest generateAuthenticationRequest(
             String requestUri,
             ClientID clientID,
-            String redirectUri) {
+            String redirectUri,
+            ResponseType responseType) {
         Scope scope = new Scope("openid");
 
         State state = new State();
         Nonce nonce = new Nonce();
         AuthenticationRequest authenticationRequest = new AuthenticationRequest(
                 URI.create(requestUri),
-                new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN),
+                responseType,
                 scope, clientID, URI.create(redirectUri), state, nonce);
 
         redisService.set("state::" + state.getValue(), nonce.getValue());
@@ -41,14 +41,15 @@ public class AuthnRequestService {
     public AuthenticationRequest generateFormPostAuthenticationRequest(
             String requestUri,
             ClientID clientID,
-            String redirectUri) {
+            String redirectUri,
+            ResponseType responseType) {
         Scope scope = new Scope("openid");
 
         State state = new State();
         Nonce nonce = new Nonce();
 
         AuthenticationRequest authenticationRequest = new AuthenticationRequest.Builder(
-                new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN),
+                responseType,
                 scope, clientID, URI.create(redirectUri))
                 .responseMode(ResponseMode.FORM_POST)
                 .endpointURI(URI.create(requestUri))

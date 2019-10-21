@@ -2,7 +2,9 @@ package uk.gov.ida.verifystubclient.resources;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
+import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import uk.gov.ida.verifystubclient.configuration.VerifyStubClientConfiguration;
@@ -49,7 +51,25 @@ public class StubClientFormPostResource {
                 .location(authnRequestService.generateFormPostAuthenticationRequest(
                         stubClientConfiguration.getAuthorisationEndpointFormPostURI(),
                         CLIENT_ID,
-                        stubClientConfiguration.getRedirectFormPostURI()).toURI())
+                        stubClientConfiguration.getRedirectFormPostURI(),
+                        new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN))
+                        .toURI())
+                        .build();
+    }
+
+    @GET
+    @Path("/serviceAuthenticationRequestCodeIDToken")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response serviceAuthenticationRequestCodeIDToken() {
+
+        return Response
+                .status(302)
+                .location(authnRequestService.generateFormPostAuthenticationRequest(
+                        stubClientConfiguration.getAuthorisationEndpointFormPostURI(),
+                        CLIENT_ID,
+                        stubClientConfiguration.getRedirectFormPostURI(),
+                        new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN))
+                        .toURI())
                         .build();
     }
 

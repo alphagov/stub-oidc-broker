@@ -2,7 +2,9 @@ package uk.gov.ida.verifystubclient.resources;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
+import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.dropwizard.views.View;
@@ -64,21 +66,9 @@ public class StubClientResource {
                 .location(authnRequestService.generateAuthenticationRequest(
                         stubClientConfiguration.getAuthorisationEndpointURI(),
                         CLIENT_ID,
-                        stubClientConfiguration.getRedirectURI()).toURI())
-                        .build();
-    }
-
-    @GET
-    @Path("/formPostAuthenticationRequest")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response formPostAuthenticationRequest() {
-
-        return Response
-                .status(302)
-                .location(authnRequestService.generateFormPostAuthenticationRequest(
-                        stubClientConfiguration.getAuthorisationEndpointFormPostURI(),
-                        CLIENT_ID,
-                        stubClientConfiguration.getRedirectFormPostURI()).toURI())
+                        stubClientConfiguration.getRedirectURI(),
+                        new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN))
+                        .toURI())
                         .build();
     }
 
@@ -94,7 +84,7 @@ public class StubClientResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response validateAuthenticationResponse(String postBody) throws IOException, java.text.ParseException, ParseException {
         AuthorizationCode authorizationCode = authnResponseService.handleAuthenticationResponse(postBody, CLIENT_ID);
-        ;
+
         return Response.ok(authorizationCode.getValue()).build();
     }
 

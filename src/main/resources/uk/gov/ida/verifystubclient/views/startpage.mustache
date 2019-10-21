@@ -61,12 +61,15 @@
 <div>
     <div class="logo"></div>
     <h1>Welcome to the Verify Stub Client</h1>
-    <p class="action-label">To send an OpenID Authentication Request press the button below</p>
+    <p class="action-label">To send an OpenID Authentication Hybrid Request press the one of the buttons below</p>
     <div>
-        <a href="./serviceAuthenticationRequest" class="submitBtn submitBtnGreen">Send Hybrid Request</a>
+        <a href="./serviceAuthenticationRequest" class="submitBtn submitBtnGreen">Send Request with Response Type 'code, id_token, token'</a>
     </div>
     <div>
-        <a href="./formPost/serviceAuthenticationRequest" class="submitBtn submitBtnGreen">Send Form Post Hybrid Request</a>
+        <a href="./formPost/serviceAuthenticationRequest" class="submitBtn submitBtnGreen">Send Form Post Request with Response Type 'code, id_token, token'</a>
+    </div>
+    <div>
+        <a href="./formPost/serviceAuthenticationRequestCodeIDToken" class="submitBtn submitBtnGreen">Send Form Post Request with Response Type 'code, id_token'</a>
     </div>
 </div>
 </body>
