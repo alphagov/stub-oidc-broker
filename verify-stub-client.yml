@@ -7,17 +7,16 @@ server:
       port: 6611
 
 
-authorisationEndpointURI: "http://localhost:5510/authorize"
+authorisationEndpointURI: ${AUTHORIZATION_URI:-"http://localhost:5510/authorize"}
 
-redirectURI: "http://localhost:6610/authenticationCallback"
+redirectURI: ${REDIRECT_URI:-"http://localhost:6610/authenticationCallback"}
 
-providerTokenURI: "http://localhost:5510/token"
+providerTokenURI: ${TOKEN_URI:-"http://localhost:5510/token"}
 
-providerUserInfoURI: "http://localhost:5510/userinfo"
+providerUserInfoURI: ${USER_INFO:-"http://localhost:5510/userinfo"}
 
-redisURI: "192.168.204.170:6380"
+redisURI: ${REDIS_URI:-"192.168.204.170:6380/0"}
 
-redirectFormPostURI: "http://localhost:6610/formPost/validateAuthenticationResponse"
+redirectFormPostURI: ${REDIRECT_FORMPOST_URI:-"http://localhost:6610/formPost/validateAuthenticationResponse"}
 
-authorisationEndpointFormPostURI: "http://localhost:5510/formPost/authorize"
-
+authorisationEndpointFormPostURI: ${AUTHORIZATION_FORMPOST_URI:-"http://localhost:5510/formPost/authorize"}
