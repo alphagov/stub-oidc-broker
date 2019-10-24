@@ -1,18 +1,18 @@
-package uk.gov.ida.verifystubclient.services;
+package uk.gov.ida.stuboidcclient.services;
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.sync.RedisCommands;
-import uk.gov.ida.verifystubclient.configuration.VerifyStubClientConfiguration;
+import uk.gov.ida.stuboidcclient.configuration.StubOidcClientConfiguration;
 
 public class RedisService {
 
     private RedisCommands<String, String> commands;
 
-    public RedisService(VerifyStubClientConfiguration config) {
+    public RedisService(StubOidcClientConfiguration config) {
         startup(config);
     }
 
-    public void startup(VerifyStubClientConfiguration config) {
+    public void startup(StubOidcClientConfiguration config) {
         RedisClient client = RedisClient.create("redis://" + config.getRedisURI());
         commands = client.connect().sync();
     }

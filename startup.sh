@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-CONFIG_FILE=./verify-stub-client.yml
+CONFIG_FILE=./stub-oidc-client.yml
 
 cd "$(dirname "$0")"
 
@@ -10,4 +10,4 @@ cd "$(dirname "$0")"
 trap "docker container stop clientRedis" EXIT
 docker run --name clientRedis -d -p 6380:6379 --rm redis
 
-./build/install/verify-stub-client/bin/verify-stub-client server $CONFIG_FILE
+./build/install/stub-oidc-client/bin/stub-oidc-client server $CONFIG_FILE

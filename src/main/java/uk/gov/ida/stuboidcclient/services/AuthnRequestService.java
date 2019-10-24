@@ -1,4 +1,4 @@
-package uk.gov.ida.verifystubclient.services;
+package uk.gov.ida.stuboidcclient.services;
 
 import com.nimbusds.oauth2.sdk.ResponseMode;
 import com.nimbusds.oauth2.sdk.ResponseType;

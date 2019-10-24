@@ -1,8 +1,8 @@
-package uk.gov.ida.verifystubclient.configuration;
+package uk.gov.ida.stuboidcclient.configuration;
 
 import io.dropwizard.Configuration;
 
-public class VerifyStubClientConfiguration extends Configuration {
+public class StubOidcClientConfiguration extends Configuration {
 
     private String authorisationEndpointURI;
     private String redirectURI;

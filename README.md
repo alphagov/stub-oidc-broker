@@ -1,17 +1,17 @@
-# verify-stub-client
+# stub-oidc-client
 
-Verify Stub Client is a very simple stub implementation of an OpenID Connect client which uses the Hybrid flow. There is currently no Trust Infrastructure in this implementation and it is very much a work in progress.
+Stub OIDC Client is a very simple stub implementation of an OpenID Connect client which uses the Hybrid flow. There is currently no Trust Infrastructure in this implementation and it is very much a work in progress.
 
-You can find the Stub OpenID Connect Provider [here](https://github.com/JHjava/verify-stub-op)
+You can find the Stub OpenID Connect Provider [here](https://github.com/alphagov/stub-oidc-op)
 
-### Verify Stub Client can currently peforms the following functions 
+### Stub OIDC Client can currently peforms the following functions 
 * Generate an Authentication Request using OpenID Connect with Response Type (code, id_token, token) and sends it to a OpenID Connect Provider.
 * Receive an Authentication Code, ID Token and Access Token and performs some validation as per the Open ID Connect Spec. 
 * Makes a request to the OpenID Connect Provider using the Authentication code to request an Access and ID Token.
 * Receive an Access Token and use it to request user information from an OpenID Connect Provider.
 
-### To use verify-stub-client
-* Ensure you have [Stub OP](https://github.com/JHjava/verify-stub-op) up and running
+### To use stub-oidc-client
+* Ensure you have [Stub OIDC OP](https://github.com/alphagov/stub-oidc-op) up and running
 * Run startup.sh
 * Go to http://localhost:6610/ in your browser and click Send request
 

@@ -1,4 +1,4 @@
-package uk.gov.ida.verifystubclient.services;
+package uk.gov.ida.stuboidcclient.services;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
@@ -17,7 +17,7 @@ import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import com.nimbusds.openid.connect.sdk.UserInfoResponse;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
-import uk.gov.ida.verifystubclient.configuration.VerifyStubClientConfiguration;
+import uk.gov.ida.stuboidcclient.configuration.StubOidcClientConfiguration;
 
 import java.io.IOException;
 import java.net.URI;
@@ -25,9 +25,9 @@ import java.net.URI;
 public class TokenService {
 
     private final RedisService redisService;
-    private final VerifyStubClientConfiguration configuration;
+    private final StubOidcClientConfiguration configuration;
 
-    public TokenService(VerifyStubClientConfiguration configuration, RedisService redisService) {
+    public TokenService(StubOidcClientConfiguration configuration, RedisService redisService) {
         this.configuration = configuration;
         this.redisService = redisService;
     }

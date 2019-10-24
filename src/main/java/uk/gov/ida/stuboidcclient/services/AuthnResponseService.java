@@ -1,4 +1,4 @@
-package uk.gov.ida.verifystubclient.services;
+package uk.gov.ida.stuboidcclient.services;
 
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -20,7 +20,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Map;
 import java.util.Optional;
 
-import static uk.gov.ida.verifystubclient.services.QueryParameterHelper.splitQuery;
+import static uk.gov.ida.stuboidcclient.services.QueryParameterHelper.splitQuery;
 
 public class AuthnResponseService {
 
@@ -115,7 +115,7 @@ public class AuthnResponseService {
         //as a valid audience. It is up to the client whether to reject if it contains any other audience claims that are not trusted.
         for (Audience audience : idToken.getAudience()) {
             if (!audience.getValue().equals(clientId.getValue())) {
-                throw new RuntimeException("INVALID AUDIENCE: " + audience.getValue() + " - Verify Stub Client only trusts audience where the client id is: " + clientId.getValue());
+                throw new RuntimeException("INVALID AUDIENCE: " + audience.getValue() + " - Stub OIDC Client only trusts audience where the client id is: " + clientId.getValue());
             }
         }
         //TODO - As per 3.1.3.7 - We might need more specific validation to check if there are multiple audiences and if the client trusts them. As per point 3,4 and 5 on 3.1.3.7.a
@@ -124,8 +124,8 @@ public class AuthnResponseService {
     private void validateIssuer(IDTokenClaimsSet idToken) {
         //3.1.37 - The Issuer Identifier for the OpenID Provider (which is typically obtained during Discovery) MUST exactly match the value of the iss (issuer) Claim.
         Issuer issuer = idToken.getIssuer();
-        if (!issuer.getValue().equals("verify-stub-op")) {
-            throw new RuntimeException("Incorrect issuer - Issuer expected: verify-stub-op but issuer received was: " + issuer.getValue());
+        if (!issuer.getValue().equals("stub-oidc-op")) {
+            throw new RuntimeException("Incorrect issuer - Issuer expected: stub-oidc-op but issuer received was: " + issuer.getValue());
         }
         //TODO - Get the issuer from the Discovery when it is implemented
     }

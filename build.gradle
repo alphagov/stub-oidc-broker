@@ -29,7 +29,7 @@ dependencies {
     )
 }
 
-mainClassName = 'uk.gov.ida.verifystubclient.VerifyStubClientApplication'
+mainClassName = 'uk.gov.ida.stuboidcclient.StubOidcClientApplication'
 apply plugin: 'application'
 
 run {

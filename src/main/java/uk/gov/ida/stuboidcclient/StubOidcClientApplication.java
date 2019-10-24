@@ -1,4 +1,4 @@
-package uk.gov.ida.verifystubclient;
+package uk.gov.ida.stuboidcclient;
 
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -7,35 +7,35 @@ import io.dropwizard.jersey.jackson.JsonProcessingExceptionMapper;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
-import uk.gov.ida.verifystubclient.configuration.VerifyStubClientConfiguration;
-import uk.gov.ida.verifystubclient.resources.StubClientFormPostResource;
-import uk.gov.ida.verifystubclient.resources.StubClientResource;
-import uk.gov.ida.verifystubclient.services.AuthnRequestService;
-import uk.gov.ida.verifystubclient.services.AuthnResponseService;
-import uk.gov.ida.verifystubclient.services.TokenService;
-import uk.gov.ida.verifystubclient.services.RedisService;
+import uk.gov.ida.stuboidcclient.configuration.StubOidcClientConfiguration;
+import uk.gov.ida.stuboidcclient.resources.StubOidcClientFormPostResource;
+import uk.gov.ida.stuboidcclient.resources.StubOidcClientResource;
+import uk.gov.ida.stuboidcclient.services.AuthnRequestService;
+import uk.gov.ida.stuboidcclient.services.AuthnResponseService;
+import uk.gov.ida.stuboidcclient.services.TokenService;
+import uk.gov.ida.stuboidcclient.services.RedisService;
 
-public class VerifyStubClientApplication extends Application<VerifyStubClientConfiguration> {
+public class StubOidcClientApplication extends Application<StubOidcClientConfiguration> {
 
     public static void main(String[] args) throws Exception {
-        new VerifyStubClientApplication().run(args);
+        new StubOidcClientApplication().run(args);
     }
 
     @Override
-    public void run(VerifyStubClientConfiguration configuration, Environment environment) {
+    public void run(StubOidcClientConfiguration configuration, Environment environment) {
         RedisService redisService = new RedisService(configuration);
 
         TokenService tokenService = new TokenService(configuration, redisService);
         AuthnRequestService authnRequestService = new AuthnRequestService(redisService);
         AuthnResponseService authResponseService = new AuthnResponseService(tokenService);
 
-        environment.jersey().register(new StubClientResource(configuration, tokenService, authnRequestService, authResponseService));
-        environment.jersey().register(new StubClientFormPostResource(configuration, tokenService, authnRequestService, authResponseService));
+        environment.jersey().register(new StubOidcClientResource(configuration, tokenService, authnRequestService, authResponseService));
+        environment.jersey().register(new StubOidcClientFormPostResource(configuration, tokenService, authnRequestService, authResponseService));
         environment.jersey().register(new JsonProcessingExceptionMapper(true));
     }
 
     @Override
-    public void initialize(final Bootstrap<VerifyStubClientConfiguration> bootstrap) {
+    public void initialize(final Bootstrap<StubOidcClientConfiguration> bootstrap) {
         bootstrap.addBundle(new ViewBundle<>());
         bootstrap.setConfigurationSourceProvider(
                 new SubstitutingSourceProvider(

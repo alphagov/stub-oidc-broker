@@ -1,4 +1,4 @@
-package uk.gov.ida.verifystubclient.services;
+package uk.gov.ida.stuboidcclient.services;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
