@@ -6,17 +6,8 @@ server:
     - type: http
       port: 6611
 
+stubOpURI: ${STUB_OP_URI:-"http://localhost:5510"}
 
-authorisationEndpointURI: ${AUTHORIZATION_URI:-"http://localhost:5510/authorize"}
+stubClientURI: ${STUB_CLIENT_URI:-"http://localhost:6610"}
 
-redirectURI: ${REDIRECT_URI:-"http://localhost:6610/authenticationCallback"}
-
-providerTokenURI: ${TOKEN_URI:-"http://localhost:5510/token"}
-
-providerUserInfoURI: ${USER_INFO:-"http://localhost:5510/userinfo"}
-
-redisURI: ${REDIS_URI:-"192.168.204.170:6380/0"}
-
-redirectFormPostURI: ${REDIRECT_FORMPOST_URI:-"http://localhost:6610/formPost/validateAuthenticationResponse"}
-
-authorisationEndpointFormPostURI: ${AUTHORIZATION_FORMPOST_URI:-"http://localhost:5510/formPost/authorize"}
+redisURI: ${REDIS_URI:-"192.168.1.7:6380/0"}
