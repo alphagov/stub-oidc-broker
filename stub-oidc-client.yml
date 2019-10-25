@@ -1,7 +1,7 @@
 server:
   applicationConnectors:
     - type: http
-      port: 6610
+      port: ${APPLICATION_PORT:-6610}
   adminConnectors:
     - type: http
       port: 6611
@@ -10,4 +10,4 @@ stubOpURI: ${STUB_OP_URI:-"http://localhost:5510"}
 
 stubClientURI: ${STUB_CLIENT_URI:-"http://localhost:6610"}
 
-redisURI: ${REDIS_URI:-"192.168.1.7:6380/0"}
+redisURI: ${REDIS_URI:-"redis://192.168.204.170:6380"}

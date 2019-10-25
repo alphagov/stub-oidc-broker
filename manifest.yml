@@ -1,0 +1,14 @@
+---
+applications:
+  - name: stub-oidc-client
+    memory: 1G
+    buildpacks:
+      - java_buildpack
+    command: (cd stub-oidc-client && ls -l &&  bin/stub-oidc-client server ./stub-oidc-client.yml)
+    env:
+      JAVA_HOME: "../.java-buildpack/open_jdk_jre"
+      STUB_OP_URI: https://stub-oidc-op.cloudapps.digital
+      STUB_CLIENT_URI: https://stub-oidc-client.cloudapps.digital
+      APPLICATION_PORT: 8080
+    services:
+      - redis-service
