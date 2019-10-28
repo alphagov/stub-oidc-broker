@@ -19,18 +19,18 @@ public class AuthnRequestService {
     }
 
     public AuthenticationRequest generateAuthenticationRequest(
-            String requestUri,
+            URI requestUri,
             ClientID clientID,
-            String redirectUri,
+            URI redirectUri,
             ResponseType responseType) {
         Scope scope = new Scope("openid");
 
         State state = new State();
         Nonce nonce = new Nonce();
         AuthenticationRequest authenticationRequest = new AuthenticationRequest(
-                URI.create(requestUri),
+                requestUri,
                 responseType,
-                scope, clientID, URI.create(redirectUri), state, nonce);
+                scope, clientID, redirectUri, state, nonce);
 
         redisService.set("state::" + state.getValue(), nonce.getValue());
         redisService.incr("nonce::" + nonce.getValue());
@@ -39,9 +39,9 @@ public class AuthnRequestService {
     }
 
     public AuthenticationRequest generateFormPostAuthenticationRequest(
-            String requestUri,
+            URI requestUri,
             ClientID clientID,
-            String redirectUri,
+            URI redirectUri,
             ResponseType responseType) {
         Scope scope = new Scope("openid");
 
@@ -50,9 +50,9 @@ public class AuthnRequestService {
 
         AuthenticationRequest authenticationRequest = new AuthenticationRequest.Builder(
                 responseType,
-                scope, clientID, URI.create(redirectUri))
+                scope, clientID, redirectUri)
                 .responseMode(ResponseMode.FORM_POST)
-                .endpointURI(URI.create(requestUri))
+                .endpointURI(requestUri)
                 .state(state)
                 .nonce(nonce)
                 .build();

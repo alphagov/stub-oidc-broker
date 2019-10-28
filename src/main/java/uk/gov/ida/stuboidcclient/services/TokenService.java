@@ -18,7 +18,9 @@ import com.nimbusds.openid.connect.sdk.UserInfoResponse;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import uk.gov.ida.stuboidcclient.configuration.StubOidcClientConfiguration;
+import uk.gov.ida.stuboidcclient.rest.Urls;
 
+import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.net.URI;
 
@@ -34,11 +36,13 @@ public class TokenService {
 
     public OIDCTokens getTokens(AuthorizationCode authorizationCode, ClientID clientID) {
         ClientSecretBasic clientSecretBasic = new ClientSecretBasic(clientID, new Secret());
+        URI redirectURI = UriBuilder.fromUri(configuration.getStubClientURI()).path(Urls.StubClient.REDIRECT_URI).build();
+        URI tokenURI = UriBuilder.fromUri(configuration.getStubOpURI()).path(Urls.StubOp.TOKEN_URI).build();
 
         TokenRequest tokenRequest = new TokenRequest(
-                URI.create(configuration.getProviderTokenURI()),
+                tokenURI,
                 clientSecretBasic,
-                new AuthorizationCodeGrant(authorizationCode, URI.create(configuration.getRedirectURI())));
+                new AuthorizationCodeGrant(authorizationCode, redirectURI));
 
         HTTPResponse httpResponse = sendHTTPRequest(tokenRequest.toHTTPRequest());
 
@@ -59,8 +63,9 @@ public class TokenService {
     }
 
     public UserInfo getUserInfo(BearerAccessToken bearerAccessToken) {
+        URI userInfoURI = UriBuilder.fromUri(configuration.getStubOpURI()).path(Urls.StubOp.USERINFO_URI).build();
         UserInfoRequest userInfoRequest = new UserInfoRequest(
-                URI.create(configuration.getProviderUserInfoURI()),
+                userInfoURI,
                 bearerAccessToken);
 
         HTTPResponse httpResonse = sendHTTPRequest(userInfoRequest.toHTTPRequest());

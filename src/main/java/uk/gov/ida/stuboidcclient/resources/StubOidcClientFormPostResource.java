@@ -8,6 +8,7 @@ import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import uk.gov.ida.stuboidcclient.configuration.StubOidcClientConfiguration;
+import uk.gov.ida.stuboidcclient.rest.Urls;
 import uk.gov.ida.stuboidcclient.services.AuthnRequestService;
 import uk.gov.ida.stuboidcclient.services.AuthnResponseService;
 import uk.gov.ida.stuboidcclient.services.TokenService;
@@ -19,7 +20,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
+import java.net.URI;
 import java.util.Optional;
 
 @Path("/formPost")
@@ -30,6 +33,9 @@ public class StubOidcClientFormPostResource {
     private final TokenService tokenService;
     private final AuthnRequestService authnRequestService;
     private final AuthnResponseService authnResponseService;
+    private URI authorisationURI;
+    private URI redirectUri;
+
 
     public StubOidcClientFormPostResource(
             StubOidcClientConfiguration stubClientConfiguration,
@@ -40,6 +46,8 @@ public class StubOidcClientFormPostResource {
         this.tokenService = tokenService;
         this.authnRequestService = authnRequestService;
         this.authnResponseService = authnResponseService;
+        authorisationURI = UriBuilder.fromUri(stubClientConfiguration.getStubOpURI()).path(Urls.StubOp.AUTHORISATION_ENDPOINT_FORM_URI).build();
+        redirectUri = UriBuilder.fromUri(stubClientConfiguration.getStubClientURI()).path(Urls.StubClient.REDIRECT_FORM_URI).build();
     }
 
     @GET
@@ -50,9 +58,9 @@ public class StubOidcClientFormPostResource {
         return Response
                 .status(302)
                 .location(authnRequestService.generateFormPostAuthenticationRequest(
-                        stubClientConfiguration.getAuthorisationEndpointFormPostURI(),
+                        authorisationURI,
                         CLIENT_ID,
-                        stubClientConfiguration.getRedirectFormPostURI(),
+                        redirectUri,
                         new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN))
                         .toURI())
                         .build();
@@ -66,9 +74,9 @@ public class StubOidcClientFormPostResource {
         return Response
                 .status(302)
                 .location(authnRequestService.generateFormPostAuthenticationRequest(
-                        stubClientConfiguration.getAuthorisationEndpointFormPostURI(),
+                        authorisationURI,
                         CLIENT_ID,
-                        stubClientConfiguration.getRedirectFormPostURI(),
+                        redirectUri,
                         new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN))
                         .toURI())
                         .build();
@@ -95,6 +103,7 @@ public class StubOidcClientFormPostResource {
 
         return Response.ok(userInfoInJson).build();
     }
+
 
     private String retrieveTokenAndUserInfo(AuthorizationCode authCode) {
 

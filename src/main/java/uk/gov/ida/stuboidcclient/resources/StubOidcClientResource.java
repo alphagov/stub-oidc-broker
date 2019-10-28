@@ -9,6 +9,7 @@ import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.dropwizard.views.View;
 import uk.gov.ida.stuboidcclient.configuration.StubOidcClientConfiguration;
+import uk.gov.ida.stuboidcclient.rest.Urls;
 import uk.gov.ida.stuboidcclient.services.AuthnRequestService;
 import uk.gov.ida.stuboidcclient.services.TokenService;
 import uk.gov.ida.stuboidcclient.services.AuthnResponseService;
@@ -23,9 +24,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
 
@@ -61,13 +64,20 @@ public class StubOidcClientResource {
     @Path("/serviceAuthenticationRequest")
     @Produces(MediaType.APPLICATION_JSON)
     public Response serviceAuthenticationRequest() {
+        URI requestURI = UriBuilder.fromUri(
+                stubClientConfiguration.getStubOpURI()).path(Urls.StubOp.AUTHORISATION_ENDPOINT_URI)
+                .build();
+
+        URI redirectURI = UriBuilder.fromUri(
+                stubClientConfiguration.getStubClientURI()).path(Urls.StubClient.REDIRECT_URI)
+                .build();
 
         return Response
                 .status(302)
                 .location(authnRequestService.generateAuthenticationRequest(
-                        stubClientConfiguration.getAuthorisationEndpointURI(),
+                        requestURI,
                         CLIENT_ID,
-                        stubClientConfiguration.getRedirectURI(),
+                        redirectURI,
                         new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN))
                         .toURI())
                         .build();
