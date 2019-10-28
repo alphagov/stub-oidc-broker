@@ -2,9 +2,9 @@ package uk.gov.ida.stuboidcclient.views;
 
 import io.dropwizard.views.View;
 
-public class AuthenticationCallbackView extends View {
+public class AuthenticationCallbackViewHttp extends View {
 
-    public AuthenticationCallbackView() {
+    public AuthenticationCallbackViewHttp() {
         super("authenticationCallbackHttp.mustache");
 
     }

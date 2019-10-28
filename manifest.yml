@@ -10,5 +10,6 @@ applications:
       STUB_OP_URI: https://stub-oidc-op.cloudapps.digital
       STUB_CLIENT_URI: https://stub-oidc-client.cloudapps.digital
       APPLICATION_PORT: 8080
+      IS_LOCAL: false
     services:
       - redis-service
