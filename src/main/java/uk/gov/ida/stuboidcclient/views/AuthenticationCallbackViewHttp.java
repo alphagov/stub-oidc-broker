@@ -4,7 +4,8 @@ import io.dropwizard.views.View;
 
 public class AuthenticationCallbackView extends View {
 
-        public AuthenticationCallbackView() {
-            super("authenticationCallbackPage.mustache");
-        }
+    public AuthenticationCallbackView() {
+        super("authenticationCallbackHttp.mustache");
+
+    }
 }
