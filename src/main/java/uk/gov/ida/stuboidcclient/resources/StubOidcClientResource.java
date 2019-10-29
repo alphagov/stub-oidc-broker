@@ -13,7 +13,8 @@ import uk.gov.ida.stuboidcclient.rest.Urls;
 import uk.gov.ida.stuboidcclient.services.AuthnRequestService;
 import uk.gov.ida.stuboidcclient.services.TokenService;
 import uk.gov.ida.stuboidcclient.services.AuthnResponseService;
-import uk.gov.ida.stuboidcclient.views.AuthenticationCallbackView;
+import uk.gov.ida.stuboidcclient.views.AuthenticationCallbackViewHttp;
+import uk.gov.ida.stuboidcclient.views.AuthenticationCallbackViewHttps;
 import uk.gov.ida.stuboidcclient.views.StartPageView;
 
 import javax.ws.rs.Consumes;
@@ -86,7 +87,11 @@ public class StubOidcClientResource {
     @GET
     @Path("/authenticationCallback")
     public View authenticationCallback() {
-        return new AuthenticationCallbackView();
+        if (stubClientConfiguration.isLocal()) {
+            return new AuthenticationCallbackViewHttp();
+        } else {
+            return new AuthenticationCallbackViewHttps();
+        }
     }
 
     @POST
