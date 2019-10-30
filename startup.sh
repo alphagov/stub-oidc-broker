@@ -5,6 +5,9 @@ CONFIG_FILE=./stub-oidc-client.yml
 
 cd "$(dirname "$0")"
 
+LOCAL_IP="$(ipconfig getifaddr en0)"
+export REDIS_URI="redis://${LOCAL_IP}:6380"
+
 ./gradlew installDist
 
 trap "docker container stop clientRedis" EXIT
