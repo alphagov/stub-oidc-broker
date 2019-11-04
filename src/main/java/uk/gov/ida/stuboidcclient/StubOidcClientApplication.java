@@ -9,9 +9,11 @@ import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
 import uk.gov.ida.stuboidcclient.configuration.StubOidcClientConfiguration;
 import uk.gov.ida.stuboidcclient.resources.StubOidcClientFormPostResource;
+import uk.gov.ida.stuboidcclient.resources.StubOidcClientRegistationResource;
 import uk.gov.ida.stuboidcclient.resources.StubOidcClientResource;
 import uk.gov.ida.stuboidcclient.services.AuthnRequestService;
 import uk.gov.ida.stuboidcclient.services.AuthnResponseService;
+import uk.gov.ida.stuboidcclient.services.RegistationService;
 import uk.gov.ida.stuboidcclient.services.TokenService;
 import uk.gov.ida.stuboidcclient.services.RedisService;
 
@@ -32,6 +34,7 @@ public class StubOidcClientApplication extends Application<StubOidcClientConfigu
         environment.jersey().register(new StubOidcClientResource(configuration, tokenService, authnRequestService, authResponseService));
         environment.jersey().register(new StubOidcClientFormPostResource(configuration, tokenService, authnRequestService, authResponseService));
         environment.jersey().register(new JsonProcessingExceptionMapper(true));
+        environment.jersey().register(new StubOidcClientRegistationResource(new RegistationService()));
     }
 
     @Override
