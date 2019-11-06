@@ -16,6 +16,8 @@ import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.gov.ida.stuboidcclient.configuration.StubOidcClientConfiguration;
+import uk.gov.ida.stuboidcclient.rest.Urls;
 
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
@@ -32,9 +34,11 @@ import java.text.ParseException;
 public class RegistationService {
 
     private final RedisService redisService;
+    private final StubOidcClientConfiguration configuration;
 
-    public RegistationService(RedisService redisService) {
+    public RegistationService(RedisService redisService, StubOidcClientConfiguration configuration) {
         this.redisService = redisService;
+        this.configuration = configuration;
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(RegistationService.class);
@@ -55,7 +59,7 @@ public class RegistationService {
     }
 
     private HttpResponse sendClientRegRequest(SignedJWT jwt, String privateKey) throws ParseException, JOSEException, IOException {
-        URI uri = UriBuilder.fromUri("http://localhost:5510").path("/register").build();
+        URI uri = UriBuilder.fromUri(configuration.getStubOpURI()).path(Urls.StubOp.REGISTER).build();
         OIDCClientMetadata clientMetadata = getClientMetadata();
         SignedJWT signedClientMetadata = createSignedClientMetadata(clientMetadata, privateKey, jwt);
 

@@ -12,5 +12,6 @@ public interface Urls {
         String AUTHORISATION_ENDPOINT_URI = "/authorize";
         String USERINFO_URI = "/userinfo";
         String AUTHORISATION_ENDPOINT_FORM_URI = "/formPost/authorize";
+        String REGISTER = "/register";
     }
 }
