@@ -7,6 +7,7 @@ applications:
     command: (cd stub-oidc-client && ls -l &&  bin/stub-oidc-client server ./stub-oidc-client.yml)
     env:
       JAVA_HOME: "../.java-buildpack/open_jdk_jre"
+      JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 11.+ } }'
       STUB_OP_URI: https://stub-oidc-op.cloudapps.digital
       STUB_CLIENT_URI: https://stub-oidc-client.cloudapps.digital
       APPLICATION_PORT: 8080

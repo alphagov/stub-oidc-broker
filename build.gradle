@@ -4,8 +4,6 @@ apply plugin: 'idea'
 
 group 'uk.gov.ida'
 
-sourceCompatibility = 1.8
-
 repositories {
     mavenCentral()
 }
@@ -34,7 +32,9 @@ dependencies {
         "io.dropwizard:dropwizard-core:$dropwizardVersion",
         "javax.xml.bind:jaxb-api:2.3.1",
         "io.dropwizard:dropwizard-views-mustache:$dropwizardVersion",
-        "io.lettuce:lettuce-core:5.2.0.RELEASE"
+        "io.lettuce:lettuce-core:5.2.0.RELEASE",
+        "org.bouncycastle:bcprov-jdk15on:1.64",
+        "org.bouncycastle:bcpkix-jdk15on:1.64"
     )
 
     testCompile( 

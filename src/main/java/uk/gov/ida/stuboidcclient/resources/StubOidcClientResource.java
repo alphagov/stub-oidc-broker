@@ -11,6 +11,7 @@ import io.dropwizard.views.View;
 import uk.gov.ida.stuboidcclient.configuration.StubOidcClientConfiguration;
 import uk.gov.ida.stuboidcclient.rest.Urls;
 import uk.gov.ida.stuboidcclient.services.AuthnRequestService;
+import uk.gov.ida.stuboidcclient.services.RedisService;
 import uk.gov.ida.stuboidcclient.services.TokenService;
 import uk.gov.ida.stuboidcclient.services.AuthnResponseService;
 import uk.gov.ida.stuboidcclient.views.AuthenticationCallbackViewHttp;
@@ -38,21 +39,23 @@ import static uk.gov.ida.stuboidcclient.services.QueryParameterHelper.splitQuery
 @Path("/")
 public class StubOidcClientResource {
 
-    private static final ClientID CLIENT_ID = new ClientID("stub-oidc-client");
     private final StubOidcClientConfiguration stubClientConfiguration;
     private final TokenService tokenService;
     private final AuthnRequestService authnRequestService;
     private final AuthnResponseService authnResponseService;
+    private final RedisService redisService;
 
     public StubOidcClientResource(
             StubOidcClientConfiguration stubClientConfiguration,
             TokenService tokenService,
             AuthnRequestService authnRequestService,
-            AuthnResponseService authnResponseService) {
+            AuthnResponseService authnResponseService,
+            RedisService redisService) {
         this.stubClientConfiguration = stubClientConfiguration;
         this.tokenService = tokenService;
         this.authnRequestService = authnRequestService;
         this.authnResponseService = authnResponseService;
+        this.redisService = redisService;
     }
 
     @GET
@@ -77,7 +80,7 @@ public class StubOidcClientResource {
                 .status(302)
                 .location(authnRequestService.generateAuthenticationRequest(
                         requestURI,
-                        CLIENT_ID,
+                        getClientID(),
                         redirectURI,
                         new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN))
                         .toURI())
@@ -109,7 +112,7 @@ public class StubOidcClientResource {
             return Response.status(400).entity(errors.get()).build();
         }
 
-        AuthorizationCode authorizationCode = authnResponseService.handleAuthenticationResponse(postBody, CLIENT_ID);
+        AuthorizationCode authorizationCode = authnResponseService.handleAuthenticationResponse(postBody, getClientID());
         return Response.ok(authorizationCode.getValue()).build();
     }
 
@@ -122,10 +125,18 @@ public class StubOidcClientResource {
             Map<String, String> authenticationParams = splitQuery(query);
             String authCode = authenticationParams.get("code");
 
-            OIDCTokens tokens = tokenService.getTokens(new AuthorizationCode(authCode), CLIENT_ID);
+            OIDCTokens tokens = tokenService.getTokens(new AuthorizationCode(authCode), getClientID());
             UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());
 
             String userInfoToJson = userInfo.toJSONObject().toJSONString();
             return Response.ok(userInfoToJson).build();
+    }
+
+    private ClientID getClientID() {
+       String client_id = redisService.get("CLIENT_ID");
+        if (client_id != null) {
+            return new ClientID(client_id);
+        }
+        return new ClientID();
     }
 }

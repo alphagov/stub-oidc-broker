@@ -40,6 +40,10 @@ public class RedisService {
         return commands.get(key);
     }
 
+    public void delete(String key) {
+        commands.del(key);
+    }
+
     public Long incr(String key) {
         return commands.incr(key);
     }
