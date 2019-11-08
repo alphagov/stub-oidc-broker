@@ -10,6 +10,8 @@ stubOpURI: ${STUB_OP_URI:-"http://localhost:5510"}
 
 stubClientURI: ${STUB_CLIENT_URI:-"http://localhost:6610"}
 
-redisURI: ${REDIS_URI:-"redis://192.168.204.170:6380"}
+redisURI: ${REDIS_URI:-"redis://192.168.1.6:6380"}
 
 local: ${IS_LOCAL:-true}
+
+softwareID: "Stub OIDC Client Software"

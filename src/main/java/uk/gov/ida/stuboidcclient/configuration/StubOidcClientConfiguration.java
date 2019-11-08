@@ -8,6 +8,7 @@ public class StubOidcClientConfiguration extends Configuration {
     private String stubClientURI;
     private String redisURI;
     private boolean local;
+    private String softwareID;
 
     public String getStubOpURI() {
         return stubOpURI;
@@ -23,5 +24,9 @@ public class StubOidcClientConfiguration extends Configuration {
 
     public boolean isLocal() {
         return local;
+    }
+
+    public String getSoftwareID() {
+        return softwareID;
     }
 }

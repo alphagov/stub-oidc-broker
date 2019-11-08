@@ -2,7 +2,7 @@ package uk.gov.ida.stuboidcclient.resources;
 
 import com.nimbusds.jose.JOSEException;
 import uk.gov.ida.stuboidcclient.services.RedisService;
-import uk.gov.ida.stuboidcclient.services.RegistationService;
+import uk.gov.ida.stuboidcclient.services.RegistrationService;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -14,22 +14,22 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 
 @Path("/")
-public class StubOidcClientRegistationResource {
+public class StubOidcClientRegistrationResource {
 
-    private final RegistationService registationService;
+    private final RegistrationService registrationService;
     private final RedisService redisService;
 
-    public StubOidcClientRegistationResource(RegistationService registationService, RedisService redisService) {
-        this.registationService = registationService;
+    public StubOidcClientRegistrationResource(RegistrationService registrationService, RedisService redisService) {
+        this.registrationService = registrationService;
         this.redisService = redisService;
     }
 
     @POST
     @Path("/sendRegistrationRequest")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response sendRegistationRequest(@FormParam("ssa") String ssa, @FormParam("privateKey") String privateKey) throws JOSEException, java.text.ParseException, IOException {
+    public Response sendRegistrationRequest(@FormParam("ssa") String ssa, @FormParam("privateKey") String privateKey) throws JOSEException, java.text.ParseException, IOException {
 
-        String responseString = registationService.sendRegistationRequest(ssa, privateKey);
+        String responseString = registrationService.sendRegistrationRequest(ssa, privateKey);
 
         return Response.ok(responseString).build();
     }
