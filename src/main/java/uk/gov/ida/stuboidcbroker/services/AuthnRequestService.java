@@ -1,4 +1,4 @@
-package uk.gov.ida.stuboidcclient.services;
+package uk.gov.ida.stuboidcbroker.services;
 
 import com.nimbusds.oauth2.sdk.ResponseMode;
 import com.nimbusds.oauth2.sdk.ResponseType;

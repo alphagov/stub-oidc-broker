@@ -1,4 +1,4 @@
-package uk.gov.ida.stuboidcclient.services;
+package uk.gov.ida.stuboidcbroker.services;
 
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -20,7 +20,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Map;
 import java.util.Optional;
 
-import static uk.gov.ida.stuboidcclient.services.QueryParameterHelper.splitQuery;
+import static uk.gov.ida.stuboidcbroker.services.QueryParameterHelper.splitQuery;
 
 public class AuthnResponseService {
 

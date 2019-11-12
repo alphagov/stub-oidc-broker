@@ -1,4 +1,4 @@
-package uk.gov.ida.stuboidcclient.services;
+package uk.gov.ida.stuboidcbroker.services;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -16,8 +16,8 @@ import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.gov.ida.stuboidcclient.configuration.StubOidcClientConfiguration;
-import uk.gov.ida.stuboidcclient.rest.Urls;
+import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
+import uk.gov.ida.stuboidcbroker.rest.Urls;
 
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
@@ -38,9 +38,9 @@ import static java.util.Arrays.asList;
 public class RegistrationService {
 
     private final RedisService redisService;
-    private final StubOidcClientConfiguration configuration;
+    private final StubOidcBrokerConfiguration configuration;
 
-    public RegistrationService(RedisService redisService, StubOidcClientConfiguration configuration) {
+    public RegistrationService(RedisService redisService, StubOidcBrokerConfiguration configuration) {
         this.redisService = redisService;
         this.configuration = configuration;
     }
@@ -78,7 +78,7 @@ public class RegistrationService {
         .expirationTime(new Date())
         .audience(configuration.getStubOpURI())
         .jwtID(UUID.randomUUID().toString())
-        .claim("redirect_uris", asList(UriBuilder.fromUri(configuration.getStubClientURI()).path(Urls.StubClient.REDIRECT_URI).build().toString()))
+        .claim("redirect_uris", asList(UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBroker.REDIRECT_URI).build().toString()))
         .claim("token_endpoint_auth_method", "tls_client_auth")
         .claim("tls_client_auth_subject_dn", "This MUST contain the Distinguished name (DN) of the certificate that the Client will present to the OP token endpoint.")
         .claim("grant_types", asList("hybrid"))

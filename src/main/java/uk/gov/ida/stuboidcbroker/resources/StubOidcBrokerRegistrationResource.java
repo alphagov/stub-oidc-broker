@@ -1,8 +1,8 @@
-package uk.gov.ida.stuboidcclient.resources;
+package uk.gov.ida.stuboidcbroker.resources;
 
 import com.nimbusds.jose.JOSEException;
-import uk.gov.ida.stuboidcclient.services.RedisService;
-import uk.gov.ida.stuboidcclient.services.RegistrationService;
+import uk.gov.ida.stuboidcbroker.services.RedisService;
+import uk.gov.ida.stuboidcbroker.services.RegistrationService;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -14,12 +14,12 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 
 @Path("/")
-public class StubOidcClientRegistrationResource {
+public class StubOidcBrokerRegistrationResource {
 
     private final RegistrationService registrationService;
     private final RedisService redisService;
 
-    public StubOidcClientRegistrationResource(RegistrationService registrationService, RedisService redisService) {
+    public StubOidcBrokerRegistrationResource(RegistrationService registrationService, RedisService redisService) {
         this.registrationService = registrationService;
         this.redisService = redisService;
     }

@@ -1,8 +1,8 @@
-package uk.gov.ida.stuboidcclient.rest;
+package uk.gov.ida.stuboidcbroker.rest;
 
 public interface Urls {
 
-    interface StubClient {
+    interface StubBroker {
         String REDIRECT_FORM_URI = "/formPost/validateAuthenticationResponse";
         String REDIRECT_URI = "/authenticationCallback";
     }

@@ -1,4 +1,4 @@
-package uk.gov.ida.stuboidcclient.views;
+package uk.gov.ida.stuboidcbroker.views;
 
 import io.dropwizard.views.View;
 

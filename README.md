@@ -1,22 +1,16 @@
-# stub-oidc-client
+# stub-oidc-broker
 
-Stub OIDC Client is a very simple stub implementation of an OpenID Connect client which uses the Hybrid flow. There is currently no Trust Infrastructure in this implementation and it is very much a work in progress.
+Stub OIDC Broker is a very simple stub implementation of an OpenID Connect client which uses the Hybrid flow. There is currently no Trust Infrastructure in this implementation and it is very much a work in progress.
 
 You can find the Stub OpenID Connect Provider [here](https://github.com/alphagov/stub-oidc-op)
 
-### Stub OIDC Client can currently peforms the following functions 
-* Generate an Authentication Request using OpenID Connect with Response Type (code, id_token, token) and sends it to a OpenID Connect Provider.
-* Receive an Authentication Code, ID Token and Access Token and performs some validation as per the Open ID Connect Spec. 
-* Makes a request to the OpenID Connect Provider using the Authentication code to request an Access and ID Token.
-* Receive an Access Token and use it to request user information from an OpenID Connect Provider.
-
-### To use stub-oidc-client
+### To use stub-oidc-broker
 * Ensure you have [Stub OIDC OP](https://github.com/alphagov/stub-oidc-op) up and running
 * Run startup.sh
 * Go to http://localhost:6610/ in your browser and click Send request
 
-### Stub OIDC Client runs on the PAAS 
-* To deploy Stub OIDC Client simply login to the PAAS and select the build-learn space. 
+### Stub OIDC Broker runs on the PAAS 
+* To deploy Stub OIDC Broker simply login to the PAAS and select the build-learn space. 
 * Run './gradlew pushToPaas' and this will deploy the app.
 
 ### For more information about Open ID Connect - 
@@ -26,4 +20,4 @@ You can find the Stub OpenID Connect Provider [here](https://github.com/alphagov
 
 ## License
 
-[MIT](https://github.com/alphagov/stub-oidc-client/blob/master/LICENCE)
+[MIT](https://github.com/alphagov/stub-oidc-broker/blob/master/LICENCE)

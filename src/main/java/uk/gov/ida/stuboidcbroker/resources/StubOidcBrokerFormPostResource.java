@@ -1,4 +1,4 @@
-package uk.gov.ida.stuboidcclient.resources;
+package uk.gov.ida.stuboidcbroker.resources;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
@@ -8,13 +8,13 @@ import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.dropwizard.views.View;
-import uk.gov.ida.stuboidcclient.configuration.StubOidcClientConfiguration;
-import uk.gov.ida.stuboidcclient.rest.Urls;
-import uk.gov.ida.stuboidcclient.services.AuthnRequestService;
-import uk.gov.ida.stuboidcclient.services.AuthnResponseService;
-import uk.gov.ida.stuboidcclient.services.RedisService;
-import uk.gov.ida.stuboidcclient.services.TokenService;
-import uk.gov.ida.stuboidcclient.views.ResponseView;
+import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
+import uk.gov.ida.stuboidcbroker.rest.Urls;
+import uk.gov.ida.stuboidcbroker.services.AuthnRequestService;
+import uk.gov.ida.stuboidcbroker.services.AuthnResponseService;
+import uk.gov.ida.stuboidcbroker.services.RedisService;
+import uk.gov.ida.stuboidcbroker.services.TokenService;
+import uk.gov.ida.stuboidcbroker.views.ResponseView;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -30,19 +30,19 @@ import java.net.URISyntaxException;
 import java.util.Optional;
 
 @Path("/formPost")
-public class StubOidcClientFormPostResource {
+public class StubOidcBrokerFormPostResource {
 
     private final TokenService tokenService;
     private final AuthnRequestService authnRequestService;
     private final AuthnResponseService authnResponseService;
-    private final StubOidcClientConfiguration configuration;
+    private final StubOidcBrokerConfiguration configuration;
     private final RedisService redisService;
     private URI authorisationURI;
     private URI redirectUri;
 
 
-    public StubOidcClientFormPostResource(
-            StubOidcClientConfiguration configuration,
+    public StubOidcBrokerFormPostResource(
+            StubOidcBrokerConfiguration configuration,
             TokenService tokenService,
             AuthnRequestService authnRequestService,
             AuthnResponseService authnResponseService,
@@ -53,7 +53,7 @@ public class StubOidcClientFormPostResource {
         this.authnResponseService = authnResponseService;
         this.redisService = redisService;
         authorisationURI = UriBuilder.fromUri(configuration.getStubOpURI()).path(Urls.StubOp.AUTHORISATION_ENDPOINT_FORM_URI).build();
-        redirectUri = UriBuilder.fromUri(configuration.getStubClientURI()).path(Urls.StubClient.REDIRECT_FORM_URI).build();
+        redirectUri = UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBroker.REDIRECT_FORM_URI).build();
     }
 
     @GET

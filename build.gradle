@@ -17,7 +17,7 @@ distributions {
         contents {
             from {
                 [
-                    'stub-oidc-client.yml'
+                    'stub-oidc-broker.yml'
                 ]
             }
 
@@ -42,7 +42,7 @@ dependencies {
     )
 }
 
-mainClassName = 'uk.gov.ida.stuboidcclient.StubOidcClientApplication'
+mainClassName = 'uk.gov.ida.stuboidcbroker.StubOidcBrokerApplication'
 apply plugin: 'application'
 
 run {
@@ -50,7 +50,7 @@ run {
 }
 
 task pushToPaas(type: Exec) {
-    commandLine 'cf', 'push', 'stub-oidc-client', '-p', 'build/distributions/stub-oidc-client.zip'
+    commandLine 'cf', 'push', 'stub-oidc-broker', '-p', 'build/distributions/stub-oidc-broker.zip'
 }
 
 pushToPaas.dependsOn distZip

@@ -1,4 +1,4 @@
-package uk.gov.ida.stuboidcclient.resources;
+package uk.gov.ida.stuboidcbroker.resources;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
@@ -8,15 +8,15 @@ import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.dropwizard.views.View;
-import uk.gov.ida.stuboidcclient.configuration.StubOidcClientConfiguration;
-import uk.gov.ida.stuboidcclient.rest.Urls;
-import uk.gov.ida.stuboidcclient.services.AuthnRequestService;
-import uk.gov.ida.stuboidcclient.services.RedisService;
-import uk.gov.ida.stuboidcclient.services.TokenService;
-import uk.gov.ida.stuboidcclient.services.AuthnResponseService;
-import uk.gov.ida.stuboidcclient.views.AuthenticationCallbackViewHttp;
-import uk.gov.ida.stuboidcclient.views.AuthenticationCallbackViewHttps;
-import uk.gov.ida.stuboidcclient.views.StartPageView;
+import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
+import uk.gov.ida.stuboidcbroker.rest.Urls;
+import uk.gov.ida.stuboidcbroker.services.AuthnRequestService;
+import uk.gov.ida.stuboidcbroker.services.RedisService;
+import uk.gov.ida.stuboidcbroker.services.TokenService;
+import uk.gov.ida.stuboidcbroker.services.AuthnResponseService;
+import uk.gov.ida.stuboidcbroker.views.AuthenticationCallbackViewHttp;
+import uk.gov.ida.stuboidcbroker.views.AuthenticationCallbackViewHttps;
+import uk.gov.ida.stuboidcbroker.views.StartPageView;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -34,24 +34,24 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
 
-import static uk.gov.ida.stuboidcclient.services.QueryParameterHelper.splitQuery;
+import static uk.gov.ida.stuboidcbroker.services.QueryParameterHelper.splitQuery;
 
 @Path("/")
-public class StubOidcClientResource {
+public class StubOidcBrokerResource {
 
-    private final StubOidcClientConfiguration stubClientConfiguration;
+    private final StubOidcBrokerConfiguration configuration;
     private final TokenService tokenService;
     private final AuthnRequestService authnRequestService;
     private final AuthnResponseService authnResponseService;
     private final RedisService redisService;
 
-    public StubOidcClientResource(
-            StubOidcClientConfiguration stubClientConfiguration,
+    public StubOidcBrokerResource(
+            StubOidcBrokerConfiguration configuration,
             TokenService tokenService,
             AuthnRequestService authnRequestService,
             AuthnResponseService authnResponseService,
             RedisService redisService) {
-        this.stubClientConfiguration = stubClientConfiguration;
+        this.configuration = configuration;
         this.tokenService = tokenService;
         this.authnRequestService = authnRequestService;
         this.authnResponseService = authnResponseService;
@@ -69,11 +69,11 @@ public class StubOidcClientResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response serviceAuthenticationRequest() {
         URI requestURI = UriBuilder.fromUri(
-                stubClientConfiguration.getStubOpURI()).path(Urls.StubOp.AUTHORISATION_ENDPOINT_URI)
+                configuration.getStubOpURI()).path(Urls.StubOp.AUTHORISATION_ENDPOINT_URI)
                 .build();
 
         URI redirectURI = UriBuilder.fromUri(
-                stubClientConfiguration.getStubClientURI()).path(Urls.StubClient.REDIRECT_URI)
+                configuration.getStubBrokerURI()).path(Urls.StubBroker.REDIRECT_URI)
                 .build();
 
         return Response
@@ -90,7 +90,7 @@ public class StubOidcClientResource {
     @GET
     @Path("/authenticationCallback")
     public View authenticationCallback() {
-        if (stubClientConfiguration.isLocal()) {
+        if (configuration.isLocal()) {
             return new AuthenticationCallbackViewHttp();
         } else {
             return new AuthenticationCallbackViewHttps();

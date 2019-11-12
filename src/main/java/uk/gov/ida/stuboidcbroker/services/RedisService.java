@@ -1,4 +1,4 @@
-package uk.gov.ida.stuboidcclient.services;
+package uk.gov.ida.stuboidcbroker.services;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -7,18 +7,18 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.sync.RedisCommands;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.gov.ida.stuboidcclient.configuration.StubOidcClientConfiguration;
+import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 
 public class RedisService {
 
     private static final Logger LOG = LoggerFactory.getLogger(RedisService.class);
     private RedisCommands<String, String> commands;
 
-    public RedisService(StubOidcClientConfiguration config) {
+    public RedisService(StubOidcBrokerConfiguration config) {
         startup(config);
     }
 
-    public void startup(StubOidcClientConfiguration config) {
+    public void startup(StubOidcBrokerConfiguration config) {
         String vcap = System.getenv("VCAP_SERVICES");
         String redisUri = config.getRedisURI();
 

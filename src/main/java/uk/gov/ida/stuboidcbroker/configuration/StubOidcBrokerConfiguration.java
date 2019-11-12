@@ -1,11 +1,11 @@
-package uk.gov.ida.stuboidcclient.configuration;
+package uk.gov.ida.stuboidcbroker.configuration;
 
 import io.dropwizard.Configuration;
 
-public class StubOidcClientConfiguration extends Configuration {
+public class StubOidcBrokerConfiguration extends Configuration {
 
     private String stubOpURI;
-    private String stubClientURI;
+    private String stubBrokerURI;
     private String redisURI;
     private boolean local;
     private String softwareID;
@@ -15,8 +15,8 @@ public class StubOidcClientConfiguration extends Configuration {
         return stubOpURI;
     }
 
-    public String getStubClientURI() {
-        return stubClientURI;
+    public String getStubBrokerURI() {
+        return stubBrokerURI;
     }
 
     public String getRedisURI() {
