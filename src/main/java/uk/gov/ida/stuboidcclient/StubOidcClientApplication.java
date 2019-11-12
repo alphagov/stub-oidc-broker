@@ -32,7 +32,7 @@ public class StubOidcClientApplication extends Application<StubOidcClientConfigu
         AuthnResponseService authResponseService = new AuthnResponseService(tokenService);
 
         environment.jersey().register(new StubOidcClientResource(configuration, tokenService, authnRequestService, authResponseService, redisService));
-        environment.jersey().register(new StubOidcClientFormPostResource(configuration, tokenService, authnRequestService, authResponseService));
+        environment.jersey().register(new StubOidcClientFormPostResource(configuration, tokenService, authnRequestService, authResponseService, redisService));
         environment.jersey().register(new JsonProcessingExceptionMapper(true));
         environment.jersey().register(new StubOidcClientRegistrationResource(new RegistrationService(redisService, configuration), redisService));
     }

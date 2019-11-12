@@ -61,16 +61,7 @@
 <div>
     <div class="logo"></div>
     <h1>Welcome to the Stub OIDC Client</h1>
-    <p class="action-label">To send an OpenID Authentication Hybrid Request press the one of the buttons below</p>
-    <div>
-        <a href="./serviceAuthenticationRequest" class="submitBtn submitBtnGreen">Send Request with Response Type 'code, id_token, token'</a>
-    </div>
-    <div>
-        <a href="./formPost/serviceAuthenticationRequest" class="submitBtn submitBtnGreen">Send Form Post Request with Response Type 'code, id_token, token'</a>
-    </div>
-    <div>
-        <a href="./formPost/serviceAuthenticationRequestCodeIDToken" class="submitBtn submitBtnGreen">Send Form Post Request with Response Type 'code, id_token'</a>
-    </div>
+    <p class="action-label">To register this Broker to an Open ID Provider please register to the Directory and then complete the fields below</p>
     <form action="/sendRegistrationRequest" method="post">
         SSA <input type="text" id="ssa" name="ssa" value="" size="50" height="50"><br>
         PrivateKey <input type="text" id="privateKey" name="privateKey" value="" size="50" height="50"><br><br>

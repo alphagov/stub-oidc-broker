@@ -9,6 +9,7 @@ public class StubOidcClientConfiguration extends Configuration {
     private String redisURI;
     private boolean local;
     private String softwareID;
+    private String stubTrustframeworkRP;
 
     public String getStubOpURI() {
         return stubOpURI;
@@ -28,5 +29,9 @@ public class StubOidcClientConfiguration extends Configuration {
 
     public String getSoftwareID() {
         return softwareID;
+    }
+
+    public String getStubTrustframeworkRP() {
+        return stubTrustframeworkRP;
     }
 }

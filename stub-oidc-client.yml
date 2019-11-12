@@ -10,6 +10,8 @@ stubOpURI: ${STUB_OP_URI:-"http://localhost:5510"}
 
 stubClientURI: ${STUB_CLIENT_URI:-"http://localhost:6610"}
 
+stubTrustframeworkRP: ${STUB_TRUSTFRAMEWORK_RP:-"http://localhost:4410/response"}
+
 redisURI: ${REDIS_URI:-"redis://192.168.1.6:6380"}
 
 local: ${IS_LOCAL:-true}

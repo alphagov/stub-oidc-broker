@@ -7,11 +7,14 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
+import io.dropwizard.views.View;
 import uk.gov.ida.stuboidcclient.configuration.StubOidcClientConfiguration;
 import uk.gov.ida.stuboidcclient.rest.Urls;
 import uk.gov.ida.stuboidcclient.services.AuthnRequestService;
 import uk.gov.ida.stuboidcclient.services.AuthnResponseService;
+import uk.gov.ida.stuboidcclient.services.RedisService;
 import uk.gov.ida.stuboidcclient.services.TokenService;
+import uk.gov.ida.stuboidcclient.views.ResponseView;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -23,31 +26,34 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Optional;
 
 @Path("/formPost")
 public class StubOidcClientFormPostResource {
 
-    private static final ClientID CLIENT_ID = new ClientID("stub-oidc-client");
-    private final StubOidcClientConfiguration stubClientConfiguration;
     private final TokenService tokenService;
     private final AuthnRequestService authnRequestService;
     private final AuthnResponseService authnResponseService;
+    private final StubOidcClientConfiguration configuration;
+    private final RedisService redisService;
     private URI authorisationURI;
     private URI redirectUri;
 
 
     public StubOidcClientFormPostResource(
-            StubOidcClientConfiguration stubClientConfiguration,
+            StubOidcClientConfiguration configuration,
             TokenService tokenService,
             AuthnRequestService authnRequestService,
-            AuthnResponseService authnResponseService) {
-        this.stubClientConfiguration = stubClientConfiguration;
+            AuthnResponseService authnResponseService,
+            RedisService redisService) {
+        this.configuration = configuration;
         this.tokenService = tokenService;
         this.authnRequestService = authnRequestService;
         this.authnResponseService = authnResponseService;
-        authorisationURI = UriBuilder.fromUri(stubClientConfiguration.getStubOpURI()).path(Urls.StubOp.AUTHORISATION_ENDPOINT_FORM_URI).build();
-        redirectUri = UriBuilder.fromUri(stubClientConfiguration.getStubClientURI()).path(Urls.StubClient.REDIRECT_FORM_URI).build();
+        this.redisService = redisService;
+        authorisationURI = UriBuilder.fromUri(configuration.getStubOpURI()).path(Urls.StubOp.AUTHORISATION_ENDPOINT_FORM_URI).build();
+        redirectUri = UriBuilder.fromUri(configuration.getStubClientURI()).path(Urls.StubClient.REDIRECT_FORM_URI).build();
     }
 
     @GET
@@ -59,7 +65,7 @@ public class StubOidcClientFormPostResource {
                 .status(302)
                 .location(authnRequestService.generateFormPostAuthenticationRequest(
                         authorisationURI,
-                        CLIENT_ID,
+                        getClientID(),
                         redirectUri,
                         new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN))
                         .toURI())
@@ -75,7 +81,7 @@ public class StubOidcClientFormPostResource {
                 .status(302)
                 .location(authnRequestService.generateFormPostAuthenticationRequest(
                         authorisationURI,
-                        CLIENT_ID,
+                        getClientID(),
                         redirectUri,
                         new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN))
                         .toURI())
@@ -84,33 +90,41 @@ public class StubOidcClientFormPostResource {
 
     @POST
     @Path("/validateAuthenticationResponse")
+    @Produces(MediaType.TEXT_HTML)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response validateAuthenticationResponse(String postBody) throws IOException, java.text.ParseException, ParseException {
+    public View validateAuthenticationResponse(String postBody) throws IOException, java.text.ParseException, ParseException, URISyntaxException {
         if (postBody == null || postBody.isEmpty()) {
-            return Response.status(500).entity("PostBody is empty").build();
+            return new ResponseView(new URI(configuration.getStubTrustframeworkRP()), "Post Body is empty");
         }
 
         Optional<String> errors = authnResponseService.checkResponseForErrors(postBody);
 
         if (errors.isPresent()) {
-            return Response.status(400).entity(errors.get()).build();
+            return new ResponseView(new URI(configuration.getStubTrustframeworkRP()), "Errors in Response: " + errors.get());
         }
 
-        AuthorizationCode authorizationCode = authnResponseService.handleAuthenticationResponse(postBody, CLIENT_ID);
+        AuthorizationCode authorizationCode = authnResponseService.handleAuthenticationResponse(postBody, getClientID());
 
         String userInfoInJson = retrieveTokenAndUserInfo(authorizationCode);
 
-        return Response.ok(userInfoInJson).build();
+        return new ResponseView(new URI(configuration.getStubTrustframeworkRP()), userInfoInJson);
     }
 
 
     private String retrieveTokenAndUserInfo(AuthorizationCode authCode) {
 
-            OIDCTokens tokens = tokenService.getTokens(authCode, CLIENT_ID);
+            OIDCTokens tokens = tokenService.getTokens(authCode, getClientID());
             UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());
 
             String userInfoToJson = userInfo.toJSONObject().toJSONString();
             return userInfoToJson;
+    }
+
+    private ClientID getClientID() {
+        String client_id = redisService.get("CLIENT_ID");
+        if (client_id != null) {
+            return new ClientID(client_id);
+        }
+        return new ClientID();
     }
 }
