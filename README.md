@@ -1,13 +1,14 @@
 # stub-oidc-broker
 
-Stub OIDC Broker is a very simple stub implementation of an OpenID Connect client which uses the Hybrid flow. There is currently no Trust Infrastructure in this implementation and it is very much a work in progress.
+Stub OIDC Broker is a very simple stub implementation of an OpenID Connect client which uses the Hybrid flow. 
 
 You can find the Stub OpenID Connect Provider [here](https://github.com/alphagov/stub-oidc-op)
+You can find the Stub Trust framework RP [here](https://github.com/alphagov/stub-trustframework-rp)
 
 ### To use stub-oidc-broker
-* Ensure you have [Stub OIDC OP](https://github.com/alphagov/stub-oidc-op) up and running
+* Ensure you have [Stub OIDC OP](https://github.com/alphagov/stub-oidc-op) and [Stub OIDC Broker](https://github.com/alphagov/stub-trustframework-rp) up and running
 * Run startup.sh
-* Go to http://localhost:6610/ in your browser and click Send request
+* Go to http://localhost:4410/ in your browser and click Send request
 
 ### Stub OIDC Broker runs on the PAAS 
 * To deploy Stub OIDC Broker simply login to the PAAS and select the build-learn space. 
