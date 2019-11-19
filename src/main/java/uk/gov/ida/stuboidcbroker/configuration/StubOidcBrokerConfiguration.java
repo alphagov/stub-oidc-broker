@@ -10,6 +10,7 @@ public class StubOidcBrokerConfiguration extends Configuration {
     private boolean local;
     private String softwareID;
     private String stubTrustframeworkRP;
+    private String tokenURI;
 
     public String getStubOpURI() {
         return stubOpURI;
@@ -33,5 +34,9 @@ public class StubOidcBrokerConfiguration extends Configuration {
 
     public String getStubTrustframeworkRP() {
         return stubTrustframeworkRP;
+    }
+
+    public String getTokenURI() {
+        return tokenURI;
     }
 }
