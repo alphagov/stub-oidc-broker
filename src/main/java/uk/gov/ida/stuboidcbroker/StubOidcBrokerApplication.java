@@ -9,6 +9,7 @@ import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.resources.StubOidcBrokerFormPostResource;
+import uk.gov.ida.stuboidcbroker.resources.StubOidcBrokerPickerResource;
 import uk.gov.ida.stuboidcbroker.resources.StubOidcBrokerRegistrationResource;
 import uk.gov.ida.stuboidcbroker.resources.StubOidcBrokerResource;
 import uk.gov.ida.stuboidcbroker.services.AuthnRequestService;
@@ -35,6 +36,7 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
         environment.jersey().register(new StubOidcBrokerFormPostResource(configuration, tokenService, authnRequestService, authResponseService, redisService));
         environment.jersey().register(new JsonProcessingExceptionMapper(true));
         environment.jersey().register(new StubOidcBrokerRegistrationResource(new RegistrationService(redisService, configuration), redisService));
+        environment.jersey().register(new StubOidcBrokerPickerResource(configuration));
     }
 
     @Override

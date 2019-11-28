@@ -14,4 +14,8 @@ public interface Urls {
         String AUTHORISATION_ENDPOINT_FORM_URI = "/formPost/authorize";
         String REGISTER = "/register";
     }
+
+    interface Directory {
+        String REGISTERED_IDPS = "/organisation/idp";
+    }
 }

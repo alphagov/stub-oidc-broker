@@ -16,11 +16,7 @@ import uk.gov.ida.stuboidcbroker.services.RedisService;
 import uk.gov.ida.stuboidcbroker.services.TokenService;
 import uk.gov.ida.stuboidcbroker.views.ResponseView;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -52,15 +48,14 @@ public class StubOidcBrokerFormPostResource {
         this.authnRequestService = authnRequestService;
         this.authnResponseService = authnResponseService;
         this.redisService = redisService;
-        authorisationURI = UriBuilder.fromUri(configuration.getStubOpURI()).path(Urls.StubOp.AUTHORISATION_ENDPOINT_FORM_URI).build();
         redirectUri = UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBroker.REDIRECT_FORM_URI).build();
     }
 
-    @GET
+    @POST
     @Path("/serviceAuthenticationRequest")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response formPostAuthenticationRequest() {
-
+    public Response formPostAuthenticationRequest(@FormParam("idpDomain") String idpDomain) {
+        authorisationURI = UriBuilder.fromUri(idpDomain).path(Urls.StubOp.AUTHORISATION_ENDPOINT_FORM_URI).build();
         return Response
                 .status(302)
                 .location(authnRequestService.generateFormPostAuthenticationRequest(

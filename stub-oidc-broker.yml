@@ -16,6 +16,8 @@ redisURI: ${REDIS_URI:-"redis://192.168.1.6:6380"}
 
 tokenURI: ${TOKEN_MIDDLEWARE_URI:-"http://localhost:3001/sender"}
 
+directoryURI: ${DIRECTORY_URI:-"http://localhost:3000"}
+
 local: ${IS_LOCAL:-true}
 
 softwareID: "Stub OIDC Broker Software"
