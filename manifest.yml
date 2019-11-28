@@ -12,6 +12,8 @@ applications:
       STUB_BROKER_URI: https://stub-oidc-broker.cloudapps.digital
       STUB_TRUSTFRAMEWORK_RP: https://stub-trustframework-rp.cloudapps.digital/response
       TOKEN_MIDDLEWARE_URI: http://52.51.37.224:80/sender
+      DIRECTORY_URI: https://directory-prototype.cloudapps.digital
+      REGISTRATION_URI: http://52.51.37.224:80/register
       APPLICATION_PORT: 8080
       IS_LOCAL: false
     services:

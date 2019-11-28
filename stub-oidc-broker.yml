@@ -18,6 +18,8 @@ tokenURI: ${TOKEN_MIDDLEWARE_URI:-"http://localhost:3001/sender"}
 
 directoryURI: ${DIRECTORY_URI:-"http://localhost:3000"}
 
+registrationURI: ${REGISTRATION_URI:-"http://localhost:3001/register"}
+
 local: ${IS_LOCAL:-true}
 
 softwareID: "Stub OIDC Broker Software"

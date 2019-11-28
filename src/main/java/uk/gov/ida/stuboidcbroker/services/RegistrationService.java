@@ -64,10 +64,9 @@ public class RegistrationService {
     }
 
     private HttpResponse sendClientRegRequest(SignedJWT jwt, String privateKey) throws JOSEException, IOException {
-        URI uri = UriBuilder.fromUri(configuration.getStubOpURI()).path(Urls.StubOp.REGISTER).build();
+        URI uri = UriBuilder.fromUri(configuration.getRegistrationURI()).build();
         JWTClaimsSet registrationRequest = getRegistrationClaims(jwt.serialize());
         SignedJWT signedClientMetadata = createSignedClientMetadata(registrationRequest, privateKey);
-
         return sendHttpRequest(uri, signedClientMetadata.serialize());
     }
 
@@ -117,9 +116,12 @@ public class RegistrationService {
     private HttpResponse<String> sendHttpRequest(URI uri, String postObject) {
         HttpClient httpClient = HttpClient.newBuilder()
                 .build();
+        JSONObject jwtJson = new JSONObject();
+        jwtJson.put("signed-jwt", postObject);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .POST(HttpRequest.BodyPublishers.ofString(postObject))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jwtJson.toJSONString()))
                 .uri(uri)
                 .build();
 

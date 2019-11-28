@@ -12,6 +12,7 @@ public class StubOidcBrokerConfiguration extends Configuration {
     private String stubTrustframeworkRP;
     private String tokenURI;
     private String directoryURI;
+    private String registrationURI;
 
     public String getStubOpURI() {
         return stubOpURI;
@@ -43,5 +44,9 @@ public class StubOidcBrokerConfiguration extends Configuration {
 
     public String getDirectoryURI() {
         return directoryURI;
+    }
+
+    public String getRegistrationURI() {
+        return registrationURI;
     }
 }
