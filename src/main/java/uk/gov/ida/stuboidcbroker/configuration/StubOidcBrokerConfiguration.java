@@ -10,9 +10,8 @@ public class StubOidcBrokerConfiguration extends Configuration {
     private boolean local;
     private String softwareID;
     private String stubTrustframeworkRP;
-    private String tokenURI;
     private String directoryURI;
-    private String registrationURI;
+    private String middlewareURI;
 
     public String getStubOpURI() {
         return stubOpURI;
@@ -38,15 +37,11 @@ public class StubOidcBrokerConfiguration extends Configuration {
         return stubTrustframeworkRP;
     }
 
-    public String getTokenURI() {
-        return tokenURI;
-    }
-
     public String getDirectoryURI() {
         return directoryURI;
     }
 
-    public String getRegistrationURI() {
-        return registrationURI;
+    public String getMiddlewareURI() {
+        return middlewareURI;
     }
 }

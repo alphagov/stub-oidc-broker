@@ -64,7 +64,7 @@ public class RegistrationService {
     }
 
     private HttpResponse sendClientRegRequest(SignedJWT jwt, String privateKey) throws JOSEException, IOException {
-        URI uri = UriBuilder.fromUri(configuration.getRegistrationURI()).build();
+        URI uri = UriBuilder.fromUri(configuration.getMiddlewareURI()).path(Urls.Middleware.REGISTRATION_URI).build();
         JWTClaimsSet registrationRequest = getRegistrationClaims(jwt.serialize());
         SignedJWT signedClientMetadata = createSignedClientMetadata(registrationRequest, privateKey);
         return sendHttpRequest(uri, signedClientMetadata.serialize());

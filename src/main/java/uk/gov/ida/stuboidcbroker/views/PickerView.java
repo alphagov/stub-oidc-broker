@@ -1,7 +1,7 @@
 package uk.gov.ida.stuboidcbroker.views;
 
 import io.dropwizard.views.View;
-import uk.gov.ida.stuboidcbroker.resources.Organisation;
+import uk.gov.ida.stuboidcbroker.domain.Organisation;
 
 import java.util.List;
 

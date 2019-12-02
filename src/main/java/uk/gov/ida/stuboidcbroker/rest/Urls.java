@@ -8,14 +8,17 @@ public interface Urls {
     }
 
     interface StubOp {
-        String TOKEN_URI = "/token";
         String AUTHORISATION_ENDPOINT_URI = "/authorize";
         String USERINFO_URI = "/userinfo";
         String AUTHORISATION_ENDPOINT_FORM_URI = "/formPost/authorize";
-        String REGISTER = "/register";
     }
 
     interface Directory {
         String REGISTERED_IDPS = "/organisation/idp";
+    }
+
+    interface Middleware {
+        String REGISTRATION_URI = "/register";
+        String TOKEN_URI = "/token";
     }
 }

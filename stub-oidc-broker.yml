@@ -12,13 +12,11 @@ stubBrokerURI: ${STUB_BROKER_URI:-"http://localhost:6610"}
 
 stubTrustframeworkRP: ${STUB_TRUSTFRAMEWORK_RP:-"http://localhost:4410/response"}
 
-redisURI: ${REDIS_URI:-"redis://192.168.1.6:6380"}
-
-tokenURI: ${TOKEN_MIDDLEWARE_URI:-"http://localhost:3001/sender"}
+redisURI: ${REDIS_URI:-"redis://192.168.204.170:6380"}
 
 directoryURI: ${DIRECTORY_URI:-"http://localhost:3000"}
 
-registrationURI: ${REGISTRATION_URI:-"http://localhost:3001/register"}
+middlewareURI: ${MIDDLEWARE_URI:-"http://localhost:3001"}
 
 local: ${IS_LOCAL:-true}
 

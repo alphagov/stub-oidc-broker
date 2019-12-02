@@ -37,7 +37,7 @@ public class TokenService {
     public OIDCTokens getTokens(AuthorizationCode authorizationCode, ClientID clientID) {
         ClientSecretBasic clientSecretBasic = new ClientSecretBasic(clientID, new Secret());
         URI redirectURI = UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBroker.REDIRECT_URI).build();
-        URI tokenURI = UriBuilder.fromUri(configuration.getTokenURI()).build();
+        URI tokenURI = UriBuilder.fromUri(configuration.getMiddlewareURI()).path(Urls.Middleware.TOKEN_URI).build();
 
         TokenRequest tokenRequest = new TokenRequest(
                 tokenURI,

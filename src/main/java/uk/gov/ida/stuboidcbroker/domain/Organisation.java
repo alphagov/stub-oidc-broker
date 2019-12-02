@@ -1,13 +1,16 @@
-package uk.gov.ida.stuboidcbroker.resources;
+package uk.gov.ida.stuboidcbroker.domain;
 
+import javax.annotation.Nullable;
 
 public class Organisation {
+
     private String name;
 
     private String type;
 
     private String domain;
 
+    @Nullable
     private String loa;
 
     public String getName() {
@@ -24,22 +27,6 @@ public class Organisation {
 
     public String getLoa() {
         return loa;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public void setDomain(String domain) {
-        this.domain = domain;
-    }
-
-    public void setLoa(String loa) {
-        this.loa = loa;
     }
 
     @Override
