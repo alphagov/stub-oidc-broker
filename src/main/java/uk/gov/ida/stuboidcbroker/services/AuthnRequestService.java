@@ -42,7 +42,8 @@ public class AuthnRequestService {
             URI requestUri,
             ClientID clientID,
             URI redirectUri,
-            ResponseType responseType) {
+            ResponseType responseType,
+            String idpName) {
         Scope scope = new Scope("openid");
 
         State state = new State();
@@ -55,6 +56,7 @@ public class AuthnRequestService {
                 .endpointURI(requestUri)
                 .state(state)
                 .nonce(nonce)
+                .customParameter("idp-name", idpName)
                 .build();
 
         redisService.set("state::" + state.getValue(), nonce.getValue());

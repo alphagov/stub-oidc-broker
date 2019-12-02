@@ -66,12 +66,14 @@
                 {{#orgList}}
                 <div>
                     <label>
-                        <input type="radio" name="idpDomain" id="{{name}}" value="{{domain}}">
+                        <input type="radio" name="idpDomain" id="{{domain}}" value="{{domain}},{{name}}">
+<!--                        <input type="hidden" name="idpName" id="{{name}}" value="{{name}}">-->
                         {{name}}
                     </label>
                 </div>
                 {{/orgList}}
                 <br>
+<!--                <input type="hidden" name="idpName" id="{{name}}" value="{{name}}">-->
                 <input type="submit" size="25">
             </form>
         </div>

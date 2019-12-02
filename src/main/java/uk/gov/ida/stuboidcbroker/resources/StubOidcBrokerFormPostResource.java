@@ -23,6 +23,8 @@ import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @Path("/formPost")
@@ -55,14 +57,18 @@ public class StubOidcBrokerFormPostResource {
     @Path("/serviceAuthenticationRequest")
     @Produces(MediaType.APPLICATION_JSON)
     public Response formPostAuthenticationRequest(@FormParam("idpDomain") String idpDomain) {
-        authorisationURI = UriBuilder.fromUri(idpDomain).path(Urls.StubOp.AUTHORISATION_ENDPOINT_FORM_URI).build();
+        List<String> orgList = Arrays.asList(idpDomain.split(","));
+        String domain = orgList.get(0);
+        String idpName = orgList.get(1);
+        authorisationURI = UriBuilder.fromUri(domain).path(Urls.StubOp.AUTHORISATION_ENDPOINT_FORM_URI).build();
         return Response
                 .status(302)
                 .location(authnRequestService.generateFormPostAuthenticationRequest(
                         authorisationURI,
                         getClientID(),
                         redirectUri,
-                        new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN))
+                        new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN),
+                        idpName)
                         .toURI())
                         .build();
     }
@@ -78,7 +84,8 @@ public class StubOidcBrokerFormPostResource {
                         authorisationURI,
                         getClientID(),
                         redirectUri,
-                        new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN))
+                        new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN),
+                        "idp-name")
                         .toURI())
                         .build();
     }
@@ -109,10 +116,12 @@ public class StubOidcBrokerFormPostResource {
     private String retrieveTokenAndUserInfo(AuthorizationCode authCode) {
 
             OIDCTokens tokens = tokenService.getTokens(authCode, getClientID());
-            UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());
 
-            String userInfoToJson = userInfo.toJSONObject().toJSONString();
-            return userInfoToJson;
+            String verifiableCredential = tokenService.getVerifiableCredential(tokens.getBearerAccessToken());
+//            UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());
+
+//            String userInfoToJson = userInfo.toJSONObject().toJSONString();
+            return verifiableCredential;
     }
 
     private ClientID getClientID() {

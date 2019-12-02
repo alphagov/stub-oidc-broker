@@ -23,6 +23,9 @@ import uk.gov.ida.stuboidcbroker.rest.Urls;
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 public class TokenService {
 
@@ -98,5 +101,24 @@ public class TokenService {
         } catch (IOException e) {
             throw new RuntimeException("Unable to send HTTP Request", e);
         }
+    }
+
+    public String getVerifiableCredential(BearerAccessToken bearerAccessToken) {
+        URI userInfoURI = UriBuilder.fromUri(configuration.getStubOpURI())
+                .path(Urls.StubOp.USERINFO_URI).build();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .header("Authorization", bearerAccessToken.toAuthorizationHeader())
+                .uri(userInfoURI)
+                .build();
+
+        HttpResponse<String> responseBody;
+        try {
+            responseBody = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return responseBody.body();
     }
 }

@@ -19,6 +19,6 @@ public interface Urls {
 
     interface Middleware {
         String REGISTRATION_URI = "/register";
-        String TOKEN_URI = "/token";
+        String TOKEN_URI = "/sender";
     }
 }
