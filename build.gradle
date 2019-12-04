@@ -30,6 +30,7 @@ dependencies {
         "com.google.code.gson:gson:2.8.5",
         "com.nimbusds:oauth2-oidc-sdk:6.14",
         "io.dropwizard:dropwizard-core:$dropwizardVersion",
+        "io.dropwizard:dropwizard-assets:$dropwizardVersion",
         "javax.xml.bind:jaxb-api:2.3.1",
         "io.dropwizard:dropwizard-views-mustache:$dropwizardVersion",
         "io.lettuce:lettuce-core:5.2.0.RELEASE",

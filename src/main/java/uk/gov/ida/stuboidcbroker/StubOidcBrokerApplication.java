@@ -1,6 +1,7 @@
 package uk.gov.ida.stuboidcbroker;
 
 import io.dropwizard.Application;
+import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.jersey.jackson.JsonProcessingExceptionMapper;
@@ -42,6 +43,10 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
     @Override
     public void initialize(final Bootstrap<StubOidcBrokerConfiguration> bootstrap) {
         bootstrap.addBundle(new ViewBundle<>());
+        bootstrap.addBundle(new AssetsBundle("/stylesheets", "/stylesheets", null, "css"));
+        bootstrap.addBundle(new AssetsBundle("/javascript", "/javascript", null, "js"));
+        bootstrap.addBundle(new AssetsBundle("/assets/fonts", "/assets/fonts", null, "fonts"));
+        bootstrap.addBundle(new AssetsBundle("/assets/images", "/assets/images", null, "images"));
         bootstrap.setConfigurationSourceProvider(
                 new SubstitutingSourceProvider(
                         bootstrap.getConfigurationSourceProvider(),
