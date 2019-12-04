@@ -3,6 +3,7 @@
 <body onload="javascript:document.forms[0].submit()">
 <form method="post" action="{{responseURI}}">
     <input type="hidden" name="jsonResponse" value="{{jsonResponse}}"/>
+    <input type="hidden" name="httpStatus" value="{{httpStatus}}"/>
     <input type="submit">
 </form>
 </body>
