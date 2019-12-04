@@ -5,9 +5,9 @@ import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
-import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.dropwizard.views.View;
+import org.apache.http.HttpStatus;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
 import uk.gov.ida.stuboidcbroker.services.AuthnRequestService;
@@ -96,20 +96,20 @@ public class StubOidcBrokerFormPostResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public View validateAuthenticationResponse(String postBody) throws IOException, java.text.ParseException, ParseException, URISyntaxException {
         if (postBody == null || postBody.isEmpty()) {
-            return new ResponseView(new URI(configuration.getStubTrustframeworkRP()), "Post Body is empty");
+            return new ResponseView(new URI(configuration.getStubTrustframeworkRP()), "Post Body is empty", Integer.toString(HttpStatus.SC_BAD_REQUEST));
         }
 
         Optional<String> errors = authnResponseService.checkResponseForErrors(postBody);
 
         if (errors.isPresent()) {
-            return new ResponseView(new URI(configuration.getStubTrustframeworkRP()), "Errors in Response: " + errors.get());
+            return new ResponseView(new URI(configuration.getStubTrustframeworkRP()), "Errors in Response: " + errors.get(), Integer.toString(HttpStatus.SC_BAD_REQUEST));
         }
 
         AuthorizationCode authorizationCode = authnResponseService.handleAuthenticationResponse(postBody, getClientID());
 
         String userInfoInJson = retrieveTokenAndUserInfo(authorizationCode);
 
-        return new ResponseView(new URI(configuration.getStubTrustframeworkRP()), userInfoInJson);
+        return new ResponseView(new URI(configuration.getStubTrustframeworkRP()), userInfoInJson, Integer.toString(HttpStatus.SC_OK));
     }
 
 
