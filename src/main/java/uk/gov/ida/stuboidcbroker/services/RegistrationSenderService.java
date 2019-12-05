@@ -35,17 +35,17 @@ import java.util.UUID;
 
 import static java.util.Arrays.asList;
 
-public class RegistrationService {
+public class RegistrationSenderService {
 
     private final RedisService redisService;
     private final StubOidcBrokerConfiguration configuration;
 
-    public RegistrationService(RedisService redisService, StubOidcBrokerConfiguration configuration) {
+    public RegistrationSenderService(RedisService redisService, StubOidcBrokerConfiguration configuration) {
         this.redisService = redisService;
         this.configuration = configuration;
     }
 
-    private static final Logger LOG = LoggerFactory.getLogger(RegistrationService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RegistrationSenderService.class);
 
     public String sendRegistrationRequest(String ssa, String privateKey) throws JOSEException, ParseException, IOException {
         SignedJWT signedJWT;

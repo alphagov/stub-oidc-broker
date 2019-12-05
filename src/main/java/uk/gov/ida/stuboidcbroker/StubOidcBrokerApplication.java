@@ -15,7 +15,8 @@ import uk.gov.ida.stuboidcbroker.resources.registration.StubOidcBrokerRegistrati
 import uk.gov.ida.stuboidcbroker.resources.request.StubOidcBrokerResource;
 import uk.gov.ida.stuboidcbroker.services.AuthnRequestService;
 import uk.gov.ida.stuboidcbroker.services.AuthnResponseService;
-import uk.gov.ida.stuboidcbroker.services.RegistrationService;
+import uk.gov.ida.stuboidcbroker.services.RegistrationHandlerService;
+import uk.gov.ida.stuboidcbroker.services.RegistrationSenderService;
 import uk.gov.ida.stuboidcbroker.services.TokenRequestService;
 import uk.gov.ida.stuboidcbroker.services.RedisService;
 
@@ -32,11 +33,14 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
         TokenRequestService tokenRequestService = new TokenRequestService(configuration, redisService);
         AuthnRequestService authnRequestService = new AuthnRequestService(redisService);
         AuthnResponseService authResponseService = new AuthnResponseService(tokenRequestService);
+        RegistrationSenderService registrationSenderService = new RegistrationSenderService(redisService, configuration);
+        RegistrationHandlerService registrationHandlerService = new RegistrationHandlerService(redisService, configuration);
+
 
         environment.jersey().register(new StubOidcBrokerResource(configuration, tokenRequestService, authnRequestService, authResponseService, redisService));
         environment.jersey().register(new StubOidcBrokerFormPostResource(configuration, tokenRequestService, authnRequestService, authResponseService, redisService));
         environment.jersey().register(new JsonProcessingExceptionMapper(true));
-        environment.jersey().register(new StubOidcBrokerRegistrationResource(new RegistrationService(redisService, configuration), redisService));
+        environment.jersey().register(new StubOidcBrokerRegistrationResource(registrationSenderService, redisService));
         environment.jersey().register(new StubOidcBrokerPickerResource(configuration));
     }
 
