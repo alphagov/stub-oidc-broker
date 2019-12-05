@@ -1,4 +1,4 @@
-package uk.gov.ida.stuboidcbroker.resources;
+package uk.gov.ida.stuboidcbroker.resources.request;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
@@ -12,7 +12,7 @@ import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
 import uk.gov.ida.stuboidcbroker.services.AuthnRequestService;
 import uk.gov.ida.stuboidcbroker.services.RedisService;
-import uk.gov.ida.stuboidcbroker.services.TokenService;
+import uk.gov.ida.stuboidcbroker.services.TokenRequestService;
 import uk.gov.ida.stuboidcbroker.services.AuthnResponseService;
 import uk.gov.ida.stuboidcbroker.views.AuthenticationCallbackViewHttp;
 import uk.gov.ida.stuboidcbroker.views.AuthenticationCallbackViewHttps;
@@ -40,19 +40,19 @@ import static uk.gov.ida.stuboidcbroker.services.QueryParameterHelper.splitQuery
 public class StubOidcBrokerResource {
 
     private final StubOidcBrokerConfiguration configuration;
-    private final TokenService tokenService;
+    private final TokenRequestService tokenRequestService;
     private final AuthnRequestService authnRequestService;
     private final AuthnResponseService authnResponseService;
     private final RedisService redisService;
 
     public StubOidcBrokerResource(
             StubOidcBrokerConfiguration configuration,
-            TokenService tokenService,
+            TokenRequestService tokenRequestService,
             AuthnRequestService authnRequestService,
             AuthnResponseService authnResponseService,
             RedisService redisService) {
         this.configuration = configuration;
-        this.tokenService = tokenService;
+        this.tokenRequestService = tokenRequestService;
         this.authnRequestService = authnRequestService;
         this.authnResponseService = authnResponseService;
         this.redisService = redisService;
@@ -125,8 +125,8 @@ public class StubOidcBrokerResource {
             Map<String, String> authenticationParams = splitQuery(query);
             String authCode = authenticationParams.get("code");
 
-            OIDCTokens tokens = tokenService.getTokens(new AuthorizationCode(authCode), getClientID());
-            UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());
+            OIDCTokens tokens = tokenRequestService.getTokens(new AuthorizationCode(authCode), getClientID());
+            UserInfo userInfo = tokenRequestService.getUserInfo(tokens.getBearerAccessToken());
 
             String userInfoToJson = userInfo.toJSONObject().toJSONString();
             return Response.ok(userInfoToJson).build();

@@ -1,7 +1,6 @@
 package uk.gov.ida.stuboidcbroker.views;
 
 import io.dropwizard.views.View;
-import org.apache.http.HttpStatus;
 
 import java.net.URI;
 

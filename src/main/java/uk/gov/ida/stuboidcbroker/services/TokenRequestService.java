@@ -27,12 +27,12 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-public class TokenService {
+public class TokenRequestService {
 
     private final RedisService redisService;
     private final StubOidcBrokerConfiguration configuration;
 
-    public TokenService(StubOidcBrokerConfiguration configuration, RedisService redisService) {
+    public TokenRequestService(StubOidcBrokerConfiguration configuration, RedisService redisService) {
         this.configuration = configuration;
         this.redisService = redisService;
     }

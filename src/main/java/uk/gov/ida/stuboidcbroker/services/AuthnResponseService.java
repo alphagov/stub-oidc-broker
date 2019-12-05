@@ -24,10 +24,10 @@ import static uk.gov.ida.stuboidcbroker.services.QueryParameterHelper.splitQuery
 
 public class AuthnResponseService {
 
-    private final TokenService tokenService;
+    private final TokenRequestService tokenRequestService;
 
-    public AuthnResponseService(TokenService tokenService) {
-        this.tokenService = tokenService;
+    public AuthnResponseService(TokenRequestService tokenRequestService) {
+        this.tokenRequestService = tokenRequestService;
     }
 
     public AuthorizationCode handleAuthenticationResponse(String postBody, ClientID clientID)
@@ -51,12 +51,12 @@ public class AuthnResponseService {
         }
 
         String state = authenticationParams.get("state");
-        String nonce = tokenService.getNonce(state);
+        String nonce = tokenRequestService.getNonce(state);
 
         validateCHash(authorizationCode, idToken);
 
         validateNonce(nonce, idToken);
-        validateNonceUsageCount(tokenService.getNonceUsageCount(nonce));
+        validateNonceUsageCount(tokenRequestService.getNonceUsageCount(nonce));
 
         validateIssuer(idToken);
 

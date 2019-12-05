@@ -1,4 +1,4 @@
-package uk.gov.ida.stuboidcbroker.resources;
+package uk.gov.ida.stuboidcbroker.resources.registration;
 
 import com.nimbusds.jose.JOSEException;
 import uk.gov.ida.stuboidcbroker.services.RedisService;
@@ -40,9 +40,4 @@ public class StubOidcBrokerRegistrationResource {
         redisService.delete("CLIENT_ID");
     }
 
-
-    private void parseSSA() {
-        //Seperate the claim and the header by searching for the dot
-        //Base64 decode the header and base64 decode the claims
-    }
 }

@@ -1,4 +1,4 @@
-package uk.gov.ida.stuboidcbroker.resources;
+package uk.gov.ida.stuboidcbroker.resources.request;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
@@ -13,7 +13,7 @@ import uk.gov.ida.stuboidcbroker.rest.Urls;
 import uk.gov.ida.stuboidcbroker.services.AuthnRequestService;
 import uk.gov.ida.stuboidcbroker.services.AuthnResponseService;
 import uk.gov.ida.stuboidcbroker.services.RedisService;
-import uk.gov.ida.stuboidcbroker.services.TokenService;
+import uk.gov.ida.stuboidcbroker.services.TokenRequestService;
 import uk.gov.ida.stuboidcbroker.views.ResponseView;
 
 import javax.ws.rs.*;
@@ -30,7 +30,7 @@ import java.util.Optional;
 @Path("/formPost")
 public class StubOidcBrokerFormPostResource {
 
-    private final TokenService tokenService;
+    private final TokenRequestService tokenRequestService;
     private final AuthnRequestService authnRequestService;
     private final AuthnResponseService authnResponseService;
     private final StubOidcBrokerConfiguration configuration;
@@ -41,12 +41,12 @@ public class StubOidcBrokerFormPostResource {
 
     public StubOidcBrokerFormPostResource(
             StubOidcBrokerConfiguration configuration,
-            TokenService tokenService,
+            TokenRequestService tokenRequestService,
             AuthnRequestService authnRequestService,
             AuthnResponseService authnResponseService,
             RedisService redisService) {
         this.configuration = configuration;
-        this.tokenService = tokenService;
+        this.tokenRequestService = tokenRequestService;
         this.authnRequestService = authnRequestService;
         this.authnResponseService = authnResponseService;
         this.redisService = redisService;
@@ -115,9 +115,9 @@ public class StubOidcBrokerFormPostResource {
 
     private String retrieveTokenAndUserInfo(AuthorizationCode authCode) {
 
-            OIDCTokens tokens = tokenService.getTokens(authCode, getClientID());
+            OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID());
 
-            String verifiableCredential = tokenService.getVerifiableCredential(tokens.getBearerAccessToken());
+            String verifiableCredential = tokenRequestService.getVerifiableCredential(tokens.getBearerAccessToken());
 //            UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());
 
 //            String userInfoToJson = userInfo.toJSONObject().toJSONString();
