@@ -4,14 +4,14 @@ import io.dropwizard.views.View;
 
 import java.net.URI;
 
-public class ResponseView extends View {
+public class RPResponseView extends View {
 
     private final URI responseURI;
     private final String jsonResponse;
     private final String httpStatus;
 
-    public ResponseView(URI responseURI, String jsonResponse, String httpStatus) {
-        super("response.mustache");
+    public RPResponseView(URI responseURI, String jsonResponse, String httpStatus) {
+        super("rpresponse.mustache");
         this.responseURI = responseURI;
         this.jsonResponse = jsonResponse;
         this.httpStatus = httpStatus;

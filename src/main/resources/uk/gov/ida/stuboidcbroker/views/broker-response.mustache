@@ -1,0 +1,12 @@
+<html>
+<head><title>Submit</title></head>
+<body onload="javascript:document.forms[0].submit()">
+<form method="post" action="{{redirectURI}}">
+    <input type="hidden" name="code" value="{{authCode}}"/>
+    <input type="hidden" name="state" value="{{state}}"/>
+    <input type="hidden" name="id_token" value="{{idToken}}"/>
+    <input type="hidden" name="access_token" value="{{accessToken}}"/>
+    <input type="submit">
+</form>
+</body>
+</html>

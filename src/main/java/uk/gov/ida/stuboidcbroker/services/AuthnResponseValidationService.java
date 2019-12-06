@@ -22,11 +22,11 @@ import java.util.Optional;
 
 import static uk.gov.ida.stuboidcbroker.services.QueryParameterHelper.splitQuery;
 
-public class AuthnResponseService {
+public class AuthnResponseValidationService {
 
     private final TokenRequestService tokenRequestService;
 
-    public AuthnResponseService(TokenRequestService tokenRequestService) {
+    public AuthnResponseValidationService(TokenRequestService tokenRequestService) {
         this.tokenRequestService = tokenRequestService;
     }
 

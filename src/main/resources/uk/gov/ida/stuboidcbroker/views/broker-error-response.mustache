@@ -1,0 +1,12 @@
+<html>
+<head><title>Submit</title></head>
+<body onload="javascript:document.forms[0].submit()">
+<form method="post" action="{{redirectURI}}">
+    <input type="hidden" name="error" value="{{error}}"/>
+    <input type="hidden" name="error_description" value="{{errorDescription}}"/>
+    <input type="hidden" name="state" value="{{state}}"/>
+    <input type="hidden" name="http_status_code" value="{{httpStatusCode}}"/>
+    <input type="submit">
+</form>
+</body>
+</html>

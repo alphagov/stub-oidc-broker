@@ -10,10 +10,10 @@ import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.dropwizard.views.View;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
-import uk.gov.ida.stuboidcbroker.services.AuthnRequestService;
+import uk.gov.ida.stuboidcbroker.services.AuthnRequestGeneratorService;
 import uk.gov.ida.stuboidcbroker.services.RedisService;
 import uk.gov.ida.stuboidcbroker.services.TokenRequestService;
-import uk.gov.ida.stuboidcbroker.services.AuthnResponseService;
+import uk.gov.ida.stuboidcbroker.services.AuthnResponseValidationService;
 import uk.gov.ida.stuboidcbroker.views.AuthenticationCallbackViewHttp;
 import uk.gov.ida.stuboidcbroker.views.AuthenticationCallbackViewHttps;
 import uk.gov.ida.stuboidcbroker.views.StartPageView;
@@ -41,20 +41,20 @@ public class StubOidcBrokerResource {
 
     private final StubOidcBrokerConfiguration configuration;
     private final TokenRequestService tokenRequestService;
-    private final AuthnRequestService authnRequestService;
-    private final AuthnResponseService authnResponseService;
+    private final AuthnRequestGeneratorService authnRequestGeneratorService;
+    private final AuthnResponseValidationService authnResponseValidationService;
     private final RedisService redisService;
 
     public StubOidcBrokerResource(
             StubOidcBrokerConfiguration configuration,
             TokenRequestService tokenRequestService,
-            AuthnRequestService authnRequestService,
-            AuthnResponseService authnResponseService,
+            AuthnRequestGeneratorService authnRequestGeneratorService,
+            AuthnResponseValidationService authnResponseValidationService,
             RedisService redisService) {
         this.configuration = configuration;
         this.tokenRequestService = tokenRequestService;
-        this.authnRequestService = authnRequestService;
-        this.authnResponseService = authnResponseService;
+        this.authnRequestGeneratorService = authnRequestGeneratorService;
+        this.authnResponseValidationService = authnResponseValidationService;
         this.redisService = redisService;
     }
 
@@ -78,7 +78,7 @@ public class StubOidcBrokerResource {
 
         return Response
                 .status(302)
-                .location(authnRequestService.generateAuthenticationRequest(
+                .location(authnRequestGeneratorService.generateAuthenticationRequest(
                         requestURI,
                         getClientID(),
                         redirectURI,
@@ -106,13 +106,13 @@ public class StubOidcBrokerResource {
             return Response.status(500).entity("PostBody is empty").build();
         }
 
-        Optional<String> errors = authnResponseService.checkResponseForErrors(postBody);
+        Optional<String> errors = authnResponseValidationService.checkResponseForErrors(postBody);
 
         if (errors.isPresent()) {
             return Response.status(400).entity(errors.get()).build();
         }
 
-        AuthorizationCode authorizationCode = authnResponseService.handleAuthenticationResponse(postBody, getClientID());
+        AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(postBody, getClientID());
         return Response.ok(authorizationCode.getValue()).build();
     }
 

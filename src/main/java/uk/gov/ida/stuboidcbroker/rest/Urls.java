@@ -10,7 +10,7 @@ public interface Urls {
     interface StubOp {
         String AUTHORISATION_ENDPOINT_URI = "/authorize";
         String USERINFO_URI = "/userinfo";
-        String AUTHORISATION_ENDPOINT_FORM_URI = "/formPost/authorize";
+        String AUTHORISATION_ENDPOINT_FORM_URI = "/authorizeFormPost/authorize";
     }
 
     interface Directory {

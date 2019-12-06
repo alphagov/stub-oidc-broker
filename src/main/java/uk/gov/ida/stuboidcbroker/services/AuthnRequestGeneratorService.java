@@ -10,11 +10,11 @@ import com.nimbusds.openid.connect.sdk.Nonce;
 
 import java.net.URI;
 
-public class AuthnRequestService {
+public class AuthnRequestGeneratorService {
 
     private final RedisService redisService;
 
-    public AuthnRequestService(RedisService redisService) {
+    public AuthnRequestGeneratorService(RedisService redisService) {
         this.redisService = redisService;
     }
 

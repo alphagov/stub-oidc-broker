@@ -4,7 +4,7 @@ server:
       port: ${APPLICATION_PORT:-6610}
   adminConnectors:
     - type: http
-      port: 6611
+      port: ${ADMIN_PORT:-6611}
 
 stubOpURI: ${STUB_OP_URI:-"http://localhost:5510"}
 
@@ -17,6 +17,8 @@ redisURI: ${REDIS_URI:-"redis://192.168.204.170:6380"}
 directoryURI: ${DIRECTORY_URI:-"http://localhost:3000"}
 
 middlewareURI: ${MIDDLEWARE_URI:-"http://localhost:3001"}
+
+verifiableCredentialURI: ${VERIFIABLE_CREDENTIAL_URI:-"http://localhost:3002"}
 
 local: ${IS_LOCAL:-true}
 
