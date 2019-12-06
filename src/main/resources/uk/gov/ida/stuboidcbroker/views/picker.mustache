@@ -21,21 +21,19 @@
 
         <h3 class="h3 mb-3">Use your existing digital identity</h3>
 
-        {{#orgList}}
+        {{#idps}}
             <button class="btn btn-lg btn-primary btn-block logo logo-img-{{index}}" name="idpDomain" value="{{domain}},{{name}}" type="submit">
                 Continue with {{name}}
             </button>
-        {{/orgList}}
+        {{/idps}}
 
         <h3 class="h3 mt-5 mb-3">Use our partner verification service</h3>
 
-        <button class="btn btn-lg btn-primary btn-block logo" name="idpDomain" value="#" type="submit">
-            Continue with Partner Service A
-        </button>
-
-        <button class="btn btn-lg btn-primary btn-block logo" name="idpDomain" value="#" type="submit">
-            Continue with Partner Service B
-        </button>
+        {{#brokers}}
+            <button class="btn btn-lg btn-primary btn-block logo logo-img-{{index}}" name="idpDomain" value="{{domain}},{{name}}" type="submit">
+                Continue with {{name}}
+            </button>
+        {{/brokers}}
 
         <p class="mt-5 mb-3 text-muted">&copy; Build and Learn 2019</p>
     </form>

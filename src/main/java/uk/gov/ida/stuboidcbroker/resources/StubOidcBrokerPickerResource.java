@@ -33,25 +33,18 @@ public class StubOidcBrokerPickerResource {
     @GET
     @Path("/picker")
     public View pickerPage() throws IOException {
-        URI directoryRequestURI = UriBuilder.fromUri(
-                configuration.getDirectoryURI()).path(Urls.Directory.REGISTERED_IDPS)
-                .build();
+        URI idpRequestURI = UriBuilder.fromUri(configuration.getDirectoryURI()).path(Urls.Directory.REGISTERED_IDPS)
+                                      .build();
+        URI brokerRequestURI = UriBuilder.fromUri(configuration.getDirectoryURI()).path(Urls.Directory.REGISTERED_BROKERS)
+                                         .build();
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .GET()
-                .uri(directoryRequestURI)
-                .build();
+        HttpResponse<String> idpsResponse = getOrganisations(idpRequestURI);
+        HttpResponse<String> brokersResponse = getOrganisations(brokerRequestURI);
 
-        HttpResponse<String> responseBody;
-        try {
-            responseBody = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        List<Organisation> idps = getOrganisationsFromResponse(idpsResponse);
+        List<Organisation> brokers = getOrganisationsFromResponse(brokersResponse);
 
-        List<Organisation> organisationsFromResponse = getOrganisationsFromResponse(responseBody);
-
-        return new PickerView(organisationsFromResponse);
+        return new PickerView(idps, brokers);
     }
 
     private List<Organisation> getOrganisationsFromResponse(HttpResponse<String> responseBody) throws IOException {
@@ -72,5 +65,18 @@ public class StubOidcBrokerPickerResource {
             orgList.add(org);
         }
         return orgList;
+    }
+
+    private HttpResponse<String> getOrganisations(URI uri) {
+        HttpRequest request = HttpRequest.newBuilder()
+                                         .GET()
+                                         .uri(uri)
+                                         .build();
+
+        try {
+            return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
