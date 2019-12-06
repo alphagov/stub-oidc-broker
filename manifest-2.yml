@@ -1,6 +1,6 @@
 ---
 applications:
-  - name: stub-oidc-broker
+  - name: stub-oidc-broker-2
     memory: 1G
     buildpacks:
       - java_buildpack
@@ -8,9 +8,9 @@ applications:
     env:
       JAVA_HOME: "../.java-buildpack/open_jdk_jre"
       JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 11.+ } }'
-      STUB_OP_URI: https://stub-oidc-op.cloudapps.digital
-      STUB_BROKER_URI: https://stub-oidc-broker.cloudapps.digital
-      STUB_TRUSTFRAMEWORK_RP: https://stub-trustframework-rp.cloudapps.digital/response
+      STUB_OP_URI: https://stub-oidc-broker-1.cloudapps.digital
+      STUB_BROKER_URI: https://stub-oidc-broker-2.cloudapps.digital
+      STUB_TRUSTFRAMEWORK_RP: https://stub-trustframework-rp-2.cloudapps.digital/response
       DIRECTORY_URI: https://directory-prototype.cloudapps.digital
       MIDDLEWARE_URI: http://52.51.37.224:80
       VERIFIABLE_CREDENTIAL_URI: https://verifiable-credentials-spike.cloudapps.digital

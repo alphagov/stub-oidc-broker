@@ -1,0 +1,20 @@
+---
+applications:
+  - name: stub-oidc-broker-1
+    memory: 1G
+    buildpacks:
+      - java_buildpack
+    command: (cd stub-oidc-broker && ls -l &&  bin/stub-oidc-broker server ./stub-oidc-broker.yml)
+    env:
+      JAVA_HOME: "../.java-buildpack/open_jdk_jre"
+      JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 11.+ } }'
+      STUB_OP_URI: https://stub-oidc-op.cloudapps.digital
+      STUB_BROKER_URI: https://stub-oidc-broker-1.cloudapps.digital
+      STUB_TRUSTFRAMEWORK_RP: https://stub-trustframework-rp-1.cloudapps.digital/response
+      DIRECTORY_URI: https://directory-prototype.cloudapps.digital
+      MIDDLEWARE_URI: http://52.51.37.224:80
+      VERIFIABLE_CREDENTIAL_URI: https://verifiable-credentials-spike.cloudapps.digital
+      APPLICATION_PORT: 8080
+      IS_LOCAL: false
+    services:
+      - redis-service
