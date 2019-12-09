@@ -26,6 +26,10 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class TokenRequestService {
 
@@ -41,13 +45,20 @@ public class TokenRequestService {
         ClientSecretBasic clientSecretBasic = new ClientSecretBasic(clientID, new Secret());
         URI redirectURI = UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBroker.REDIRECT_URI).build();
         URI tokenURI = UriBuilder.fromUri(configuration.getMiddlewareURI()).path(Urls.Middleware.TOKEN_URI).build();
+        Map<String, List<String>> customParams = new HashMap<>();
+        customParams.put("destination-url", Collections.singletonList(configuration.getStubOpURI()));
 
         TokenRequest tokenRequest = new TokenRequest(
                 tokenURI,
                 clientSecretBasic,
-                new AuthorizationCodeGrant(authorizationCode, redirectURI));
+                new AuthorizationCodeGrant(authorizationCode, redirectURI),
+                null,
+                null,
+                customParams
+        );
 
-        HTTPResponse httpResponse = sendHTTPRequest(tokenRequest.toHTTPRequest());
+        HTTPRequest httpRequest = tokenRequest.toHTTPRequest();
+        HTTPResponse httpResponse = sendHTTPRequest(httpRequest);
 
         try {
             TokenResponse tokenResponse = OIDCTokenResponseParser.parse(httpResponse);

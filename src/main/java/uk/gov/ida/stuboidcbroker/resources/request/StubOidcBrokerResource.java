@@ -16,7 +16,7 @@ import uk.gov.ida.stuboidcbroker.services.TokenRequestService;
 import uk.gov.ida.stuboidcbroker.services.AuthnResponseValidationService;
 import uk.gov.ida.stuboidcbroker.views.AuthenticationCallbackViewHttp;
 import uk.gov.ida.stuboidcbroker.views.AuthenticationCallbackViewHttps;
-import uk.gov.ida.stuboidcbroker.views.StartPageView;
+import uk.gov.ida.stuboidcbroker.views.RegistrationView;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -61,7 +61,7 @@ public class StubOidcBrokerResource {
     @GET
     @Path("/")
     public View startPage() {
-        return new StartPageView();
+        return new RegistrationView();
     }
 
     @GET

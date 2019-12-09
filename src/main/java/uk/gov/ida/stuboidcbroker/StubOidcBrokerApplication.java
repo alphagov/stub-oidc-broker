@@ -10,7 +10,7 @@ import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.resources.request.StubOidcBrokerFormPostResource;
-import uk.gov.ida.stuboidcbroker.resources.StubOidcBrokerPickerResource;
+import uk.gov.ida.stuboidcbroker.resources.picker.StubOidcBrokerPickerResource;
 import uk.gov.ida.stuboidcbroker.resources.registration.StubOidcBrokerRegistrationResource;
 import uk.gov.ida.stuboidcbroker.resources.request.StubOidcBrokerResource;
 import uk.gov.ida.stuboidcbroker.resources.response.StubOidcAuthorizationResource;

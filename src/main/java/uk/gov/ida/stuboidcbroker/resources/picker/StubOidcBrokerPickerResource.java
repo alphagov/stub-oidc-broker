@@ -1,4 +1,4 @@
-package uk.gov.ida.stuboidcbroker.resources;
+package uk.gov.ida.stuboidcbroker.resources.picker;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dropwizard.views.View;

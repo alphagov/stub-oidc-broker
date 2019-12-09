@@ -47,14 +47,14 @@ public class RegistrationSenderService {
 
     private static final Logger LOG = LoggerFactory.getLogger(RegistrationSenderService.class);
 
-    public String sendRegistrationRequest(String ssa, String privateKey) throws JOSEException, ParseException, IOException {
+    public String sendRegistrationRequest(String ssa, String privateKey, String brokerDomain) throws JOSEException, ParseException, IOException {
         SignedJWT signedJWT;
         try {
             signedJWT = SignedJWT.parse(ssa);
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
-        HttpResponse<String> httpResponse = sendClientRegRequest(signedJWT, privateKey);
+        HttpResponse<String> httpResponse = sendClientRegRequest(signedJWT, privateKey, brokerDomain);
         String body = httpResponse.body();
         LOG.info("HTTP RESPONSE AS STRING: " + body);
             JSONObject jsonObjectResponse = JSONObjectUtils.parse(body);
@@ -63,19 +63,19 @@ public class RegistrationSenderService {
         return body;
     }
 
-    private HttpResponse sendClientRegRequest(SignedJWT jwt, String privateKey) throws JOSEException, IOException {
+    private HttpResponse sendClientRegRequest(SignedJWT jwt, String privateKey, String brokerDomain) throws JOSEException, IOException {
         URI uri = UriBuilder.fromUri(configuration.getMiddlewareURI()).path(Urls.Middleware.REGISTRATION_URI).build();
-        JWTClaimsSet registrationRequest = getRegistrationClaims(jwt.serialize());
+        JWTClaimsSet registrationRequest = getRegistrationClaims(jwt.serialize(), brokerDomain);
         SignedJWT signedClientMetadata = createSignedClientMetadata(registrationRequest, privateKey);
-        return sendHttpRequest(uri, signedClientMetadata.serialize());
+        return sendHttpRequest(uri, signedClientMetadata.serialize(), brokerDomain);
     }
 
-    private JWTClaimsSet getRegistrationClaims(String seralizedSoftwareStatement) {
+    private JWTClaimsSet getRegistrationClaims(String seralizedSoftwareStatement, String brokerDomain) {
         JWTClaimsSet registrationClaims = new JWTClaimsSet.Builder()
         .issuer(configuration.getSoftwareID())
         .issueTime(new Date())
         .expirationTime(new Date())
-        .audience(configuration.getStubOpURI())
+        .audience(brokerDomain)
         .jwtID(UUID.randomUUID().toString())
         .claim("redirect_uris", asList(UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBroker.REDIRECT_URI).build().toString()))
         .claim("token_endpoint_auth_method", "tls_client_auth")
@@ -113,12 +113,12 @@ public class RegistrationSenderService {
         return signedJWT;
     }
 
-    private HttpResponse<String> sendHttpRequest(URI uri, String postObject) {
+    private HttpResponse<String> sendHttpRequest(URI uri, String postObject, String brokerDomain) {
         HttpClient httpClient = HttpClient.newBuilder()
                 .build();
         JSONObject jwtJson = new JSONObject();
         jwtJson.put("signed-jwt", postObject);
-        jwtJson.put("destination-url", configuration.getStubOpURI());
+        jwtJson.put("destination-url", brokerDomain);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .header("Content-Type", "application/json")
