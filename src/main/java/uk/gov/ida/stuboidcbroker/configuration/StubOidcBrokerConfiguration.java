@@ -13,6 +13,7 @@ public class StubOidcBrokerConfiguration extends Configuration {
     private String directoryURI;
     private String middlewareURI;
     private String verifiableCredentialURI;
+    private String scheme;
 
     public String getStubOpURI() {
         return stubOpURI;
@@ -48,5 +49,9 @@ public class StubOidcBrokerConfiguration extends Configuration {
 
     public String getVerifiableCredentialURI() {
         return verifiableCredentialURI;
+    }
+
+    public String getScheme() {
+        return scheme;
     }
 }

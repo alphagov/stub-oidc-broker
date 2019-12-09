@@ -33,9 +33,10 @@ public class StubOidcBrokerPickerResource {
     @GET
     @Path("/picker")
     public View pickerPage() throws IOException {
-        URI idpRequestURI = UriBuilder.fromUri(configuration.getDirectoryURI()).path(Urls.Directory.REGISTERED_IDPS)
+        String scheme = configuration.getScheme();
+        URI idpRequestURI = UriBuilder.fromUri(configuration.getDirectoryURI()).path(Urls.Directory.REGISTERED_IDPS + scheme)
                                       .build();
-        URI brokerRequestURI = UriBuilder.fromUri(configuration.getDirectoryURI()).path(Urls.Directory.REGISTERED_BROKERS)
+        URI brokerRequestURI = UriBuilder.fromUri(configuration.getDirectoryURI()).path(Urls.Directory.REGISTERED_BROKERS + scheme)
                                          .build();
 
         HttpResponse<String> idpsResponse = getOrganisations(idpRequestURI);

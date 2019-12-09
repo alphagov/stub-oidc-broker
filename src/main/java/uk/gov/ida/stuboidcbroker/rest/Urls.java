@@ -14,8 +14,8 @@ public interface Urls {
     }
 
     interface Directory {
-        String REGISTERED_IDPS = "/organisation/idp";
-        String REGISTERED_BROKERS = "/organisation/broker";
+        String REGISTERED_IDPS = "/organisation/idp/";
+        String REGISTERED_BROKERS = "/organisation/broker/";
     }
 
     interface Middleware {

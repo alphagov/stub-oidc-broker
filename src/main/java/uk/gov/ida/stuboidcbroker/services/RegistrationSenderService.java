@@ -118,6 +118,7 @@ public class RegistrationSenderService {
                 .build();
         JSONObject jwtJson = new JSONObject();
         jwtJson.put("signed-jwt", postObject);
+        jwtJson.put("destination-url", configuration.getStubOpURI());
 
         HttpRequest request = HttpRequest.newBuilder()
                 .header("Content-Type", "application/json")

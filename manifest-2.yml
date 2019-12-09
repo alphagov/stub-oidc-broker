@@ -16,5 +16,6 @@ applications:
       VERIFIABLE_CREDENTIAL_URI: https://verifiable-credentials-spike.cloudapps.digital
       APPLICATION_PORT: 8080
       IS_LOCAL: false
+      SCHEME: 2
     services:
       - redis-service

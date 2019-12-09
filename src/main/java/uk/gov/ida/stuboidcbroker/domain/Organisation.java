@@ -13,6 +13,8 @@ public class Organisation {
     @Nullable
     private String loa;
 
+    private String scheme;
+
     public String getName() {
         return name;
     }
@@ -29,6 +31,10 @@ public class Organisation {
         return loa;
     }
 
+    public String getScheme() {
+        return scheme;
+    }
+
     @Override
     public String toString() {
         return "Organisation{" +
@@ -36,6 +42,7 @@ public class Organisation {
                 ", type='" + type + '\'' +
                 ", domain='" + domain + '\'' +
                 ", loa='" + loa + '\'' +
+                ", scheme='" + scheme + '\'' +
                 '}';
     }
 }
