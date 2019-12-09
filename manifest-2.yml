@@ -8,7 +8,6 @@ applications:
     env:
       JAVA_HOME: "../.java-buildpack/open_jdk_jre"
       JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 11.+ } }'
-      STUB_OP_URI: https://stub-oidc-broker-1.cloudapps.digital
       STUB_BROKER_URI: https://stub-oidc-broker-2.cloudapps.digital
       STUB_TRUSTFRAMEWORK_RP: https://stub-trustframework-rp-2.cloudapps.digital/response
       DIRECTORY_URI: https://directory-prototype.cloudapps.digital

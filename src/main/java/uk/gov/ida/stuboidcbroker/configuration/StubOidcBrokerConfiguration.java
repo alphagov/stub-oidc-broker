@@ -4,7 +4,6 @@ import io.dropwizard.Configuration;
 
 public class StubOidcBrokerConfiguration extends Configuration {
 
-    private String stubOpURI;
     private String stubBrokerURI;
     private String redisURI;
     private boolean local;
@@ -14,10 +13,6 @@ public class StubOidcBrokerConfiguration extends Configuration {
     private String middlewareURI;
     private String verifiableCredentialURI;
     private String scheme;
-
-    public String getStubOpURI() {
-        return stubOpURI;
-    }
 
     public String getStubBrokerURI() {
         return stubBrokerURI;

@@ -6,8 +6,6 @@ server:
     - type: http
       port: ${ADMIN_PORT:-6611}
 
-stubOpURI: ${STUB_OP_URI:-"http://localhost:5510"}
-
 stubBrokerURI: ${STUB_BROKER_URI:-"http://localhost:6610"}
 
 stubTrustframeworkRP: ${STUB_TRUSTFRAMEWORK_RP:-"http://localhost:4410/response"}

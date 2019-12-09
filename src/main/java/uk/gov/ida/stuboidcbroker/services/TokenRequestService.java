@@ -41,12 +41,12 @@ public class TokenRequestService {
         this.redisService = redisService;
     }
 
-    public OIDCTokens getTokens(AuthorizationCode authorizationCode, ClientID clientID) {
+    public OIDCTokens getTokens(AuthorizationCode authorizationCode, ClientID clientID, String idpDomain) {
         ClientSecretBasic clientSecretBasic = new ClientSecretBasic(clientID, new Secret());
         URI redirectURI = UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBroker.REDIRECT_URI).build();
         URI tokenURI = UriBuilder.fromUri(configuration.getMiddlewareURI()).path(Urls.Middleware.TOKEN_URI).build();
         Map<String, List<String>> customParams = new HashMap<>();
-        customParams.put("destination-url", Collections.singletonList(configuration.getStubOpURI()));
+        customParams.put("destination-url", Collections.singletonList(idpDomain));
 
         TokenRequest tokenRequest = new TokenRequest(
                 tokenURI,
@@ -76,8 +76,8 @@ public class TokenRequestService {
         }
     }
 
-    public UserInfo getUserInfo(BearerAccessToken bearerAccessToken) {
-        URI userInfoURI = UriBuilder.fromUri(configuration.getStubOpURI()).path(Urls.StubOp.USERINFO_URI).build();
+    public UserInfo getUserInfo(BearerAccessToken bearerAccessToken, String idpDomain) {
+        URI userInfoURI = UriBuilder.fromUri(idpDomain).path(Urls.StubOp.USERINFO_URI).build();
         UserInfoRequest userInfoRequest = new UserInfoRequest(
                 userInfoURI,
                 bearerAccessToken);
@@ -114,8 +114,8 @@ public class TokenRequestService {
         }
     }
 
-    public String getVerifiableCredential(BearerAccessToken bearerAccessToken) {
-        URI userInfoURI = UriBuilder.fromUri(configuration.getStubOpURI())
+    public String getVerifiableCredential(BearerAccessToken bearerAccessToken, String idpDomain) {
+        URI userInfoURI = UriBuilder.fromUri(idpDomain)
                 .path(Urls.StubOp.USERINFO_URI).build();
 
         HttpRequest request = HttpRequest.newBuilder()

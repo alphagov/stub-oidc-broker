@@ -13,6 +13,7 @@ export STUB_OP_URI=http://localhost:6610
 export ADMIN_PORT=5511
 export STUB_TRUSTFRAMEWORK_RP=http://localhost:4412/response
 export VERIFIABLE_CREDENTIAL_URI=http://localhost:3004
+export SCHEME=2
 
 ./gradlew installDist
 

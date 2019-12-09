@@ -41,6 +41,7 @@ public class StubOidcBrokerFormPostResource {
     private final RedisService redisService;
     private URI authorisationURI;
     private URI redirectUri;
+    private String domain;
 
 
     public StubOidcBrokerFormPostResource(
@@ -64,6 +65,7 @@ public class StubOidcBrokerFormPostResource {
         List<String> orgList = Arrays.asList(idpDomain.split(","));
         String domain = orgList.get(0);
         String idpName = orgList.get(1);
+        this.domain = domain;
         authorisationURI = UriBuilder.fromUri(domain).path(Urls.StubOp.AUTHORISATION_ENDPOINT_FORM_URI).build();
         return Response
                 .status(302)
@@ -81,7 +83,6 @@ public class StubOidcBrokerFormPostResource {
     @Path("/serviceAuthenticationRequestCodeIDToken")
     @Produces(MediaType.APPLICATION_JSON)
     public Response serviceAuthenticationRequestCodeIDToken() {
-
         return Response
                 .status(302)
                 .location(authnRequestGeneratorService.generateFormPostAuthenticationRequest(
@@ -119,9 +120,9 @@ public class StubOidcBrokerFormPostResource {
 
     private String retrieveTokenAndUserInfo(AuthorizationCode authCode) {
 
-            OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID());
+            OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(), domain);
 
-            String verifiableCredential = tokenRequestService.getVerifiableCredential(tokens.getBearerAccessToken());
+            String verifiableCredential = tokenRequestService.getVerifiableCredential(tokens.getBearerAccessToken(), domain);
 //            UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());
 
 //            String userInfoToJson = userInfo.toJSONObject().toJSONString();

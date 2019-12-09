@@ -7,6 +7,7 @@ cd "$(dirname "$0")"
 
 LOCAL_IP="$(ipconfig getifaddr en0)"
 export REDIS_URI="redis://${LOCAL_IP}:6380"
+export SCHEME=1
 
 ./gradlew installDist
 

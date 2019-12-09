@@ -19,6 +19,7 @@ import uk.gov.ida.stuboidcbroker.views.AuthenticationCallbackViewHttps;
 import uk.gov.ida.stuboidcbroker.views.RegistrationView;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -31,6 +32,8 @@ import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -44,6 +47,7 @@ public class StubOidcBrokerResource {
     private final AuthnRequestGeneratorService authnRequestGeneratorService;
     private final AuthnResponseValidationService authnResponseValidationService;
     private final RedisService redisService;
+    private static String idpDomain;
 
     public StubOidcBrokerResource(
             StubOidcBrokerConfiguration configuration,
@@ -64,12 +68,16 @@ public class StubOidcBrokerResource {
         return new RegistrationView();
     }
 
-    @GET
+    @POST
     @Path("/serviceAuthenticationRequest")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response serviceAuthenticationRequest() {
+    public Response serviceAuthenticationRequest(@FormParam("idpDomain") String idpDomain) {
+        List<String> orgList = Arrays.asList(idpDomain.split(","));
+        String domain = orgList.get(0);
+        String idpName = orgList.get(1);
+        this.idpDomain = idpDomain;
         URI requestURI = UriBuilder.fromUri(
-                configuration.getStubOpURI()).path(Urls.StubOp.AUTHORISATION_ENDPOINT_URI)
+                idpDomain).path(Urls.StubOp.AUTHORISATION_ENDPOINT_URI)
                 .build();
 
         URI redirectURI = UriBuilder.fromUri(
@@ -125,8 +133,8 @@ public class StubOidcBrokerResource {
             Map<String, String> authenticationParams = splitQuery(query);
             String authCode = authenticationParams.get("code");
 
-            OIDCTokens tokens = tokenRequestService.getTokens(new AuthorizationCode(authCode), getClientID());
-            UserInfo userInfo = tokenRequestService.getUserInfo(tokens.getBearerAccessToken());
+            OIDCTokens tokens = tokenRequestService.getTokens(new AuthorizationCode(authCode), getClientID(), idpDomain);
+            UserInfo userInfo = tokenRequestService.getUserInfo(tokens.getBearerAccessToken(), idpDomain);
 
             String userInfoToJson = userInfo.toJSONObject().toJSONString();
             return Response.ok(userInfoToJson).build();
