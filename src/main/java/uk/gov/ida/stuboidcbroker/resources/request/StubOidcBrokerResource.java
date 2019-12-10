@@ -1,5 +1,6 @@
 package uk.gov.ida.stuboidcbroker.resources.request;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.ResponseType;
@@ -8,7 +9,11 @@ import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.dropwizard.views.View;
+import net.minidev.json.JSONArray;
+import net.minidev.json.JSONObject;
+import net.minidev.json.parser.JSONParser;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
+import uk.gov.ida.stuboidcbroker.domain.Organisation;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
 import uk.gov.ida.stuboidcbroker.services.AuthnRequestGeneratorService;
 import uk.gov.ida.stuboidcbroker.services.RedisService;
@@ -34,6 +39,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 
@@ -47,7 +56,7 @@ public class StubOidcBrokerResource {
     private final AuthnRequestGeneratorService authnRequestGeneratorService;
     private final AuthnResponseValidationService authnResponseValidationService;
     private final RedisService redisService;
-    private static String idpDomain;
+    private static String brokerDomain;
 
     public StubOidcBrokerResource(
             StubOidcBrokerConfiguration configuration,
@@ -64,8 +73,15 @@ public class StubOidcBrokerResource {
 
     @GET
     @Path("/")
-    public View startPage() {
-        return new RegistrationView();
+    public View startPage() throws IOException {
+        String scheme = configuration.getScheme();
+        URI brokerRequestURI = UriBuilder.fromUri(configuration.getDirectoryURI()).path(Urls.Directory.REGISTERED_BROKERS + scheme)
+                .build();
+
+        HttpResponse<String> brokersResponse = getOrganisations(brokerRequestURI);
+        List<Organisation> brokers = getOrganisationsFromResponse(brokersResponse);
+
+        return new RegistrationView(brokers);
     }
 
     @POST
@@ -74,10 +90,10 @@ public class StubOidcBrokerResource {
     public Response serviceAuthenticationRequest(@FormParam("idpDomain") String idpDomain) {
         List<String> orgList = Arrays.asList(idpDomain.split(","));
         String domain = orgList.get(0);
-        String idpName = orgList.get(1);
-        this.idpDomain = idpDomain;
+        String brokerName = orgList.get(1);
+        this.brokerDomain = domain;
         URI requestURI = UriBuilder.fromUri(
-                idpDomain).path(Urls.StubOp.AUTHORISATION_ENDPOINT_URI)
+                domain).path(Urls.StubOp.AUTHORISATION_ENDPOINT_URI)
                 .build();
 
         URI redirectURI = UriBuilder.fromUri(
@@ -133,8 +149,8 @@ public class StubOidcBrokerResource {
             Map<String, String> authenticationParams = splitQuery(query);
             String authCode = authenticationParams.get("code");
 
-            OIDCTokens tokens = tokenRequestService.getTokens(new AuthorizationCode(authCode), getClientID(), idpDomain);
-            UserInfo userInfo = tokenRequestService.getUserInfo(tokens.getBearerAccessToken(), idpDomain);
+            OIDCTokens tokens = tokenRequestService.getTokens(new AuthorizationCode(authCode), getClientID(), brokerDomain);
+            UserInfo userInfo = tokenRequestService.getUserInfo(tokens.getBearerAccessToken(), brokerDomain);
 
             String userInfoToJson = userInfo.toJSONObject().toJSONString();
             return Response.ok(userInfoToJson).build();
@@ -146,5 +162,38 @@ public class StubOidcBrokerResource {
             return new ClientID(client_id);
         }
         return new ClientID();
+    }
+
+    private List<Organisation> getOrganisationsFromResponse(HttpResponse<String> responseBody) throws IOException {
+        JSONParser parser = new JSONParser(JSONParser.MODE_JSON_SIMPLE);
+        JSONArray jsonarray;
+        try {
+            jsonarray = (JSONArray) parser.parse(responseBody.body());
+        } catch (net.minidev.json.parser.ParseException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+
+        List<Organisation> orgList = new ArrayList<>();
+        for(int i = 0; i < jsonarray.size(); i++) {
+            JSONObject obj = (JSONObject) jsonarray.get(i);
+            ObjectMapper objectMapper = new ObjectMapper();
+            Organisation org = objectMapper.readValue(obj.toJSONString(), Organisation.class);
+            orgList.add(org);
+        }
+        return orgList;
+    }
+
+    private HttpResponse<String> getOrganisations(URI uri) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(uri)
+                .build();
+
+        try {
+            return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

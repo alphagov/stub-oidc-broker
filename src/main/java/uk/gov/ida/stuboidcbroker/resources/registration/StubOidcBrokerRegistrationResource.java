@@ -35,6 +35,8 @@ public class StubOidcBrokerRegistrationResource {
     @Path("/sendRegistrationRequest")
     @Produces(MediaType.APPLICATION_JSON)
     public Response sendRegistrationRequest(@FormParam("ssa") String ssa, @FormParam("privateKey") String privateKey, @FormParam("brokerDomain") String brokerDomain) throws JOSEException, java.text.ParseException, IOException {
+        // get ssa for this broker from directory
+        // get private key for this broker directory
 
         String responseString = registrationSenderService.sendRegistrationRequest(ssa, privateKey, brokerDomain);
 

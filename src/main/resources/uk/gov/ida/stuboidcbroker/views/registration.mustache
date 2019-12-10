@@ -56,11 +56,12 @@
                     <legend class="govuk-fieldset__legend govuk-fieldset__legend--sm govuk-!-margin-bottom-9">
                         To register this Broker to an Open ID Provider please register to the Directory and then complete the fields below
                     </legend>
+                    {{#brokers}}
 
-                    <label class="govuk-label" for="full">
-                        Broker Domain
-                    </label>
-                    <input class="govuk-input govuk-!-margin-bottom-5" type="text" id="brokerDomain" name="brokerDomain" aria-describedby="more-detail-hint">
+                        <button class="govuk-button govuk-button" name="idpDomain" value="{{domain}}, {{name}}" type="submit">
+                            Register with {{name}}
+                        </button>
+                    {{/brokers}}
 
                     <label class="govuk-label" for="full">
                         Software Statement Assertion
@@ -73,9 +74,7 @@
                     <textarea class="govuk-textarea" id="privateKey" name="privateKey" rows="5" aria-describedby="more-detail-hint"></textarea>
                 </fieldset>
             </div>
-            <input type="submit" size="25" class="govuk-button" value="Register">
         </form>
-        <a href="/resetClientID" class="govuk-button govuk-button--warning">Reset Client</a>
     </main>
 </div>
 
