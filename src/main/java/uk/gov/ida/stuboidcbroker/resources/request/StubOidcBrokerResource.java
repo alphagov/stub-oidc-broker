@@ -56,7 +56,8 @@ public class StubOidcBrokerResource {
     private final AuthnRequestGeneratorService authnRequestGeneratorService;
     private final AuthnResponseValidationService authnResponseValidationService;
     private final RedisService redisService;
-    private static String brokerDomain;
+    private String brokerDomain;
+    private String brokerName;
 
     public StubOidcBrokerResource(
             StubOidcBrokerConfiguration configuration,
@@ -92,6 +93,7 @@ public class StubOidcBrokerResource {
         String domain = orgList.get(0);
         String brokerName = orgList.get(1);
         this.brokerDomain = domain;
+        this.brokerName = brokerName;
         URI requestURI = UriBuilder.fromUri(
                 domain).path(Urls.StubOp.AUTHORISATION_ENDPOINT_URI)
                 .build();
@@ -104,7 +106,7 @@ public class StubOidcBrokerResource {
                 .status(302)
                 .location(authnRequestGeneratorService.generateAuthenticationRequest(
                         requestURI,
-                        getClientID(),
+                        getClientID(brokerDomain),
                         redirectURI,
                         new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN))
                         .toURI())
@@ -136,7 +138,7 @@ public class StubOidcBrokerResource {
             return Response.status(400).entity(errors.get()).build();
         }
 
-        AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(postBody, getClientID());
+        AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(postBody, getClientID(brokerDomain));
         return Response.ok(authorizationCode.getValue()).build();
     }
 
@@ -149,15 +151,15 @@ public class StubOidcBrokerResource {
             Map<String, String> authenticationParams = splitQuery(query);
             String authCode = authenticationParams.get("code");
 
-            OIDCTokens tokens = tokenRequestService.getTokens(new AuthorizationCode(authCode), getClientID(), brokerDomain);
+            OIDCTokens tokens = tokenRequestService.getTokens(new AuthorizationCode(authCode), getClientID(brokerDomain), brokerDomain);
             UserInfo userInfo = tokenRequestService.getUserInfo(tokens.getBearerAccessToken(), brokerDomain);
 
             String userInfoToJson = userInfo.toJSONObject().toJSONString();
             return Response.ok(userInfoToJson).build();
     }
 
-    private ClientID getClientID() {
-       String client_id = redisService.get("CLIENT_ID");
+    private ClientID getClientID(String brokerName) {
+       String client_id = redisService.get(brokerName);
         if (client_id != null) {
             return new ClientID(client_id);
         }

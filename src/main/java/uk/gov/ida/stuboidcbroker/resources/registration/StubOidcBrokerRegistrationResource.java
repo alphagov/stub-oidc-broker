@@ -17,6 +17,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Arrays;
+import java.util.List;
 
 @Path("/")
 public class StubOidcBrokerRegistrationResource {
@@ -37,8 +39,10 @@ public class StubOidcBrokerRegistrationResource {
     public Response sendRegistrationRequest(@FormParam("ssa") String ssa, @FormParam("privateKey") String privateKey, @FormParam("brokerDomain") String brokerDomain) throws JOSEException, java.text.ParseException, IOException {
         // get ssa for this broker from directory
         // get private key for this broker directory
-
-        String responseString = registrationSenderService.sendRegistrationRequest(ssa, privateKey, brokerDomain);
+        List<String> orgList = Arrays.asList(brokerDomain.split(","));
+        String domain = orgList.get(0).trim();
+        String brokerName = orgList.get(1).trim();
+        String responseString = registrationSenderService.sendRegistrationRequest(ssa, privateKey, domain, brokerName);
 
         return Response.ok(responseString).build();
     }
@@ -61,4 +65,8 @@ public class StubOidcBrokerRegistrationResource {
         redisService.delete("CLIENT_ID");
     }
 
+
+    private void saveClientID(String clientID) {
+        redisService.set("CLIENT_ID",clientID);
+    }
 }

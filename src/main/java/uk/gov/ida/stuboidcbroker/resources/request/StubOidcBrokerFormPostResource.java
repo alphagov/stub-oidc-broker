@@ -42,6 +42,7 @@ public class StubOidcBrokerFormPostResource {
     private URI authorisationURI;
     private URI redirectUri;
     private String domain;
+    private String brokerName;
 
 
     public StubOidcBrokerFormPostResource(
@@ -64,17 +65,18 @@ public class StubOidcBrokerFormPostResource {
     public Response formPostAuthenticationRequest(@FormParam("idpDomain") String idpDomain) {
         List<String> orgList = Arrays.asList(idpDomain.split(","));
         String domain = orgList.get(0);
-        String idpName = orgList.get(1);
+        String brokerName = orgList.get(1);
         this.domain = domain;
+        this.brokerName = brokerName;
         authorisationURI = UriBuilder.fromUri(domain).path(Urls.StubOp.AUTHORISATION_ENDPOINT_FORM_URI).build();
         return Response
                 .status(302)
                 .location(authnRequestGeneratorService.generateFormPostAuthenticationRequest(
                         authorisationURI,
-                        getClientID(),
+                        getClientID(brokerName),
                         redirectUri,
                         new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN),
-                        idpName)
+                        brokerName)
                         .toURI())
                         .build();
     }
@@ -87,7 +89,7 @@ public class StubOidcBrokerFormPostResource {
                 .status(302)
                 .location(authnRequestGeneratorService.generateFormPostAuthenticationRequest(
                         authorisationURI,
-                        getClientID(),
+                        getClientID(brokerName),
                         redirectUri,
                         new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN),
                         "idp-name")
@@ -110,7 +112,7 @@ public class StubOidcBrokerFormPostResource {
             return new RPResponseView(new URI(configuration.getStubTrustframeworkRP()), "Errors in Response: " + errors.get(), Integer.toString(HttpStatus.SC_BAD_REQUEST));
         }
 
-        AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(postBody, getClientID());
+        AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(postBody, getClientID(brokerName));
 
         String userInfoInJson = retrieveTokenAndUserInfo(authorizationCode);
 
@@ -120,7 +122,7 @@ public class StubOidcBrokerFormPostResource {
 
     private String retrieveTokenAndUserInfo(AuthorizationCode authCode) {
 
-            OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(), domain);
+            OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), domain);
 
             String verifiableCredential = tokenRequestService.getVerifiableCredential(tokens.getBearerAccessToken(), domain);
 //            UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());
@@ -129,8 +131,8 @@ public class StubOidcBrokerFormPostResource {
             return verifiableCredential;
     }
 
-    private ClientID getClientID() {
-        String client_id = redisService.get("CLIENT_ID");
+    private ClientID getClientID(String brokerName) {
+        String client_id = redisService.get(brokerName);
         if (client_id != null) {
             return new ClientID(client_id);
         }

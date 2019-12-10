@@ -47,7 +47,9 @@ public class RegistrationSenderService {
 
     private static final Logger LOG = LoggerFactory.getLogger(RegistrationSenderService.class);
 
-    public String sendRegistrationRequest(String ssa, String privateKey, String brokerDomain) throws JOSEException, ParseException, IOException {
+    public String sendRegistrationRequest(String ssa, String privateKey, String brokerDomain, String brokerName)
+            throws JOSEException, ParseException, IOException {
+
         SignedJWT signedJWT;
         try {
             signedJWT = SignedJWT.parse(ssa);
@@ -57,9 +59,12 @@ public class RegistrationSenderService {
         HttpResponse<String> httpResponse = sendClientRegRequest(signedJWT, privateKey, brokerDomain);
         String body = httpResponse.body();
         LOG.info("HTTP RESPONSE AS STRING: " + body);
-            JSONObject jsonObjectResponse = JSONObjectUtils.parse(body);
-            saveClientID(jsonObjectResponse.get("client_id").toString());
 
+        JSONObject jsonObjectResponse = JSONObjectUtils.parse(body);
+
+            if (jsonObjectResponse.get("client_id") != null) {
+                saveClientID(brokerName, jsonObjectResponse.get("client_id").toString());
+            }
         return body;
     }
 
@@ -133,8 +138,8 @@ public class RegistrationSenderService {
         }
     }
 
-    private void saveClientID(String clientID) {
-        redisService.set("CLIENT_ID",clientID);
+    private void saveClientID(String brokerName, String clientID) {
+        redisService.set(brokerName, clientID);
     }
 }
 

@@ -9,6 +9,7 @@ import net.minidev.json.parser.ParseException;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.domain.Organisation;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
+import uk.gov.ida.stuboidcbroker.services.RedisService;
 import uk.gov.ida.stuboidcbroker.views.PickerView;
 
 import javax.ws.rs.GET;
@@ -21,13 +22,16 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Path("/")
 public class StubOidcBrokerPickerResource {
     private final StubOidcBrokerConfiguration configuration;
+    private final RedisService redisService;
 
-    public StubOidcBrokerPickerResource(StubOidcBrokerConfiguration configuration) {
+    public StubOidcBrokerPickerResource(StubOidcBrokerConfiguration configuration, RedisService redisService) {
         this.configuration = configuration;
+        this.redisService = redisService;
     }
 
     @GET
@@ -45,7 +49,11 @@ public class StubOidcBrokerPickerResource {
         List<Organisation> idps = getOrganisationsFromResponse(idpsResponse);
         List<Organisation> brokers = getOrganisationsFromResponse(brokersResponse);
 
-        return new PickerView(idps, brokers);
+        List<Organisation> registeredBrokers = brokers.stream()
+                .filter(org -> redisService.get(org.getName()) != null)
+                .collect(Collectors.toList());
+
+        return new PickerView(idps, registeredBrokers);
     }
 
     private List<Organisation> getOrganisationsFromResponse(HttpResponse<String> responseBody) throws IOException {

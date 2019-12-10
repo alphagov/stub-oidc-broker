@@ -29,6 +29,7 @@ public class RedisService {
             }
         }
         RedisClient client = RedisClient.create(redisUri + "/1");
+        LOG.info("REDIS URI" + redisUri);
         commands = client.connect().sync();
     }
 

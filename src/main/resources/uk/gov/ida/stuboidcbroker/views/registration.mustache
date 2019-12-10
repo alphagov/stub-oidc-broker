@@ -56,11 +56,15 @@
                     <legend class="govuk-fieldset__legend govuk-fieldset__legend--sm govuk-!-margin-bottom-9">
                         To register this Broker to an Open ID Provider please register to the Directory and then complete the fields below
                     </legend>
+
                     {{#brokers}}
 
-                        <button class="govuk-button govuk-button" name="idpDomain" value="{{domain}}, {{name}}" type="submit">
+                        <button class="govuk-button govuk-button" name="brokerDomain" value="{{domain}},{{name}}" type="submit">
                             Register with {{name}}
                         </button>
+                    {{/brokers}}
+                    {{^brokers}}
+                    <p class="govuk-body">No Brokers have been onboarded to the Directory</p>
                     {{/brokers}}
 
                     <label class="govuk-label" for="full">
