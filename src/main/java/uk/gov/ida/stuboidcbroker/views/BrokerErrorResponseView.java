@@ -12,8 +12,9 @@ public class BrokerErrorResponseView extends View {
     private final int httpStatusCode;
     private final State state;
     private final URI redirectURI;
+    private final String transactionID;
 
-    public BrokerErrorResponseView(String error, String errorDescription, int httpStatusCode, State state, URI redirectURI) {
+    public BrokerErrorResponseView(String error, String errorDescription, int httpStatusCode, State state, URI redirectURI, String transactionID) {
         super("broker-error-response.mustache");
 
         this.error = error;
@@ -21,6 +22,7 @@ public class BrokerErrorResponseView extends View {
         this.httpStatusCode = httpStatusCode;
         this.state = state;
         this.redirectURI = redirectURI;
+        this.transactionID = transactionID;
     }
 
     public String getError() {
@@ -44,5 +46,9 @@ public class BrokerErrorResponseView extends View {
 
     public String getHttpStatusCode() {
         return Integer.toString(httpStatusCode);
+    }
+
+    public String getTransactionID() {
+        return transactionID;
     }
 }

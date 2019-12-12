@@ -15,19 +15,21 @@ public class BrokerResponseView extends View {
     private final JWT idToken;
     private final URI redirectURI;
     private AccessToken accessToken;
+    private String transactionID;
 
-    public BrokerResponseView(State state, AuthorizationCode authCode, JWT idToken, URI redirectURI) {
+    public BrokerResponseView(State state, AuthorizationCode authCode, JWT idToken, URI redirectURI, String transactionID) {
         super("broker-response.mustache");
 
         this.state = state;
         this.authCode = authCode;
         this.idToken = idToken;
         this.redirectURI = redirectURI;
+        this.transactionID = transactionID;
     }
 
-    public BrokerResponseView(State state, AuthorizationCode authCode, JWT idToken, URI redirectURI, AccessToken accessToken) {
+    public BrokerResponseView(State state, AuthorizationCode authCode, JWT idToken, URI redirectURI, AccessToken accessToken, String transactionID) {
 
-        this(state, authCode, idToken, redirectURI);
+        this(state, authCode, idToken, redirectURI, transactionID);
 
         this.accessToken = accessToken;
     }
@@ -53,5 +55,9 @@ public class BrokerResponseView extends View {
             return null;
         }
         return accessToken.toString();
+    }
+
+    public String getTransactionID() {
+        return transactionID;
     }
 }

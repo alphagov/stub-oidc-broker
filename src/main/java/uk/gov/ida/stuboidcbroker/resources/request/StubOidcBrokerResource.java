@@ -128,17 +128,19 @@ public class StubOidcBrokerResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
     public Response validateAuthenticationResponse(String postBody) throws IOException, java.text.ParseException, ParseException {
+        Map<String, String> authenticationParams = splitQuery(postBody);
+
         if (postBody == null || postBody.isEmpty()) {
             return Response.status(500).entity("PostBody is empty").build();
         }
 
-        Optional<String> errors = authnResponseValidationService.checkResponseForErrors(postBody);
+        Optional<String> errors = authnResponseValidationService.checkResponseForErrors(authenticationParams);
 
         if (errors.isPresent()) {
             return Response.status(400).entity(errors.get()).build();
         }
 
-        AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(postBody, getClientID(brokerDomain));
+        AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(authenticationParams, getClientID(brokerDomain));
         return Response.ok(authorizationCode.getValue()).build();
     }
 

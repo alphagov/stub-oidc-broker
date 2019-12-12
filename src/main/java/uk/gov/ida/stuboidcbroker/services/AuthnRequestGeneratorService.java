@@ -43,7 +43,8 @@ public class AuthnRequestGeneratorService {
             ClientID clientID,
             URI redirectUri,
             ResponseType responseType,
-            String idpName) {
+            String idpName,
+            String transactionID) {
         Scope scope = new Scope("openid");
 
         State state = new State();
@@ -57,6 +58,7 @@ public class AuthnRequestGeneratorService {
                 .state(state)
                 .nonce(nonce)
                 .customParameter("idp-name", idpName)
+                .customParameter("transaction-id", transactionID)
                 .build();
 
         redisService.set("state::" + state.getValue(), nonce.getValue());

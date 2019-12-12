@@ -27,7 +27,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+
+import static uk.gov.ida.stuboidcbroker.services.QueryParameterHelper.splitQuery;
 
 @Path("/formPost")
 public class StubOidcBrokerFormPostResource {
@@ -62,7 +65,7 @@ public class StubOidcBrokerFormPostResource {
     @POST
     @Path("/serviceAuthenticationRequest")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response formPostAuthenticationRequest(@FormParam("brokerDomain") String domain) {
+    public Response formPostAuthenticationRequest(@FormParam("brokerDomain") String domain, @FormParam("transactionID") String transactionID) {
         List<String> orgList = Arrays.asList(domain.split(","));
         String brokerDomain = orgList.get(0);
         String brokerName = orgList.get(1);
@@ -76,7 +79,8 @@ public class StubOidcBrokerFormPostResource {
                         getClientID(brokerName),
                         redirectUri,
                         new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN),
-                        brokerName)
+                        brokerName,
+                        transactionID)
                         .toURI())
                         .build();
     }
@@ -84,17 +88,13 @@ public class StubOidcBrokerFormPostResource {
     @POST
     @Path("/idpAuthenticationRequest")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response sendIdpAuthenticationRequest(@FormParam("idpDomain") String domain) {
+    public Response sendIdpAuthenticationRequest(@FormParam("idpDomain") String domain, @FormParam("transactionID") String transactionID) {
         List<String> orgList = Arrays.asList(domain.split(","));
         String idpDomain = orgList.get(0);
         String idpName = orgList.get(1);
 
-        String transactionId = new ClientID().toString();
-
-        URI idpUri = UriBuilder.fromUri(idpDomain).path("/request").queryParam("transaction-id", transactionId).build();
-
-        storeTransactionID(transactionId, idpUri.toString());
-
+        URI idpUri = UriBuilder.fromUri(idpDomain).path("/request").queryParam("transaction-id", transactionID).build();
+        LOG.info("IDP URI is: " + idpUri);
         return Response
                 .status(302)
                 .location(idpUri)
@@ -111,41 +111,45 @@ public class StubOidcBrokerFormPostResource {
         return new RPResponseView(new URI(rpUri), "Success", Integer.toString(HttpStatus.SC_OK));
     }
 
-    @GET
-    @Path("/serviceAuthenticationRequestCodeIDToken")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response serviceAuthenticationRequestCodeIDToken() {
-        return Response
-                .status(302)
-                .location(authnRequestGeneratorService.generateFormPostAuthenticationRequest(
-                        authorisationURI,
-                        getClientID(brokerName),
-                        redirectUri,
-                        new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN),
-                        "idp-name")
-                        .toURI())
-                        .build();
-    }
+
+//    @GET
+//    @Path("/serviceAuthenticationRequestCodeIDToken")
+//    @Produces(MediaType.APPLICATION_JSON)
+//    public Response serviceAuthenticationRequestCodeIDToken() {
+//        return Response
+//                .status(302)
+//                .location(authnRequestGeneratorService.generateFormPostAuthenticationRequest(
+//                        authorisationURI,
+//                        getClientID(brokerName),
+//                        redirectUri,
+//                        new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN),
+//                        "idp-name")
+//                        .toURI())
+//                        .build();
+//    }
 
     @POST
     @Path("/validateAuthenticationResponse")
     @Produces(MediaType.TEXT_HTML)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public View validateAuthenticationResponse(String postBody) throws IOException, java.text.ParseException, ParseException, URISyntaxException {
-
-        URI rpUri = UriBuilder.fromUri(configuration.getStubTrustframeworkRP()).path(Urls.RP.AUTHORISATION_ENDPOINT_URI).build();
+    public View validateAuthenticationResponse(String postBody) throws IOException, java.text.ParseException, ParseException {
+        Map<String, String> authenticationParams = splitQuery(postBody);
+        String transactionID = authenticationParams.get("transactionID");
+        String rpDomain = redisService.get(transactionID);
+        LOG.info("RP Domain is :" + rpDomain);
+        URI rpUri = UriBuilder.fromUri(rpDomain).build();
 
         if (postBody == null || postBody.isEmpty()) {
             return new RPResponseView(rpUri, "Post Body is empty", Integer.toString(HttpStatus.SC_BAD_REQUEST));
         }
 
-        Optional<String> errors = authnResponseValidationService.checkResponseForErrors(postBody);
+        Optional<String> errors = authnResponseValidationService.checkResponseForErrors(authenticationParams);
 
         if (errors.isPresent()) {
             return new RPResponseView(rpUri, "Errors in Response: " + errors.get(), Integer.toString(HttpStatus.SC_BAD_REQUEST));
         }
 
-        AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(postBody, getClientID(brokerName));
+        AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(authenticationParams, getClientID(brokerName));
 
         String userInfoInJson = retrieveTokenAndUserInfo(authorizationCode);
 
@@ -162,11 +166,6 @@ public class StubOidcBrokerFormPostResource {
 
 //            String userInfoToJson = userInfo.toJSONObject().toJSONString();
             return verifiableCredential;
-    }
-
-    private void storeTransactionID(String transactionID, String rpResponsePath) {
-
-        redisService.set(transactionID, rpResponsePath);
     }
 
     private ClientID getClientID(String brokerName) {

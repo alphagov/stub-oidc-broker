@@ -12,11 +12,13 @@ stubTrustframeworkRP: ${STUB_TRUSTFRAMEWORK_RP:-"http://localhost:4410"}
 
 redisURI: ${REDIS_URI:-"redis://192.168.204.170:6380"}
 
+redisDatabase: ${REDIS_DATABASE:-"/1"}
+
 directoryURI: ${DIRECTORY_URI:-"http://localhost:3000"}
 
 middlewareURI: ${MIDDLEWARE_URI:-"http://localhost:3001"}
 
-verifiableCredentialURI: ${VERIFIABLE_CREDENTIAL_URI:-"http://localhost:3002"}
+verifiableCredentialURI: ${VERIFIABLE_CREDENTIAL_URI:-"http://localhost:3333"}
 
 local: ${IS_LOCAL:-true}
 

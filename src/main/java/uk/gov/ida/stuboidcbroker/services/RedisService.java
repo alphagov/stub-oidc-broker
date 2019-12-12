@@ -13,22 +13,23 @@ public class RedisService {
 
     private static final Logger LOG = LoggerFactory.getLogger(RedisService.class);
     private RedisCommands<String, String> commands;
+    private StubOidcBrokerConfiguration configuration;
 
     public RedisService(StubOidcBrokerConfiguration config) {
+        this.configuration = config;
         startup(config);
     }
 
     public void startup(StubOidcBrokerConfiguration config) {
         String vcap = System.getenv("VCAP_SERVICES");
         String redisUri = config.getRedisURI();
-
         if (vcap != null && vcap.length() > 0) {
             String redisURIFromVcap = getRedisURIFromVcap(vcap);
             if (redisURIFromVcap != null) {
                 redisUri = redisURIFromVcap;
             }
         }
-        RedisClient client = RedisClient.create(redisUri + "/1");
+        RedisClient client = RedisClient.create(redisUri + configuration.getRedisDatabase());
         LOG.info("REDIS URI" + redisUri);
         commands = client.connect().sync();
     }

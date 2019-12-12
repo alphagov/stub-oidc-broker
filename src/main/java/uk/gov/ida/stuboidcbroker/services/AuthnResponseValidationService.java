@@ -15,12 +15,9 @@ import com.nimbusds.openid.connect.sdk.claims.AccessTokenHash;
 import com.nimbusds.openid.connect.sdk.claims.CodeHash;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
 import java.util.Optional;
-
-import static uk.gov.ida.stuboidcbroker.services.QueryParameterHelper.splitQuery;
 
 public class AuthnResponseValidationService {
 
@@ -30,10 +27,8 @@ public class AuthnResponseValidationService {
         this.tokenRequestService = tokenRequestService;
     }
 
-    public AuthorizationCode handleAuthenticationResponse(String postBody, ClientID clientID)
-            throws ParseException, java.text.ParseException, IOException {
-
-        Map<String, String> authenticationParams = splitQuery(postBody);
+    public AuthorizationCode handleAuthenticationResponse(Map<String, String> authenticationParams, ClientID clientID)
+            throws ParseException, java.text.ParseException {
 
         String authCode = authenticationParams.get("code");
         AuthorizationCode authorizationCode = new AuthorizationCode(authCode);
@@ -65,8 +60,7 @@ public class AuthnResponseValidationService {
         return authorizationCode;
     }
 
-    public Optional<String> checkResponseForErrors(String postBody) throws UnsupportedEncodingException {
-        Map<String, String> authenticationParams = splitQuery(postBody);
+    public Optional<String> checkResponseForErrors(Map<String, String> authenticationParams) throws UnsupportedEncodingException {
 
         if (authenticationParams.get("error") != null) {
             return Optional.of(authenticationParams.get("error") + " : " + authenticationParams.get("error_description"));

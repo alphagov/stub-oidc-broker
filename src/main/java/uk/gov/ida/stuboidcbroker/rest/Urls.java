@@ -5,6 +5,7 @@ public interface Urls {
     interface StubBroker {
         String REDIRECT_FORM_URI = "/formPost/validateAuthenticationResponse";
         String REDIRECT_URI = "/authenticationCallback";
+        String USER_INFO = "/userinfo";
     }
 
     interface StubOp {
@@ -25,5 +26,10 @@ public interface Urls {
     interface Middleware {
         String REGISTRATION_URI = "/register";
         String TOKEN_URI = "/sender";
+    }
+
+    interface IDP {
+        String AUTHENTICATION_URI = "/authentication";
+        String CREDENTIAL_URI = "/issue/jwt/credential";
     }
 }
