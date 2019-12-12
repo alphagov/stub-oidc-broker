@@ -8,6 +8,8 @@ cd "$(dirname "$0")"
 LOCAL_IP="$(ipconfig getifaddr en0)"
 export REDIS_URI="redis://${LOCAL_IP}:6380"
 export SCHEME=1
+export REDIS_DATABASE="/1"
+export VERIFIABLE_CREDENTIAL_URI=http://localhost:3333
 
 ./gradlew installDist
 

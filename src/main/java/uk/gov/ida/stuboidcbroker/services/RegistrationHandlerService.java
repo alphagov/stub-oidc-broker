@@ -66,7 +66,7 @@ public class RegistrationHandlerService {
         PublicKey ssaPublicKey = getPublicKeyFromDirectoryForSSA(ssaURI);
         PublicKey jwtPublicKey = getPublicKeyFromDirectoryForRequest(softwareURI);
 
-        boolean passedSSASignatureValidation = validateJWTSignatureAndAlgorithm(ssaPublicKey, softwareStatement);
+         boolean passedSSASignatureValidation = validateJWTSignatureAndAlgorithm(ssaPublicKey, softwareStatement);
         boolean passedJWTSignatureValidation = validateJWTSignatureAndAlgorithm(jwtPublicKey, signedJWT);
 
 

@@ -28,6 +28,7 @@ import net.minidev.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
+import uk.gov.ida.stuboidcbroker.rest.Urls;
 
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
@@ -121,7 +122,23 @@ public class TokenGeneratorService {
     }
 
     public String getVerifiableCredential(AccessToken accessToken) {
-        return redisService.get(accessToken.getValue());
+
+        URI userInfoURI = UriBuilder.fromUri(configuration.getVerifiableCredentialURI())
+                .path(Urls.IDP.CREDENTIAL_URI).build();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .header("Authorization", accessToken.toAuthorizationHeader())
+                .uri(userInfoURI)
+                .build();
+
+        HttpResponse<String> responseBody;
+        try {
+            responseBody = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return responseBody.body();
     }
 
     private void storeTokens(JWT idToken, AccessToken accessToken, AuthorizationCode authCode) {

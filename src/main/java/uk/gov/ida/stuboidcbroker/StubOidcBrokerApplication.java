@@ -42,7 +42,7 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
         AuthnRequestValidationService authnRequestValidationService = new AuthnRequestValidationService(tokenGeneratorService, redisService);
 
         environment.jersey().register(new TokenResource(tokenGeneratorService));
-        environment.jersey().register(new StubOidcAuthorizationResource(authnRequestValidationService));
+        environment.jersey().register(new StubOidcAuthorizationResource(authnRequestValidationService, configuration));
         environment.jersey().register(new StubOidcBrokerResource(configuration, tokenRequestService, authnRequestGeneratorService, authResponseService, redisService));
         environment.jersey().register(new StubOidcBrokerFormPostResource(configuration, tokenRequestService, authnRequestGeneratorService, authResponseService, redisService));
         environment.jersey().register(new JsonProcessingExceptionMapper(true));

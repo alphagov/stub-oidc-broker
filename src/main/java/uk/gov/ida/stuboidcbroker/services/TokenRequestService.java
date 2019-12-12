@@ -114,9 +114,9 @@ public class TokenRequestService {
         }
     }
 
-    public String getVerifiableCredential(BearerAccessToken bearerAccessToken, String idpDomain) {
-        URI userInfoURI = UriBuilder.fromUri(idpDomain)
-                .path(Urls.StubOp.USERINFO_URI).build();
+    public String getVerifiableCredential(BearerAccessToken bearerAccessToken, String brokerDomain) {
+        URI userInfoURI = UriBuilder.fromUri(brokerDomain)
+                .path(Urls.StubBroker.USER_INFO).build();
 
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()

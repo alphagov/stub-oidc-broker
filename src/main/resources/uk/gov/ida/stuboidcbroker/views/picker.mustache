@@ -23,7 +23,7 @@
 
         <p class="mt-3 mb-5">Before getting a criminal record check you need to validate your identity</p>
     <form method="post" action="/formPost/idpAuthenticationRequest">
-
+        <input type="hidden" name="transactionID" value="{{transactionID}}"/>
         <h3 class="h3 mb-3">Use your existing digital identity</h3>
 
         {{#idps}}
@@ -33,7 +33,7 @@
         {{/idps}}
     </form>
     <form method="post" action="/formPost/serviceAuthenticationRequest">
-
+        <input type="hidden" name="transactionID" value="{{transactionID}}"/>
         <h3 class="h3 mt-5 mb-3">Use our partner verification service</h3>
 
         {{#brokers}}

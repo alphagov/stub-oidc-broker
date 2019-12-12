@@ -3,13 +3,13 @@ package uk.gov.ida.stuboidcbroker.services;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ErrorObject;
+import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.ResponseMode;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
-import com.nimbusds.openid.connect.sdk.AuthenticationResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import org.eclipse.jetty.http.HttpStatus;
 
@@ -25,7 +25,7 @@ public class AuthnRequestValidationService {
         this.redisService = redisService;
     }
 
-    public AuthenticationResponse handleAuthenticationRequest(AuthenticationRequest authenticationRequest) {
+    public AuthenticationErrorResponse handleAuthenticationRequest(AuthenticationRequest authenticationRequest, String transactionID) {
 
         validateRedirectURI(authenticationRequest);
         Optional<ErrorObject> errorObject = validateAuthenticationRequest(authenticationRequest);
@@ -36,8 +36,16 @@ public class AuthnRequestValidationService {
                     errorObject.get(),
                     null,
                     ResponseMode.FRAGMENT);
+        }
+        String serialisedRequest = authenticationRequest.toQueryString();
+        redisService.set(transactionID, serialisedRequest);
+
+        return null;
     }
 
+    public AuthenticationSuccessResponse handleAuthenticationRequestResponse(String transactionID) throws ParseException {
+        String serialisedRequest = redisService.get(transactionID);
+        AuthenticationRequest authenticationRequest = AuthenticationRequest.parse(serialisedRequest);
         AuthorizationCode authorizationCode = tokenGeneratorService.getAuthorizationCode();
 
         AccessToken accessToken = new BearerAccessToken();

@@ -1,6 +1,7 @@
 package uk.gov.ida.stuboidcbroker.resources.picker;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.oauth2.sdk.id.ClientID;
 import io.dropwizard.views.View;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
@@ -14,6 +15,7 @@ import uk.gov.ida.stuboidcbroker.views.PickerView;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.net.URI;
@@ -36,7 +38,14 @@ public class StubOidcBrokerPickerResource {
 
     @GET
     @Path("/picker")
-    public View pickerPage() throws IOException {
+    public View pickerPage(@QueryParam("response-uri") String rpURI) throws IOException {
+
+        String transactionId = new ClientID().toString();
+
+        URI uri = UriBuilder.fromUri(rpURI).build();
+
+        storeTransactionID(transactionId, uri.toString());
+
         String scheme = configuration.getScheme();
         URI idpRequestURI = UriBuilder.fromUri(configuration.getDirectoryURI()).path(Urls.Directory.REGISTERED_IDPS + scheme)
                                       .build();
@@ -53,7 +62,7 @@ public class StubOidcBrokerPickerResource {
                 .filter(org -> redisService.get(org.getName()) != null)
                 .collect(Collectors.toList());
 
-        return new PickerView(idps, registeredBrokers);
+        return new PickerView(idps, registeredBrokers, transactionId);
     }
 
     private List<Organisation> getOrganisationsFromResponse(HttpResponse<String> responseBody) throws IOException {
@@ -87,5 +96,10 @@ public class StubOidcBrokerPickerResource {
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void storeTransactionID(String transactionID, String rpResponsePath) {
+
+        redisService.set(transactionID, rpResponsePath);
     }
 }

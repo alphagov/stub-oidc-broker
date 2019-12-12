@@ -9,12 +9,18 @@ public class PickerView extends View {
     private int index;
     private List<Organisation> idps;
     private List<Organisation> brokers;
+    private String transactionID;
 
-    public PickerView(List<Organisation> idps, List<Organisation> brokers) {
+    public PickerView(List<Organisation> idps, List<Organisation> brokers, String transactionID) {
         super("picker.mustache");
         this.idps = idps;
         this.brokers = brokers;
+        this.transactionID = transactionID;
         this.index = 0;
+    }
+
+    public String getTransactionID() {
+        return transactionID;
     }
 
     public List<Organisation> getIdps() {
