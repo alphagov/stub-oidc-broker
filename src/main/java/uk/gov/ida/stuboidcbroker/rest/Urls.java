@@ -18,6 +18,10 @@ public interface Urls {
         String REGISTERED_BROKERS = "/organisation/broker/";
     }
 
+    interface RP {
+        String AUTHORISATION_ENDPOINT_URI = "/response";
+    }
+
     interface Middleware {
         String REGISTRATION_URI = "/register";
         String TOKEN_URI = "/sender";

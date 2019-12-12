@@ -41,7 +41,7 @@ public class StubOidcBrokerFormPostResource {
     private final RedisService redisService;
     private URI authorisationURI;
     private URI redirectUri;
-    private String domain;
+    private String brokerDomain;
     private String brokerName;
 
 
@@ -62,13 +62,13 @@ public class StubOidcBrokerFormPostResource {
     @POST
     @Path("/serviceAuthenticationRequest")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response formPostAuthenticationRequest(@FormParam("idpDomain") String idpDomain) {
-        List<String> orgList = Arrays.asList(idpDomain.split(","));
-        String domain = orgList.get(0);
+    public Response formPostAuthenticationRequest(@FormParam("brokerDomain") String domain) {
+        List<String> orgList = Arrays.asList(domain.split(","));
+        String brokerDomain = orgList.get(0);
         String brokerName = orgList.get(1);
-        this.domain = domain;
+        this.brokerDomain = brokerDomain;
         this.brokerName = brokerName;
-        authorisationURI = UriBuilder.fromUri(domain).path(Urls.StubOp.AUTHORISATION_ENDPOINT_FORM_URI).build();
+        authorisationURI = UriBuilder.fromUri(brokerDomain).path(Urls.StubOp.AUTHORISATION_ENDPOINT_FORM_URI).build();
         return Response
                 .status(302)
                 .location(authnRequestGeneratorService.generateFormPostAuthenticationRequest(
@@ -79,6 +79,36 @@ public class StubOidcBrokerFormPostResource {
                         brokerName)
                         .toURI())
                         .build();
+    }
+
+    @POST
+    @Path("/idpAuthenticationRequest")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response sendIdpAuthenticationRequest(@FormParam("idpDomain") String domain) {
+        List<String> orgList = Arrays.asList(domain.split(","));
+        String idpDomain = orgList.get(0);
+        String idpName = orgList.get(1);
+
+        String transactionId = new ClientID().toString();
+
+        URI idpUri = UriBuilder.fromUri(idpDomain).path("/request").queryParam("transaction-id", transactionId).build();
+
+        storeTransactionID(transactionId, idpUri.toString());
+
+        return Response
+                .status(302)
+                .location(idpUri)
+                .build();
+    }
+
+    @POST
+    @Path("/response/POST")
+    @Produces(MediaType.APPLICATION_JSON)
+    public View handAuthenticationResponse() throws URISyntaxException {
+
+        String rpUri = redisService.get("");
+
+        return new RPResponseView(new URI(rpUri), "Success", Integer.toString(HttpStatus.SC_OK));
     }
 
     @GET
@@ -102,33 +132,41 @@ public class StubOidcBrokerFormPostResource {
     @Produces(MediaType.TEXT_HTML)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public View validateAuthenticationResponse(String postBody) throws IOException, java.text.ParseException, ParseException, URISyntaxException {
+
+        URI rpUri = UriBuilder.fromUri(configuration.getStubTrustframeworkRP()).path(Urls.RP.AUTHORISATION_ENDPOINT_URI).build();
+
         if (postBody == null || postBody.isEmpty()) {
-            return new RPResponseView(new URI(configuration.getStubTrustframeworkRP()), "Post Body is empty", Integer.toString(HttpStatus.SC_BAD_REQUEST));
+            return new RPResponseView(rpUri, "Post Body is empty", Integer.toString(HttpStatus.SC_BAD_REQUEST));
         }
 
         Optional<String> errors = authnResponseValidationService.checkResponseForErrors(postBody);
 
         if (errors.isPresent()) {
-            return new RPResponseView(new URI(configuration.getStubTrustframeworkRP()), "Errors in Response: " + errors.get(), Integer.toString(HttpStatus.SC_BAD_REQUEST));
+            return new RPResponseView(rpUri, "Errors in Response: " + errors.get(), Integer.toString(HttpStatus.SC_BAD_REQUEST));
         }
 
         AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(postBody, getClientID(brokerName));
 
         String userInfoInJson = retrieveTokenAndUserInfo(authorizationCode);
 
-        return new RPResponseView(new URI(configuration.getStubTrustframeworkRP()), userInfoInJson, Integer.toString(HttpStatus.SC_OK));
+        return new RPResponseView(rpUri, userInfoInJson, Integer.toString(HttpStatus.SC_OK));
     }
 
 
     private String retrieveTokenAndUserInfo(AuthorizationCode authCode) {
 
-            OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), domain);
+            OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), brokerDomain);
 
-            String verifiableCredential = tokenRequestService.getVerifiableCredential(tokens.getBearerAccessToken(), domain);
+            String verifiableCredential = tokenRequestService.getVerifiableCredential(tokens.getBearerAccessToken(), brokerDomain);
 //            UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());
 
 //            String userInfoToJson = userInfo.toJSONObject().toJSONString();
             return verifiableCredential;
+    }
+
+    private void storeTransactionID(String transactionID, String rpResponsePath) {
+
+        redisService.set(transactionID, rpResponsePath);
     }
 
     private ClientID getClientID(String brokerName) {

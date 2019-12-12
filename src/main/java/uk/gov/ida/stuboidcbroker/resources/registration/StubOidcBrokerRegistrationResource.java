@@ -64,9 +64,4 @@ public class StubOidcBrokerRegistrationResource {
     public void clientReset() {
         redisService.delete("CLIENT_ID");
     }
-
-
-    private void saveClientID(String clientID) {
-        redisService.set("CLIENT_ID",clientID);
-    }
 }

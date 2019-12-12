@@ -88,7 +88,7 @@ public class StubOidcBrokerResource {
     @POST
     @Path("/serviceAuthenticationRequest")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response serviceAuthenticationRequest(@FormParam("idpDomain") String idpDomain) {
+    public Response serviceAuthenticationRequest(@FormParam("brokerDomain") String idpDomain) {
         List<String> orgList = Arrays.asList(idpDomain.split(","));
         String domain = orgList.get(0);
         String brokerName = orgList.get(1);

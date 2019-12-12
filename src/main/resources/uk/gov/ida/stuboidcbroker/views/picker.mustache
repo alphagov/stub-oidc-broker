@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
+    <meta name=“robots” content=“noindex” />
+    <meta name=“googlebot” content=“noindex” />
+    <meta name=“AdsBot-Google” content=“noindex” />
+    <meta name=“googlebot-news” content=“nosnippet”>
 
     <title>Pick an IDP</title>
 
@@ -13,11 +17,12 @@
 </head>
 
 <body class="text-center">
-    <form class="form-signin" method="post" action="/formPost/serviceAuthenticationRequest">
+    <div class="form-signin">
         <img class="mb-4" src="/assets/images/logo.png" alt="" width="85" height="72">
         <h1 class="h1 mb-3 font-weight-heavy">Validating your identity</h1>
 
         <p class="mt-3 mb-5">Before getting a criminal record check you need to validate your identity</p>
+    <form method="post" action="/formPost/idpAuthenticationRequest">
 
         <h3 class="h3 mb-3">Use your existing digital identity</h3>
 
@@ -26,16 +31,19 @@
                 Continue with {{name}}
             </button>
         {{/idps}}
+    </form>
+    <form method="post" action="/formPost/serviceAuthenticationRequest">
 
         <h3 class="h3 mt-5 mb-3">Use our partner verification service</h3>
 
         {{#brokers}}
-            <button class="btn btn-lg btn-primary btn-block logo logo-img-{{index}}" name="idpDomain" value="{{domain}},{{name}}" type="submit">
+            <button class="btn btn-lg btn-primary btn-block logo logo-img-{{index}}" name="brokerDomain" value="{{domain}},{{name}}" type="submit">
                 Continue with {{name}}
             </button>
         {{/brokers}}
 
-        <p class="mt-5 mb-3 text-muted">&copy; Build and Learn 2019</p>
     </form>
+        <p class="mt-5 mb-3 text-muted">&copy; Build and Learn 2019</p>
+    </div>
 </body>
 </html>
