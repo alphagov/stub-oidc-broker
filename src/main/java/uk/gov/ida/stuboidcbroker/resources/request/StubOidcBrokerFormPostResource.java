@@ -4,6 +4,8 @@ import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.token.AccessToken;
+import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.dropwizard.views.View;
@@ -25,6 +27,9 @@ import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -93,40 +98,30 @@ public class StubOidcBrokerFormPostResource {
         String idpDomain = orgList.get(0);
         String idpName = orgList.get(1);
 
-        URI idpUri = UriBuilder.fromUri(idpDomain).path("/request").queryParam("transaction-id", transactionID).build();
+        URI idpUri = UriBuilder.fromUri(idpDomain).path(Urls.IDP.AUTHENTICATION_URI)
+                .queryParam("transaction-id", transactionID)
+                .queryParam("redirect-path", Urls.StubBroker.IDP_AUTHENTICATION_RESPONE)
+                .build();
         LOG.info("IDP URI is: " + idpUri);
+
         return Response
                 .status(302)
                 .location(idpUri)
                 .build();
     }
 
-    @POST
-    @Path("/response/POST")
-    @Produces(MediaType.APPLICATION_JSON)
-    public View handAuthenticationResponse() throws URISyntaxException {
+    @GET
+    @Path("/idpAuthenticationRespone")
+    @Produces(MediaType.TEXT_HTML)
+    public View handAuthenticationResponse(@QueryParam("transaction-id") String transactionID) {
+        String rpUri = redisService.get(transactionID);
+        String verifiableCredential = getVerifiableCredential(new BearerAccessToken());
 
-        String rpUri = redisService.get("");
+        LOG.info("RP URI is: " + rpUri);
+        URI rpUriDomain = UriBuilder.fromUri(rpUri).build();
 
-        return new RPResponseView(new URI(rpUri), "Success", Integer.toString(HttpStatus.SC_OK));
+        return new RPResponseView(rpUriDomain, verifiableCredential, Integer.toString(HttpStatus.SC_OK));
     }
-
-
-//    @GET
-//    @Path("/serviceAuthenticationRequestCodeIDToken")
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public Response serviceAuthenticationRequestCodeIDToken() {
-//        return Response
-//                .status(302)
-//                .location(authnRequestGeneratorService.generateFormPostAuthenticationRequest(
-//                        authorisationURI,
-//                        getClientID(brokerName),
-//                        redirectUri,
-//                        new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN),
-//                        "idp-name")
-//                        .toURI())
-//                        .build();
-//    }
 
     @POST
     @Path("/validateAuthenticationResponse")
@@ -174,5 +169,25 @@ public class StubOidcBrokerFormPostResource {
             return new ClientID(client_id);
         }
         return new ClientID();
+    }
+
+    public String getVerifiableCredential(AccessToken accessToken) {
+
+        URI userInfoURI = UriBuilder.fromUri(configuration.getVerifiableCredentialURI())
+                .path(Urls.IDP.CREDENTIAL_URI).build();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .header("Authorization", accessToken.toAuthorizationHeader())
+                .uri(userInfoURI)
+                .build();
+
+        HttpResponse<String> responseBody;
+        try {
+            responseBody = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return responseBody.body();
     }
 }
