@@ -16,6 +16,7 @@ applications:
       APPLICATION_PORT: 8080
       IS_LOCAL: false
       SCHEME: 1
+      BRANDING: private
       REDIS_DATABASE: "/1"
     services:
       - redis-service
