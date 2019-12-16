@@ -20,6 +20,13 @@ body {
   margin: 0 auto;
 }
 
+.header-public {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  margin: 0 auto;
+}
+
 .form-signin {
   width: 100%;
   max-width: 660px;
@@ -61,50 +68,4 @@ body {
 .consent-list li {
   background-color: transparent;
   padding: 0.75rem 0;
-}
-
-.broker-logo {
-    height: 100px;
-    width: 200px;
-}
-
-.logo {
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-color: #f6f6f6;
-    height: 100px;
-    width: 200px;
-}
-
-.scheme-1 {
-    background-image: url('/assets/images/idp1.png');
-}
-
-.scheme-2 {
-    background-image: url('/assets/images/idp2.png');
-}
-
-.logo-img-1 {
-    background-image: url('/assets/images/a.png');
-}
-
-.logo-img-2 {
-    background-image: url('/assets/images/b.png');
-}
-
-.logo-img-3 {
-    background-image: url('/assets/images/c.png');
-}
-
-.logo-img-4 {
-    background-image: url('/assets/images/d.png');
-}
-
-.logo-img-5 {
-    background-image: url('/assets/images/e.png');
-}
-
-.logo-img-6 {
-    background-image: url('/assets/images/f.png');
 }

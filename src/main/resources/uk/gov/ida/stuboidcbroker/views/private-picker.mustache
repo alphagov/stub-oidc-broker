@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="robots" content="noindex" />
+    <meta name="googlebot" content="noindex" />
+    <meta name="AdsBot-Google" content="noindex" />
+    <meta name="googlebot-news" content="nosnippet">
+
+    <title>Pick an IDP</title>
+
+    <link href="/stylesheets/bootstrap.min.css" rel="stylesheet">
+    <link href="/stylesheets/custom.css" rel="stylesheet">
+    <link href="/stylesheets/custom_2.css" rel="stylesheet">
+</head>
+
+<body>
+    <header class="header">
+      <div class="container">
+        <div class="row justify-content-md-center">
+          <p><img src="/assets/images/idp{{scheme}}.png" width="auto" height="100px" alt="IDP logo"></p>
+
+          <span style="padding-left: 200px;"></span>
+
+          <p><img src="/assets/images/Trustmark.svg" class="pt-4 mt-1" alt="Trustmark" /></p>
+        </div>
+      </div>
+    </header>
+
+    <div class="form-signin text-center">
+        <h1 class="h1 mb-3 font-weight-heavy" style="display:none;">Validating your identity</h1>
+
+        <form class="mt-5" method="post" action="/formPost/idpAuthenticationRequest">
+            <input type="hidden" name="transactionID" value="{{transactionID}}"/>
+
+            {{#idps}}
+            <button class="btn btn-lg btn-danger btn-block" name="idpDomain" value="{{domain}},{{name}}" type="submit">
+                {{#isSchemeOne}}
+                Continue with Post Office ID
+                {{/isSchemeOne}}
+                {{^isSchemeOne}}
+                Continue with MasterCard ID Check
+                {{/isSchemeOne}}
+            </button>
+            {{/idps}}
+        </form>
+
+        <form method="post" action="/formPost/serviceAuthenticationRequest">
+            <input type="hidden" name="transactionID" value="{{transactionID}}"/>
+
+            <div class="mt-5 border-bottom border-secondary" style="height: 1px;"></div>
+
+            <p class="mt-5 mb-3">or use an existing identity</p>
+
+            <div class="row">
+                <div class="col broker-logo">
+                    {{#brokers}}
+                        <button class="logo {{getSchemeLogoClassName}}" name="brokerDomain" value="{{domain}},{{name}}" type="submit"></button>
+                    {{/brokers}}
+                    {{^brokers}}
+                        Remember to register the broker
+                    {{/brokers}}
+                </div>
+                <div class="col broker-logo">
+                    <button class="logo logo-img-1" name="brokerDomain" value="#,#" type="submit"></button>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col broker-logo">
+                    <button class="logo logo-img-2" name="brokerDomain" value="#,#" type="submit"></button>
+                </div>
+                <div class="col broker-logo">
+                    <button class="logo logo-img-3" name="brokerDomain" value="#,#" type="submit"></button>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col">
+                    <button class="logo logo-img-4" name="brokerDomain" value="#,#" type="submit"></button>
+                </div>
+                <div class="col">
+                    <button class="logo logo-img-5" name="brokerDomain" value="#,#" type="submit"></button>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col">
+                    <button class="logo logo-img-6" name="brokerDomain" value="#,#" type="submit"></button>
+                </div>
+                <div class="col">
+                    <button class="logo logo-img-6" name="brokerDomain" value="#,#" type="submit"></button>
+                </div>
+            </div>
+        </form>
+        <p class="mt-5 mb-3"><a href="#" class="text-danger">How we use your data</a></p>
+    </div>
+</body>
+</html>
+
