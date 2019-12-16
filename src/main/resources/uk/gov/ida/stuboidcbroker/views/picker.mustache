@@ -171,6 +171,9 @@
                     {{#brokers}}
                         <button class="logo {{getSchemeLogoClassName}}" name="brokerDomain" value="{{domain}},{{name}}" type="submit"></button>
                     {{/brokers}}
+                    {{^brokers}}
+                        Remember to register the broker
+                    {{/brokers}}
                 </div>
                 <div class="col broker-logo">
                     <button class="logo logo-img-1" name="brokerDomain" value="#,#" type="submit"></button>
