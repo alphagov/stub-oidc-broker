@@ -7,6 +7,8 @@ import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.domain.Organisation;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
@@ -30,6 +32,9 @@ import java.util.stream.Collectors;
 public class StubOidcBrokerPickerResource {
     private final StubOidcBrokerConfiguration configuration;
     private final RedisService redisService;
+
+    private static final Logger LOG = LoggerFactory.getLogger(StubOidcBrokerPickerResource.class);
+
 
     public StubOidcBrokerPickerResource(StubOidcBrokerConfiguration configuration, RedisService redisService) {
         this.configuration = configuration;
@@ -61,8 +66,10 @@ public class StubOidcBrokerPickerResource {
         List<Organisation> registeredBrokers = brokers.stream()
                 .filter(org -> redisService.get(org.getName()) != null)
                 .collect(Collectors.toList());
+        String branding = configuration.getBranding();
 
-        return new PickerView(idps, registeredBrokers, transactionId);
+        LOG.info("Scheme number:" + configuration.getScheme());
+        return new PickerView(idps, brokers, transactionId, branding, configuration.getScheme());
     }
 
     private List<Organisation> getOrganisationsFromResponse(HttpResponse<String> responseBody) throws IOException {

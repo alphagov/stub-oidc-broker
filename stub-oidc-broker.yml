@@ -25,3 +25,5 @@ local: ${IS_LOCAL:-true}
 softwareID: "Stub OIDC Broker Software"
 
 scheme: ${SCHEME:-"1"}
+
+branding: ${BRANDING:-"private"}

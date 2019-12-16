@@ -15,6 +15,7 @@ export STUB_TRUSTFRAMEWORK_RP=http://localhost:4412
 export VERIFIABLE_CREDENTIAL_URI=http://localhost:3334
 export REDIS_DATABASE="/2"
 export SCHEME=2
+export BRANDING=private
 
 ./gradlew installDist
 

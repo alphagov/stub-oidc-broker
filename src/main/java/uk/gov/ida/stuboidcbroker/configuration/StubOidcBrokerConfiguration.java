@@ -13,6 +13,7 @@ public class StubOidcBrokerConfiguration extends Configuration {
     private String middlewareURI;
     private String verifiableCredentialURI;
     private String scheme;
+    private String branding;
     private String redisDatabase;
 
     public String getStubBrokerURI() {
@@ -49,6 +50,10 @@ public class StubOidcBrokerConfiguration extends Configuration {
 
     public String getScheme() {
         return scheme;
+    }
+
+    public String getBranding() {
+        return branding;
     }
 
     public String getRedisDatabase() {

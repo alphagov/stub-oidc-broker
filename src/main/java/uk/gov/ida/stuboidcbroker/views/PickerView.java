@@ -10,13 +10,19 @@ public class PickerView extends View {
     private List<Organisation> idps;
     private List<Organisation> brokers;
     private String transactionID;
+    private String branding;
+    private String scheme;
 
-    public PickerView(List<Organisation> idps, List<Organisation> brokers, String transactionID) {
+    public PickerView(List<Organisation> idps, List<Organisation> brokers,
+                      String transactionID, String branding,
+                      String scheme) {
         super("picker.mustache");
+        this.branding = branding;
         this.idps = idps;
         this.brokers = brokers;
         this.transactionID = transactionID;
         this.index = 0;
+        this.scheme = scheme;
     }
 
     public String getTransactionID() {
@@ -32,7 +38,27 @@ public class PickerView extends View {
     }
 
     public int getIndex() {
-        this.index = ++index;
+        ++index;
         return index;
+    }
+
+    public String getScheme() {
+        return scheme;
+    }
+
+    public String getBranding() {
+        return branding;
+    }
+
+    public boolean isPublicBranding() {
+        return branding.equals("public");
+    }
+
+    public boolean isSchemeOne() {
+        return scheme.equals("1");
+    }
+
+    public String getSchemeLogoClassName() {
+        return scheme.equals("1") ? "scheme-2" : "scheme-1";
     }
 }
