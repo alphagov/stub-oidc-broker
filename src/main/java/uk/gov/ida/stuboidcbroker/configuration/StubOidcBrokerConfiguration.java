@@ -8,13 +8,11 @@ public class StubOidcBrokerConfiguration extends Configuration {
     private String redisURI;
     private boolean local;
     private String softwareID;
-    private String stubTrustframeworkRP;
     private String directoryURI;
     private String middlewareURI;
     private String verifiableCredentialURI;
     private String scheme;
     private String branding;
-    private String redisDatabase;
 
     public String getStubBrokerURI() {
         return stubBrokerURI;
@@ -30,10 +28,6 @@ public class StubOidcBrokerConfiguration extends Configuration {
 
     public String getSoftwareID() {
         return softwareID;
-    }
-
-    public String getStubTrustframeworkRP() {
-        return stubTrustframeworkRP;
     }
 
     public String getDirectoryURI() {
@@ -54,9 +48,5 @@ public class StubOidcBrokerConfiguration extends Configuration {
 
     public String getBranding() {
         return branding;
-    }
-
-    public String getRedisDatabase() {
-        return redisDatabase;
     }
 }

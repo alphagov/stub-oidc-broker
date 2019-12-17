@@ -9,7 +9,6 @@ applications:
       JAVA_HOME: "../.java-buildpack/open_jdk_jre"
       JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 11.+ } }'
       STUB_BROKER_URI: https://stub-oidc-broker-1.cloudapps.digital
-      STUB_TRUSTFRAMEWORK_RP: https://stub-trustframework-rp-1.cloudapps.digital
       DIRECTORY_URI: https://directory-prototype.cloudapps.digital
       MIDDLEWARE_URI: http://52.51.37.224:80
       VERIFIABLE_CREDENTIAL_URI: https://trust-framework-idp-1.cloudapps.digital
@@ -17,6 +16,5 @@ applications:
       IS_LOCAL: false
       SCHEME: 1
       BRANDING: private
-      REDIS_DATABASE: "/1"
     services:
       - redis-service

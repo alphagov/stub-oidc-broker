@@ -29,7 +29,7 @@ public class RedisService {
                 redisUri = redisURIFromVcap;
             }
         }
-        RedisClient client = RedisClient.create(redisUri + configuration.getRedisDatabase());
+        RedisClient client = RedisClient.create(redisUri + "/" + configuration.getScheme());
         LOG.info("REDIS URI" + redisUri);
         commands = client.connect().sync();
     }
