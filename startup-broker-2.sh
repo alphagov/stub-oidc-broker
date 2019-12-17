@@ -10,7 +10,7 @@ export REDIS_URI="redis://${LOCAL_IP}:6381"
 export APPLICATION_PORT=5510
 export STUB_BROKER_URI=http://localhost:5510
 export ADMIN_PORT=5511
-export VERIFIABLE_CREDENTIAL_URI=http://localhost:3334
+export IDP_URI=http://localhost:3334
 export SCHEME=2
 export BRANDING=public
 

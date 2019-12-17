@@ -10,7 +10,7 @@ public class StubOidcBrokerConfiguration extends Configuration {
     private String softwareID;
     private String directoryURI;
     private String middlewareURI;
-    private String verifiableCredentialURI;
+    private String idpURI;
     private String scheme;
     private String branding;
 
@@ -38,8 +38,8 @@ public class StubOidcBrokerConfiguration extends Configuration {
         return middlewareURI;
     }
 
-    public String getVerifiableCredentialURI() {
-        return verifiableCredentialURI;
+    public String getIdpURI() {
+        return idpURI;
     }
 
     public String getScheme() {

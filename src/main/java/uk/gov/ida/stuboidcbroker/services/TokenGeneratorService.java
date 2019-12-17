@@ -123,7 +123,7 @@ public class TokenGeneratorService {
 
     public String getVerifiableCredential(AccessToken accessToken) {
 
-        URI userInfoURI = UriBuilder.fromUri(configuration.getVerifiableCredentialURI())
+        URI userInfoURI = UriBuilder.fromUri(configuration.getIdpURI())
                 .path(Urls.IDP.CREDENTIAL_URI).build();
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -168,7 +168,7 @@ public class TokenGeneratorService {
     }
 
     private void retrieveAndStoreVerifiableCredential(String idpName, AccessToken accessToken) {
-        URI uri = UriBuilder.fromUri(configuration.getVerifiableCredentialURI()).path("/issue/jwt/credential").queryParam("idp-name", idpName).build();
+        URI uri = UriBuilder.fromUri(configuration.getIdpURI()).path("/issue/jwt/credential").queryParam("idp-name", idpName).build();
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
                 .uri(uri)

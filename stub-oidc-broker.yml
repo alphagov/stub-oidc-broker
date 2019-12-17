@@ -14,7 +14,7 @@ directoryURI: ${DIRECTORY_URI:-"http://localhost:3000"}
 
 middlewareURI: ${MIDDLEWARE_URI:-"http://localhost:3001"}
 
-verifiableCredentialURI: ${VERIFIABLE_CREDENTIAL_URI:-"http://localhost:3333"}
+idpURI: ${IDP_URI:-"http://localhost:3333"}
 
 local: ${IS_LOCAL:-true}
 

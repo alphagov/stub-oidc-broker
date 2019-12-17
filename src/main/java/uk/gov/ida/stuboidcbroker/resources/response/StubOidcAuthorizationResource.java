@@ -54,7 +54,7 @@ public class StubOidcAuthorizationResource {
                         transactionID);
             }
             URI idpUri = UriBuilder.fromUri(
-                    configuration.getVerifiableCredentialURI())
+                    configuration.getIdpURI())
                     .path(Urls.IDP.AUTHENTICATION_URI)
                     .queryParam("transaction-id", transactionID)
                     .queryParam("redirect-path", Urls.StubBroker.RESPONSE_FOR_BROKER)

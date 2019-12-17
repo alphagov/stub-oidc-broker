@@ -26,7 +26,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -173,7 +172,7 @@ public class StubOidcBrokerFormPostResource {
 
     public String getVerifiableCredential(AccessToken accessToken) {
 
-        URI userInfoURI = UriBuilder.fromUri(configuration.getVerifiableCredentialURI())
+        URI userInfoURI = UriBuilder.fromUri(configuration.getIdpURI())
                 .path(Urls.IDP.CREDENTIAL_URI).build();
 
         HttpRequest request = HttpRequest.newBuilder()

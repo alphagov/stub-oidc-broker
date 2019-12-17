@@ -11,7 +11,7 @@ applications:
       STUB_BROKER_URI: https://stub-oidc-broker-2.cloudapps.digital
       DIRECTORY_URI: https://directory-prototype.cloudapps.digital
       MIDDLEWARE_URI: http://52.51.37.224:80
-      VERIFIABLE_CREDENTIAL_URI: https://trust-framework-idp-2.cloudapps.digital
+      IDP_URI: https://trust-framework-idp-2.cloudapps.digital
       APPLICATION_PORT: 8080
       IS_LOCAL: false
       SCHEME: 2
