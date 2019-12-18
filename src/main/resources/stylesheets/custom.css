@@ -29,6 +29,7 @@ body {
 .border-right{
   border-right: 1px solid #C4C4C4;
   height: 100%;
+  box-sizing: content-box;
 }
 
 
