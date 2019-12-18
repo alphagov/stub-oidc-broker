@@ -69,7 +69,7 @@ public class StubOidcBrokerPickerResource {
         String branding = configuration.getBranding();
 
         LOG.info("Scheme number:" + configuration.getScheme());
-        return new PickerView(idps, brokers, transactionId, branding, configuration.getScheme());
+        return new PickerView(idps, registeredBrokers, transactionId, branding, configuration.getScheme());
     }
 
     private List<Organisation> getOrganisationsFromResponse(HttpResponse<String> responseBody) throws IOException {
