@@ -56,14 +56,11 @@
 <div class="govuk-width-container ">
     <main class="govuk-main-wrapper text-center" id="main-content" role="main">
         <div class="form-signin text-center">
-            <div class="container">
-                <div class="row justify-content-md-center">
-                <p><img src="/assets/images/idp{{scheme}}.png" width="auto" height="100px" alt="IDP logo"></p>
-
-                <span style="padding-left: 200px;"></span>
-
-                <p><img src="/assets/images/Trustmark.svg" class="pt-4 mt-1" alt="Trustmark" /></p>
-                </div>
+            <div class="container" style="max-width: 660px;">
+              <div class="row justify-content-md-center">
+                <img class="pr-4 mr-5 border-right" src="/assets/images/idp{{scheme}}.svg" width="35%" alt="IDP logo">
+                <img src="/assets/images/trustmark.svg" width="35%" alt="Trustmark" />
+              </div>
             </div>
 
             <h1 class="h1 mb-3 font-weight-heavy" style="display:none;">Validating your identity</h1>
@@ -85,10 +82,8 @@
 
             <form method="post" action="/formPost/serviceAuthenticationRequest">
                 <input type="hidden" name="transactionID" value="{{transactionID}}"/>
-
-                <div class="mt-5 border-bottom border-secondary" style="height: 1px;"></div>
-
-                <p class="mt-5 mb-3">or use an existing identity</p>
+                <div class="border mt-5 mb-5"></div>
+                <p class="mt-5 mb-5">or use an existing identity</p>
 
                 <div class="row">
                     <div class="col broker-logo">
@@ -100,32 +95,32 @@
                         {{/brokers}}
                     </div>
                     <div class="col broker-logo">
-                        <button class="logo logo-img-1" name="brokerDomain" value="#,#" type="submit"></button>
+                        <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
                     </div>
                 </div>
 
                 <div class="row mt-3">
                     <div class="col broker-logo">
-                        <button class="logo logo-img-2" name="brokerDomain" value="#,#" type="submit"></button>
+                        <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
                     </div>
                     <div class="col broker-logo">
-                        <button class="logo logo-img-3" name="brokerDomain" value="#,#" type="submit"></button>
+                        <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
                     </div>
                 </div>
                 <div class="row mt-3">
                     <div class="col">
-                        <button class="logo logo-img-4" name="brokerDomain" value="#,#" type="submit"></button>
+                        <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
                     </div>
                     <div class="col">
-                        <button class="logo logo-img-5" name="brokerDomain" value="#,#" type="submit"></button>
+                        <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
                     </div>
                 </div>
                 <div class="row mt-3">
                     <div class="col">
-                        <button class="logo logo-img-6" name="brokerDomain" value="#,#" type="submit"></button>
+                        <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
                     </div>
                     <div class="col">
-                        <button class="logo logo-img-6" name="brokerDomain" value="#,#" type="submit"></button>
+                        <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
                     </div>
                 </div>
             </form>
