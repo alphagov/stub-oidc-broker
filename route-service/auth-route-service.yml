@@ -1,0 +1,27 @@
+---
+
+applications:
+  - name: auth-route-service
+    instances: 2
+    memory: 256M
+
+    buildpacks:
+      - nginx_buildpack
+
+    health-check-type: http
+    health-check-http-endpoint: /_route-service-health
+
+    env:
+      APP_NAME: auth-route-service
+      ALLOWED_IPS: |
+        allow 213.86.153.212/32;
+        allow 213.86.153.213/32;
+        allow 213.86.153.214/32;
+        allow 213.86.153.235/32;
+        allow 213.86.153.236/32;
+        allow 213.86.153.237/32;
+        allow 52.51.37.224/32;
+        allow 52.209.185.207/32;
+        allow 52.51.250.21/32;
+        allow 52.208.24.161/32;
+        allow 52.208.1.143/32;
