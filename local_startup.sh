@@ -7,19 +7,19 @@ if [ ! -d $PID_DIR ]; then
   mkdir -p $PID_DIR
 fi
 
-if [ -f ./tmp/pids/broker-1.pid ] && [ `ps -p $(cat ./tmp/pids/broker-1.pid)` ]; then
+if [ -f ./tmp/pids/broker1.pid ] && [ `ps -p $(cat ./tmp/pids/broker1.pid)` ]; then
   echo 'Broker 1 is already running'
 else
   echo 'Starting Broker 1'
-  ./startup-broker-1.sh &
-  echo $! > ./tmp/pids/broker-1.pid
+  ./startup-broker1.sh >"$log" 2>&1 &
+  echo $! > ./tmp/pids/broker1.pid
 fi
-if [ -f ./tmp/pids/broker-2.pid ] && [ `ps -p $(cat ./tmp/pids/broker-2.pid)` ]; then
+if [ -f ./tmp/pids/broker-2.pid ] && [ `ps -p $(cat ./tmp/pids/broker2.pid)` ]; then
   echo 'Broker 2 is already running'
 else
   echo 'Starting Broker 2'
-  ./startup-broker-2.sh &
-  echo $! > ./tmp/pids/broker-2.pid
+  ./startup-broker2.sh &
+  echo $! > ./tmp/pids/broker2.pid
 fi
 
 cd ../trust-framework-directory-prototype
@@ -27,7 +27,7 @@ if [ -f ./tmp/pids/directory.pid ] && [ `ps -p $(cat ./tmp/pids/directory.pid)` 
   echo 'Directory is already running'
 else
   echo 'Starting the Directory'
-  ./startup.sh &
+  ./startup-directory.sh &
   echo $! > ./../stub-oidc-broker/tmp/pids/directory.pid
 fi
 
@@ -36,47 +36,47 @@ if [ -f ./tmp/pids/initiator.pid ] && [ `ps -p $(cat ./tmp/pids/initiator.pid)` 
   echo 'Initiator is already running'
 else
   echo 'Starting the initiator'
-  ./run-local-initiator.sh &
+  ./startup-local-initiator.sh &
   echo $! > ./../stub-oidc-broker/tmp/pids/initiator.pid
 fi
 if [ -f ./tmp/pids/receiver.pid ] && [ `ps -p $(cat ./tmp/pids/receiver.pid)` ]; then
   echo 'Receiver is already running'
 else
   echo 'Starting the receiver'
-  ./run-local-receiver.sh &
+  ./startuo-local-receiver.sh &
   echo $! > ./../stub-oidc-broker/tmp/pids/receiver.pid
 fi
 
 cd ../trust-framework-idp
-if [ -f ./tmp/pids/idp-1.pid ] && [ `ps -p $(cat ./tmp/pids/idp-1.pid)` ]; then
+if [ -f ./tmp/pids/idp1.pid ] && [ `ps -p $(cat ./tmp/pids/idp1.pid)` ]; then
   echo 'IDP 1 is already running'
 else
   echo 'Starting the IDP 1'
-  ./startup-1.sh &
-  echo $! > ./../stub-oidc-broker/tmp/pids/idp-1.pid
+  ./startup-idp1.sh &
+  echo $! > ./../stub-oidc-broker/tmp/pids/idp1.pid
 fi
-if [ -f ./tmp/pids/idp-2.pid ] && [ `ps -p $(cat ./tmp/pids/idp-2.pid)` ]; then
+if [ -f ./tmp/pids/idp2.pid ] && [ `ps -p $(cat ./tmp/pids/idp2.pid)` ]; then
   echo 'IDP 2 is already running'
 else
   echo 'Starting the IDP 2'
-  ./startup-2.sh &
-  echo $! > ./../stub-oidc-broker/tmp/pids/idp-2.pid
+  ./startup-idp2.sh &
+  echo $! > ./../stub-oidc-broker/tmp/pids/idp2.pid
 fi
 
 cd ../stub-trustframework-rp
-if [ -f ./tmp/pids/rp-1.pid ] && [ `ps -p $(cat ./tmp/pids/rp-1.pid)` ]; then
+if [ -f ./tmp/pids/rp1.pid ] && [ `ps -p $(cat ./tmp/pids/rp1.pid)` ]; then
   echo 'RP 1 is already running'
 else
   echo 'Starting the RP 1'
-  ./startup-rp-1.sh &
-  echo $! > ./../stub-oidc-broker/tmp/pids/rp-1.pid
+  ./startup-rp1.sh &
+  echo $! > ./../stub-oidc-broker/tmp/pids/rp1.pid
 fi
-if [ -f ./tmp/pids/rp-2.pid ] && [ `ps -p $(cat ./tmp/pids/rp-2.pid)` ]; then
+if [ -f ./tmp/pids/rp2.pid ] && [ `ps -p $(cat ./tmp/pids/rp2.pid)` ]; then
   echo 'RP 2 is already running'
 else
   echo 'Starting the RP 2'
-  ./startup-rp-2.sh &
-  echo $! > ./../stub-oidc-broker/tmp/pids/rp-2.pid
+  ./startup-rp2.sh &
+  echo $! > ./../stub-oidc-broker/tmp/pids/rp2.pid
 fi
 
 cd ../tpp-registration-prototype
@@ -84,7 +84,7 @@ if [ -f ./tmp/pids/onboarding.pid ] && [ `ps -p $(cat ./tmp/pids/onboarding.pid)
   echo 'Onboarding app is already running'
 else
   echo 'Starting the onboarding app'
-  ./startup.sh &
+  ./startup-registration.sh &
   echo $! > ./../stub-oidc-broker/tmp/pids/onboarding.pid
 fi
 

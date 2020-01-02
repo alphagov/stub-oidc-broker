@@ -5,3 +5,4 @@ out/
 bin/
 .DS_Store
 /tmp
+logs/
