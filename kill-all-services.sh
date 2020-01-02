@@ -3,6 +3,11 @@ set -e
 
 echo "Killing all services"
 
+if [ "$(docker ps -q -f name=clientRedis)" ]; then
+      echo "Killing Docker container: clientRedis"
+      docker kill clientRedis
+fi
+
 pushd ../stub-oidc-broker> /dev/null
 ./kill-broker1.sh
 ./kill-broker2.sh
