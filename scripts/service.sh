@@ -16,14 +16,22 @@ start_service() {
   killscriptname="kill-${servicename}.sh"
   currentdirectory=${PWD}
 
-  pushd ../${directory} > /dev/null
+  if [ ! -d  ../${directory} ]; then
+      echo "${directory} does not exist. Use the clone-trustframework-repos.sh to clone the required repos"
+      echo "Stopping start-up"
+      exit 1
+  else
+      pushd ../${directory} > /dev/null
 
-  if [ -f "./tmp/pids/${servicename}.pid" ]; then
-  echo -e "About to kill ${servicename} before starting again"
-  $(pwd)/${killscriptname}
+      if [ -f "./tmp/pids/${servicename}.pid" ]; then
+        echo -e "About to kill ${servicename} before starting again"
+        $(pwd)/${killscriptname}
+      fi
+
+      $(pwd)/${startscriptname} >"${currentdirectory}/$log" 2>&1
+      echo -e "Starting ${servicename}\n"
+      popd > /dev/null
   fi
-  $(pwd)/${startscriptname} >"${currentdirectory}/$log" 2>&1
-  echo -e "Starting ${servicename}\n"
-  popd > /dev/null
+
 }
 
