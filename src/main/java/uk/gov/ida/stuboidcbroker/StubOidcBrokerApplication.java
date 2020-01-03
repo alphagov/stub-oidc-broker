@@ -15,6 +15,7 @@ import uk.gov.ida.stuboidcbroker.resources.registration.StubOidcBrokerRegistrati
 import uk.gov.ida.stuboidcbroker.resources.request.StubOidcBrokerResource;
 import uk.gov.ida.stuboidcbroker.resources.response.StubOidcAuthorizationResource;
 import uk.gov.ida.stuboidcbroker.resources.response.TokenResource;
+import uk.gov.ida.stuboidcbroker.resources.response.UserInfoResource;
 import uk.gov.ida.stuboidcbroker.services.AuthnRequestGeneratorService;
 import uk.gov.ida.stuboidcbroker.services.AuthnRequestValidationService;
 import uk.gov.ida.stuboidcbroker.services.AuthnResponseValidationService;
@@ -48,6 +49,7 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
         environment.jersey().register(new JsonProcessingExceptionMapper(true));
         environment.jersey().register(new StubOidcBrokerRegistrationResource(registrationSenderService, registrationHandlerService, redisService, configuration));
         environment.jersey().register(new StubOidcBrokerPickerResource(configuration, redisService));
+        environment.jersey().register(new UserInfoResource(tokenHandlerService));
     }
 
     @Override
@@ -62,5 +64,4 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
                         bootstrap.getConfigurationSourceProvider(),
                         new EnvironmentVariableSubstitutor(false)));
     }
-
 }
