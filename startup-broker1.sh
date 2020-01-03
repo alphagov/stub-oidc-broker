@@ -24,6 +24,11 @@ log="logs/broker1_console.log"
       docker run --name clientRedis -d -p 6380:6379 --rm redis
   fi
 
+  if [ -f "./tmp/pids/broker1.pid" ]; then
+      echo -e "About to kill broker1 before starting again"
+      $(pwd)/kill-broker1.sh
+  fi
+
   LOGS_DIR=./logs
   if [ ! -d $LOGS_DIR ]; then
     echo -e 'Creating LOGs directory\n'

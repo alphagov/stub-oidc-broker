@@ -29,6 +29,11 @@ log="logs/broker2_console.log"
     mkdir -p $LOGS_DIR
   fi
 
+  if [ -f "./tmp/pids/broker2.pid" ]; then
+      echo -e "About to kill broker2 before starting again"
+      $(pwd)/kill-broker2.sh
+  fi
+
   PID_DIR=./tmp/pids
   if [ ! -d $PID_DIR ]; then
       echo -e 'Creating PIDs directory\n'
