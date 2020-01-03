@@ -9,12 +9,14 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
+import uk.gov.ida.stuboidcbroker.resources.oidcclient.AuthorizationResponseClientResource;
+import uk.gov.ida.stuboidcbroker.resources.oidcprovider.AuthorizationResponseProviderResource;
 import uk.gov.ida.stuboidcbroker.resources.oidcprovider.RegistrationHandlerResource;
-import uk.gov.ida.stuboidcbroker.resources.oidcclient.StubOidcBrokerFormPostResource;
-import uk.gov.ida.stuboidcbroker.resources.oidcclient.StubOidcBrokerPickerResource;
+import uk.gov.ida.stuboidcbroker.resources.oidcclient.AuthorizationRequestClientResource;
+import uk.gov.ida.stuboidcbroker.resources.oidcclient.PickerPageResource;
 import uk.gov.ida.stuboidcbroker.resources.oidcclient.RegistrationRequestResource;
 import uk.gov.ida.stuboidcbroker.resources.oidcclient.StubOidcBrokerResource;
-import uk.gov.ida.stuboidcbroker.resources.oidcprovider.StubOidcAuthorizationResource;
+import uk.gov.ida.stuboidcbroker.resources.oidcprovider.AuthorizationRequestProviderResource;
 import uk.gov.ida.stuboidcbroker.resources.oidcprovider.TokenResource;
 import uk.gov.ida.stuboidcbroker.resources.oidcprovider.UserInfoResource;
 import uk.gov.ida.stuboidcbroker.services.AuthnRequestGeneratorService;
@@ -35,23 +37,9 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
     @Override
     public void run(StubOidcBrokerConfiguration configuration, Environment environment) {
         RedisService redisService = new RedisService(configuration);
-        TokenHandlerService tokenHandlerService = new TokenHandlerService(redisService, configuration);
-        TokenRequestService tokenRequestService = new TokenRequestService(configuration, redisService);
-        AuthnRequestGeneratorService authnRequestGeneratorService = new AuthnRequestGeneratorService(redisService);
-        AuthnResponseValidationService authResponseService = new AuthnResponseValidationService(tokenRequestService);
-        RegistrationRequestService registrationRequestService = new RegistrationRequestService(redisService, configuration);
-        RegistrationHandlerService registrationHandlerService = new RegistrationHandlerService(redisService, configuration);
-        AuthnRequestValidationService authnRequestValidationService = new AuthnRequestValidationService(tokenHandlerService, redisService);
 
-        environment.jersey().register(new TokenResource(tokenHandlerService));
-        environment.jersey().register(new StubOidcAuthorizationResource(authnRequestValidationService, configuration));
-        environment.jersey().register(new StubOidcBrokerResource(configuration, tokenRequestService, authnRequestGeneratorService, authResponseService, redisService));
-        environment.jersey().register(new StubOidcBrokerFormPostResource(configuration, tokenRequestService, authnRequestGeneratorService, authResponseService, redisService));
-        environment.jersey().register(new JsonProcessingExceptionMapper(true));
-        environment.jersey().register(new RegistrationRequestResource(registrationRequestService, redisService, configuration));
-        environment.jersey().register(new StubOidcBrokerPickerResource(configuration, redisService));
-        environment.jersey().register(new UserInfoResource(tokenHandlerService));
-        environment.jersey().register(new RegistrationHandlerResource(registrationHandlerService));
+        registerOidcClientResources(environment, configuration, redisService);
+        registerOidcProviderResources(environment, configuration, redisService);
     }
 
     @Override
@@ -65,5 +53,32 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
                 new SubstitutingSourceProvider(
                         bootstrap.getConfigurationSourceProvider(),
                         new EnvironmentVariableSubstitutor(false)));
+    }
+
+    private void registerOidcClientResources(Environment environment, StubOidcBrokerConfiguration configuration, RedisService redisService) {
+        TokenRequestService tokenRequestService = new TokenRequestService(configuration, redisService);
+        AuthnRequestGeneratorService authnRequestGeneratorService = new AuthnRequestGeneratorService(redisService);
+        AuthnResponseValidationService authResponseService = new AuthnResponseValidationService(tokenRequestService);
+        RegistrationRequestService registrationRequestService = new RegistrationRequestService(redisService, configuration);
+
+        environment.jersey().register(new StubOidcBrokerResource(configuration, tokenRequestService, authnRequestGeneratorService, authResponseService, redisService));
+        environment.jersey().register(new AuthorizationRequestClientResource(configuration, authnRequestGeneratorService, redisService));
+        environment.jersey().register(new JsonProcessingExceptionMapper(true));
+        environment.jersey().register(new RegistrationRequestResource(registrationRequestService, redisService, configuration));
+        environment.jersey().register(new PickerPageResource(configuration, redisService));
+        environment.jersey().register(new AuthorizationResponseClientResource(configuration, tokenRequestService, authResponseService, redisService));
+    }
+
+
+    private void registerOidcProviderResources(Environment environment, StubOidcBrokerConfiguration configuration, RedisService redisService) {
+        TokenHandlerService tokenHandlerService = new TokenHandlerService(redisService, configuration);
+        RegistrationHandlerService registrationHandlerService = new RegistrationHandlerService(redisService, configuration);
+        AuthnRequestValidationService authnRequestValidationService = new AuthnRequestValidationService(tokenHandlerService, redisService);
+
+        environment.jersey().register(new TokenResource(tokenHandlerService));
+        environment.jersey().register(new UserInfoResource(tokenHandlerService));
+        environment.jersey().register(new AuthorizationResponseProviderResource(authnRequestValidationService));
+        environment.jersey().register(new AuthorizationRequestProviderResource(authnRequestValidationService, configuration));
+        environment.jersey().register(new RegistrationHandlerResource(registrationHandlerService));
     }
 }

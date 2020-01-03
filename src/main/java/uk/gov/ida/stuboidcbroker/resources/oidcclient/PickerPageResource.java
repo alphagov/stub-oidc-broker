@@ -29,14 +29,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Path("/")
-public class StubOidcBrokerPickerResource {
+public class PickerPageResource {
     private final StubOidcBrokerConfiguration configuration;
     private final RedisService redisService;
 
-    private static final Logger LOG = LoggerFactory.getLogger(StubOidcBrokerPickerResource.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PickerPageResource.class);
 
 
-    public StubOidcBrokerPickerResource(StubOidcBrokerConfiguration configuration, RedisService redisService) {
+    public PickerPageResource(StubOidcBrokerConfiguration configuration, RedisService redisService) {
         this.configuration = configuration;
         this.redisService = redisService;
     }
@@ -53,9 +53,9 @@ public class StubOidcBrokerPickerResource {
 
         String scheme = configuration.getScheme();
         URI idpRequestURI = UriBuilder.fromUri(configuration.getDirectoryURI()).path(Urls.Directory.REGISTERED_IDPS + scheme)
-                                      .build();
+                .build();
         URI brokerRequestURI = UriBuilder.fromUri(configuration.getDirectoryURI()).path(Urls.Directory.REGISTERED_BROKERS + scheme)
-                                         .build();
+                .build();
 
         HttpResponse<String> idpsResponse = getOrganisations(idpRequestURI);
         HttpResponse<String> brokersResponse = getOrganisations(brokerRequestURI);
@@ -83,7 +83,7 @@ public class StubOidcBrokerPickerResource {
         }
 
         List<Organisation> orgList = new ArrayList<>();
-        for(int i = 0; i < jsonarray.size(); i++) {
+        for (int i = 0; i < jsonarray.size(); i++) {
             JSONObject obj = (JSONObject) jsonarray.get(i);
             ObjectMapper objectMapper = new ObjectMapper();
             Organisation org = objectMapper.readValue(obj.toJSONString(), Organisation.class);
@@ -94,9 +94,9 @@ public class StubOidcBrokerPickerResource {
 
     private HttpResponse<String> getOrganisations(URI uri) {
         HttpRequest request = HttpRequest.newBuilder()
-                                         .GET()
-                                         .uri(uri)
-                                         .build();
+                .GET()
+                .uri(uri)
+                .build();
 
         try {
             return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());

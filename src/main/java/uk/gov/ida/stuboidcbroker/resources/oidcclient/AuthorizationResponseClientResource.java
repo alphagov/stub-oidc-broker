@@ -2,11 +2,9 @@ package uk.gov.ida.stuboidcbroker.resources.oidcclient;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
-import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.dropwizard.views.View;
 import org.apache.http.HttpStatus;
@@ -14,13 +12,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
-import uk.gov.ida.stuboidcbroker.services.AuthnRequestGeneratorService;
 import uk.gov.ida.stuboidcbroker.services.AuthnResponseValidationService;
 import uk.gov.ida.stuboidcbroker.services.RedisService;
 import uk.gov.ida.stuboidcbroker.services.TokenRequestService;
 import uk.gov.ida.stuboidcbroker.views.RPResponseView;
 
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -37,56 +40,24 @@ import java.util.Optional;
 import static uk.gov.ida.stuboidcbroker.services.QueryParameterHelper.splitQuery;
 
 @Path("/formPost")
-public class StubOidcBrokerFormPostResource {
+public class AuthorizationResponseClientResource {
 
-    private static final Logger LOG = LoggerFactory.getLogger(StubOidcBrokerFormPostResource.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AuthorizationResponseClientResource.class);
 
-    private final TokenRequestService tokenRequestService;
-    private final AuthnRequestGeneratorService authnRequestGeneratorService;
-    private final AuthnResponseValidationService authnResponseValidationService;
     private final StubOidcBrokerConfiguration configuration;
+    private final TokenRequestService tokenRequestService;
+    private final AuthnResponseValidationService authnResponseValidationService;
     private final RedisService redisService;
-    private URI authorisationURI;
-    private URI redirectUri;
-    private String brokerDomain;
-    private String brokerName;
 
-
-    public StubOidcBrokerFormPostResource(
+    public AuthorizationResponseClientResource(
             StubOidcBrokerConfiguration configuration,
             TokenRequestService tokenRequestService,
-            AuthnRequestGeneratorService authnRequestGeneratorService,
             AuthnResponseValidationService authnResponseValidationService,
             RedisService redisService) {
         this.configuration = configuration;
         this.tokenRequestService = tokenRequestService;
-        this.authnRequestGeneratorService = authnRequestGeneratorService;
         this.authnResponseValidationService = authnResponseValidationService;
         this.redisService = redisService;
-        redirectUri = UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBroker.REDIRECT_FORM_URI).build();
-    }
-
-    @POST
-    @Path("/serviceAuthenticationRequest")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response formPostAuthenticationRequest(@FormParam("brokerDomain") String domain, @FormParam("transactionID") String transactionID) {
-        List<String> orgList = Arrays.asList(domain.split(","));
-        String brokerDomain = orgList.get(0);
-        String brokerName = orgList.get(1);
-        this.brokerDomain = brokerDomain;
-        this.brokerName = brokerName;
-        authorisationURI = UriBuilder.fromUri(brokerDomain).path(Urls.StubOp.AUTHORISATION_ENDPOINT_FORM_URI).build();
-        return Response
-                .status(302)
-                .location(authnRequestGeneratorService.generateFormPostAuthenticationRequest(
-                        authorisationURI,
-                        getClientID(brokerName),
-                        redirectUri,
-                        new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN),
-                        brokerName,
-                        transactionID)
-                        .toURI())
-                        .build();
     }
 
     @POST
@@ -100,7 +71,7 @@ public class StubOidcBrokerFormPostResource {
         LOG.info("RP Domain is :" + rpDomain);
         URI rpUri = UriBuilder.fromUri(rpDomain).build();
 
-        if (postBody == null || postBody.isEmpty()) {
+        if (postBody.isEmpty()) {
             return new RPResponseView(rpUri, "Post Body is empty", Integer.toString(HttpStatus.SC_BAD_REQUEST));
         }
 
@@ -110,9 +81,10 @@ public class StubOidcBrokerFormPostResource {
             return new RPResponseView(rpUri, "Errors in Response: " + errors.get(), Integer.toString(HttpStatus.SC_BAD_REQUEST));
         }
 
+        String brokerName = getBrokerName(transactionID);
+        String brokerDomain = getBrokerDomain(transactionID);
         AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(authenticationParams, getClientID(brokerName));
-
-        String userInfoInJson = retrieveTokenAndUserInfo(authorizationCode);
+        String userInfoInJson = retrieveTokenAndUserInfo(authorizationCode, brokerName, brokerDomain);
 
         return new RPResponseView(rpUri, userInfoInJson, Integer.toString(HttpStatus.SC_OK));
     }
@@ -150,15 +122,22 @@ public class StubOidcBrokerFormPostResource {
         return new RPResponseView(rpUriDomain, verifiableCredential, Integer.toString(HttpStatus.SC_OK));
     }
 
-    private String retrieveTokenAndUserInfo(AuthorizationCode authCode) {
+    private String retrieveTokenAndUserInfo(AuthorizationCode authCode, String brokerName, String brokerDomain) {
 
-            OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), brokerDomain);
+        OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), brokerDomain);
 
-            String verifiableCredential = tokenRequestService.getVerifiableCredential(tokens.getBearerAccessToken(), brokerDomain);
 //            UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());
 
 //            String userInfoToJson = userInfo.toJSONObject().toJSONString();
-            return verifiableCredential;
+        return tokenRequestService.getVerifiableCredential(tokens.getBearerAccessToken(), brokerDomain);
+    }
+
+    private String getBrokerName(String transactionID) {
+        return redisService.get(transactionID + "-brokername");
+    }
+
+    private String getBrokerDomain(String transactionID) {
+        return redisService.get(transactionID + "-brokerdomain");
     }
 
     private ClientID getClientID(String brokerName) {

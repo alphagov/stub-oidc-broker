@@ -1,5 +1,6 @@
 package uk.gov.ida.stuboidcbroker.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -9,7 +10,9 @@ import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.openid.connect.sdk.rp.ApplicationType;
+import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
+import net.minidev.json.parser.JSONParser;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
@@ -17,6 +20,7 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
+import uk.gov.ida.stuboidcbroker.domain.Organisation;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
 
 import javax.ws.rs.core.UriBuilder;
@@ -30,7 +34,9 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.Security;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import static java.util.Arrays.asList;
@@ -66,6 +72,40 @@ public class RegistrationRequestService {
                 saveClientID(brokerName, jsonObjectResponse.get("client_id").toString());
             }
         return body;
+    }
+
+    public List<Organisation> getListOfBrokersFromResponse(HttpResponse<String> responseBody) throws IOException {
+        JSONParser parser = new JSONParser(JSONParser.MODE_JSON_SIMPLE);
+        JSONArray jsonarray;
+        try {
+            jsonarray = (JSONArray) parser.parse(responseBody.body());
+        } catch (net.minidev.json.parser.ParseException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+
+        List<Organisation> orgList = new ArrayList<>();
+
+        for (int i = 0; i < jsonarray.size(); i++) {
+            JSONObject obj = (JSONObject) jsonarray.get(i);
+            ObjectMapper objectMapper = new ObjectMapper();
+            Organisation org = objectMapper.readValue(obj.toJSONString(), Organisation.class);
+            orgList.add(org);
+        }
+        return orgList;
+    }
+
+    public HttpResponse<String> getRegisteredBrokersFromDirectory(URI uri) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(uri)
+                .build();
+
+        try {
+            return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private HttpResponse sendClientRegRequest(SignedJWT jwt, String privateKey, String brokerDomain) throws JOSEException, IOException {
