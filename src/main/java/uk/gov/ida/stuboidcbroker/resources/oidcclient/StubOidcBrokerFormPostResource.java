@@ -1,4 +1,4 @@
-package uk.gov.ida.stuboidcbroker.resources.request;
+package uk.gov.ida.stuboidcbroker.resources.oidcclient;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
@@ -17,7 +17,7 @@ import uk.gov.ida.stuboidcbroker.rest.Urls;
 import uk.gov.ida.stuboidcbroker.services.AuthnRequestGeneratorService;
 import uk.gov.ida.stuboidcbroker.services.AuthnResponseValidationService;
 import uk.gov.ida.stuboidcbroker.services.RedisService;
-import uk.gov.ida.stuboidcbroker.services.TokenSenderService;
+import uk.gov.ida.stuboidcbroker.services.TokenRequestService;
 import uk.gov.ida.stuboidcbroker.views.RPResponseView;
 
 import javax.ws.rs.*;
@@ -41,7 +41,7 @@ public class StubOidcBrokerFormPostResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(StubOidcBrokerFormPostResource.class);
 
-    private final TokenSenderService tokenSenderService;
+    private final TokenRequestService tokenRequestService;
     private final AuthnRequestGeneratorService authnRequestGeneratorService;
     private final AuthnResponseValidationService authnResponseValidationService;
     private final StubOidcBrokerConfiguration configuration;
@@ -54,12 +54,12 @@ public class StubOidcBrokerFormPostResource {
 
     public StubOidcBrokerFormPostResource(
             StubOidcBrokerConfiguration configuration,
-            TokenSenderService tokenSenderService,
+            TokenRequestService tokenRequestService,
             AuthnRequestGeneratorService authnRequestGeneratorService,
             AuthnResponseValidationService authnResponseValidationService,
             RedisService redisService) {
         this.configuration = configuration;
-        this.tokenSenderService = tokenSenderService;
+        this.tokenRequestService = tokenRequestService;
         this.authnRequestGeneratorService = authnRequestGeneratorService;
         this.authnResponseValidationService = authnResponseValidationService;
         this.redisService = redisService;
@@ -152,9 +152,9 @@ public class StubOidcBrokerFormPostResource {
 
     private String retrieveTokenAndUserInfo(AuthorizationCode authCode) {
 
-            OIDCTokens tokens = tokenSenderService.getTokens(authCode, getClientID(brokerName), brokerDomain);
+            OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), brokerDomain);
 
-            String verifiableCredential = tokenSenderService.getVerifiableCredential(tokens.getBearerAccessToken(), brokerDomain);
+            String verifiableCredential = tokenRequestService.getVerifiableCredential(tokens.getBearerAccessToken(), brokerDomain);
 //            UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());
 
 //            String userInfoToJson = userInfo.toJSONObject().toJSONString();

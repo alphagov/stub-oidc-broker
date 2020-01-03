@@ -21,10 +21,10 @@ import java.util.Optional;
 
 public class AuthnResponseValidationService {
 
-    private final TokenSenderService tokenSenderService;
+    private final TokenRequestService tokenRequestService;
 
-    public AuthnResponseValidationService(TokenSenderService tokenSenderService) {
-        this.tokenSenderService = tokenSenderService;
+    public AuthnResponseValidationService(TokenRequestService tokenRequestService) {
+        this.tokenRequestService = tokenRequestService;
     }
 
     public AuthorizationCode handleAuthenticationResponse(Map<String, String> authenticationParams, ClientID clientID)
@@ -46,12 +46,12 @@ public class AuthnResponseValidationService {
         }
 
         String state = authenticationParams.get("state");
-        String nonce = tokenSenderService.getNonce(state);
+        String nonce = tokenRequestService.getNonce(state);
 
         validateCHash(authorizationCode, idToken);
 
         validateNonce(nonce, idToken);
-        validateNonceUsageCount(tokenSenderService.getNonceUsageCount(nonce));
+        validateNonceUsageCount(tokenRequestService.getNonceUsageCount(nonce));
 
         validateIssuer(idToken);
 

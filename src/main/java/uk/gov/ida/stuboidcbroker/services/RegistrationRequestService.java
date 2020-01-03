@@ -35,17 +35,17 @@ import java.util.UUID;
 
 import static java.util.Arrays.asList;
 
-public class RegistrationSenderService {
+public class RegistrationRequestService {
 
     private final RedisService redisService;
     private final StubOidcBrokerConfiguration configuration;
 
-    public RegistrationSenderService(RedisService redisService, StubOidcBrokerConfiguration configuration) {
+    public RegistrationRequestService(RedisService redisService, StubOidcBrokerConfiguration configuration) {
         this.redisService = redisService;
         this.configuration = configuration;
     }
 
-    private static final Logger LOG = LoggerFactory.getLogger(RegistrationSenderService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RegistrationRequestService.class);
 
     public String sendRegistrationRequest(String ssa, String privateKey, String brokerDomain, String brokerName)
             throws JOSEException, ParseException, IOException {

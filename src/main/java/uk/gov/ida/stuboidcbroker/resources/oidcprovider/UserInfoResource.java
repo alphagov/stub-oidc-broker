@@ -1,4 +1,4 @@
-package uk.gov.ida.stuboidcbroker.resources.response;
+package uk.gov.ida.stuboidcbroker.resources.oidcprovider;
 
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
