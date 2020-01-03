@@ -20,8 +20,8 @@ import uk.gov.ida.stuboidcbroker.services.AuthnRequestValidationService;
 import uk.gov.ida.stuboidcbroker.services.AuthnResponseValidationService;
 import uk.gov.ida.stuboidcbroker.services.RegistrationHandlerService;
 import uk.gov.ida.stuboidcbroker.services.RegistrationSenderService;
-import uk.gov.ida.stuboidcbroker.services.TokenGeneratorService;
-import uk.gov.ida.stuboidcbroker.services.TokenRequestService;
+import uk.gov.ida.stuboidcbroker.services.TokenHandlerService;
+import uk.gov.ida.stuboidcbroker.services.TokenSenderService;
 import uk.gov.ida.stuboidcbroker.services.RedisService;
 
 public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfiguration> {
@@ -33,18 +33,18 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
     @Override
     public void run(StubOidcBrokerConfiguration configuration, Environment environment) {
         RedisService redisService = new RedisService(configuration);
-        TokenGeneratorService tokenGeneratorService = new TokenGeneratorService(redisService, configuration);
-        TokenRequestService tokenRequestService = new TokenRequestService(configuration, redisService);
+        TokenHandlerService tokenHandlerService = new TokenHandlerService(redisService, configuration);
+        TokenSenderService tokenSenderService = new TokenSenderService(configuration, redisService);
         AuthnRequestGeneratorService authnRequestGeneratorService = new AuthnRequestGeneratorService(redisService);
-        AuthnResponseValidationService authResponseService = new AuthnResponseValidationService(tokenRequestService);
+        AuthnResponseValidationService authResponseService = new AuthnResponseValidationService(tokenSenderService);
         RegistrationSenderService registrationSenderService = new RegistrationSenderService(redisService, configuration);
         RegistrationHandlerService registrationHandlerService = new RegistrationHandlerService(redisService, configuration);
-        AuthnRequestValidationService authnRequestValidationService = new AuthnRequestValidationService(tokenGeneratorService, redisService);
+        AuthnRequestValidationService authnRequestValidationService = new AuthnRequestValidationService(tokenHandlerService, redisService);
 
-        environment.jersey().register(new TokenResource(tokenGeneratorService));
+        environment.jersey().register(new TokenResource(tokenHandlerService));
         environment.jersey().register(new StubOidcAuthorizationResource(authnRequestValidationService, configuration));
-        environment.jersey().register(new StubOidcBrokerResource(configuration, tokenRequestService, authnRequestGeneratorService, authResponseService, redisService));
-        environment.jersey().register(new StubOidcBrokerFormPostResource(configuration, tokenRequestService, authnRequestGeneratorService, authResponseService, redisService));
+        environment.jersey().register(new StubOidcBrokerResource(configuration, tokenSenderService, authnRequestGeneratorService, authResponseService, redisService));
+        environment.jersey().register(new StubOidcBrokerFormPostResource(configuration, tokenSenderService, authnRequestGeneratorService, authResponseService, redisService));
         environment.jersey().register(new JsonProcessingExceptionMapper(true));
         environment.jersey().register(new StubOidcBrokerRegistrationResource(registrationSenderService, registrationHandlerService, redisService, configuration));
         environment.jersey().register(new StubOidcBrokerPickerResource(configuration, redisService));

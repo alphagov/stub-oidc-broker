@@ -31,12 +31,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TokenRequestService {
+public class TokenSenderService {
 
     private final RedisService redisService;
     private final StubOidcBrokerConfiguration configuration;
 
-    public TokenRequestService(StubOidcBrokerConfiguration configuration, RedisService redisService) {
+    public TokenSenderService(StubOidcBrokerConfiguration configuration, RedisService redisService) {
         this.configuration = configuration;
         this.redisService = redisService;
     }

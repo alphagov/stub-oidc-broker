@@ -13,7 +13,7 @@ import uk.gov.ida.stuboidcbroker.rest.Urls;
 import uk.gov.ida.stuboidcbroker.services.AuthnRequestGeneratorService;
 import uk.gov.ida.stuboidcbroker.services.AuthnResponseValidationService;
 import uk.gov.ida.stuboidcbroker.services.RedisService;
-import uk.gov.ida.stuboidcbroker.services.TokenRequestService;
+import uk.gov.ida.stuboidcbroker.services.TokenSenderService;
 import uk.gov.ida.stuboidcbroker.views.AuthenticationCallbackViewHttp;
 import uk.gov.ida.stuboidcbroker.views.AuthenticationCallbackViewHttps;
 
@@ -42,7 +42,7 @@ import static uk.gov.ida.stuboidcbroker.services.QueryParameterHelper.splitQuery
 public class StubOidcBrokerResource {
 
     private final StubOidcBrokerConfiguration configuration;
-    private final TokenRequestService tokenRequestService;
+    private final TokenSenderService tokenSenderService;
     private final AuthnRequestGeneratorService authnRequestGeneratorService;
     private final AuthnResponseValidationService authnResponseValidationService;
     private final RedisService redisService;
@@ -50,12 +50,12 @@ public class StubOidcBrokerResource {
 
     public StubOidcBrokerResource(
             StubOidcBrokerConfiguration configuration,
-            TokenRequestService tokenRequestService,
+            TokenSenderService tokenSenderService,
             AuthnRequestGeneratorService authnRequestGeneratorService,
             AuthnResponseValidationService authnResponseValidationService,
             RedisService redisService) {
         this.configuration = configuration;
-        this.tokenRequestService = tokenRequestService;
+        this.tokenSenderService = tokenSenderService;
         this.authnRequestGeneratorService = authnRequestGeneratorService;
         this.authnResponseValidationService = authnResponseValidationService;
         this.redisService = redisService;
@@ -128,8 +128,8 @@ public class StubOidcBrokerResource {
             Map<String, String> authenticationParams = splitQuery(query);
             String authCode = authenticationParams.get("code");
 
-            OIDCTokens tokens = tokenRequestService.getTokens(new AuthorizationCode(authCode), getClientID(brokerDomain), brokerDomain);
-            UserInfo userInfo = tokenRequestService.getUserInfo(tokens.getBearerAccessToken(), brokerDomain);
+            OIDCTokens tokens = tokenSenderService.getTokens(new AuthorizationCode(authCode), getClientID(brokerDomain), brokerDomain);
+            UserInfo userInfo = tokenSenderService.getUserInfo(tokens.getBearerAccessToken(), brokerDomain);
 
             String userInfoToJson = userInfo.toJSONObject().toJSONString();
             return Response.ok(userInfoToJson).build();

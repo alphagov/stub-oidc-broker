@@ -17,7 +17,7 @@ import uk.gov.ida.stuboidcbroker.rest.Urls;
 import uk.gov.ida.stuboidcbroker.services.AuthnRequestGeneratorService;
 import uk.gov.ida.stuboidcbroker.services.AuthnResponseValidationService;
 import uk.gov.ida.stuboidcbroker.services.RedisService;
-import uk.gov.ida.stuboidcbroker.services.TokenRequestService;
+import uk.gov.ida.stuboidcbroker.services.TokenSenderService;
 import uk.gov.ida.stuboidcbroker.views.RPResponseView;
 
 import javax.ws.rs.*;
@@ -41,7 +41,7 @@ public class StubOidcBrokerFormPostResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(StubOidcBrokerFormPostResource.class);
 
-    private final TokenRequestService tokenRequestService;
+    private final TokenSenderService tokenSenderService;
     private final AuthnRequestGeneratorService authnRequestGeneratorService;
     private final AuthnResponseValidationService authnResponseValidationService;
     private final StubOidcBrokerConfiguration configuration;
@@ -54,12 +54,12 @@ public class StubOidcBrokerFormPostResource {
 
     public StubOidcBrokerFormPostResource(
             StubOidcBrokerConfiguration configuration,
-            TokenRequestService tokenRequestService,
+            TokenSenderService tokenSenderService,
             AuthnRequestGeneratorService authnRequestGeneratorService,
             AuthnResponseValidationService authnResponseValidationService,
             RedisService redisService) {
         this.configuration = configuration;
-        this.tokenRequestService = tokenRequestService;
+        this.tokenSenderService = tokenSenderService;
         this.authnRequestGeneratorService = authnRequestGeneratorService;
         this.authnResponseValidationService = authnResponseValidationService;
         this.redisService = redisService;
@@ -90,39 +90,6 @@ public class StubOidcBrokerFormPostResource {
     }
 
     @POST
-    @Path("/idpAuthenticationRequest")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response sendIdpAuthenticationRequest(@FormParam("idpDomain") String domain, @FormParam("transactionID") String transactionID) {
-        List<String> orgList = Arrays.asList(domain.split(","));
-        String idpDomain = orgList.get(0);
-        String idpName = orgList.get(1);
-
-        URI idpUri = UriBuilder.fromUri(idpDomain).path(Urls.IDP.AUTHENTICATION_URI)
-                .queryParam("transaction-id", transactionID)
-                .queryParam("redirect-path", Urls.StubBroker.IDP_AUTHENTICATION_RESPONE)
-                .build();
-        LOG.info("IDP URI is: " + idpUri);
-
-        return Response
-                .status(302)
-                .location(idpUri)
-                .build();
-    }
-
-    @GET
-    @Path("/idpAuthenticationRespone")
-    @Produces(MediaType.TEXT_HTML)
-    public View handAuthenticationResponse(@QueryParam("transaction-id") String transactionID) {
-        String rpUri = redisService.get(transactionID);
-        String verifiableCredential = getVerifiableCredential(new BearerAccessToken());
-
-        LOG.info("RP URI is: " + rpUri);
-        URI rpUriDomain = UriBuilder.fromUri(rpUri).build();
-
-        return new RPResponseView(rpUriDomain, verifiableCredential, Integer.toString(HttpStatus.SC_OK));
-    }
-
-    @POST
     @Path("/validateAuthenticationResponse")
     @Produces(MediaType.TEXT_HTML)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -150,12 +117,44 @@ public class StubOidcBrokerFormPostResource {
         return new RPResponseView(rpUri, userInfoInJson, Integer.toString(HttpStatus.SC_OK));
     }
 
+    @POST
+    @Path("/idpAuthenticationRequest")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response sendIdpAuthenticationRequest(@FormParam("idpDomain") String domain, @FormParam("transactionID") String transactionID) {
+        List<String> orgList = Arrays.asList(domain.split(","));
+        String idpDomain = orgList.get(0);
+        String idpName = orgList.get(1);
+
+        URI idpUri = UriBuilder.fromUri(idpDomain).path(Urls.IDP.AUTHENTICATION_URI)
+                .queryParam("transaction-id", transactionID)
+                .queryParam("redirect-path", Urls.StubBroker.IDP_AUTHENTICATION_RESPONE)
+                .build();
+        LOG.info("IDP URI is: " + idpUri);
+
+        return Response
+                .status(302)
+                .location(idpUri)
+                .build();
+    }
+
+    @GET
+    @Path("/idpAuthenticationResponse")
+    @Produces(MediaType.TEXT_HTML)
+    public View handAuthenticationResponse(@QueryParam("transaction-id") String transactionID) {
+        String rpUri = redisService.get(transactionID);
+        String verifiableCredential = getVerifiableCredential(new BearerAccessToken());
+
+        LOG.info("RP URI is: " + rpUri);
+        URI rpUriDomain = UriBuilder.fromUri(rpUri).build();
+
+        return new RPResponseView(rpUriDomain, verifiableCredential, Integer.toString(HttpStatus.SC_OK));
+    }
 
     private String retrieveTokenAndUserInfo(AuthorizationCode authCode) {
 
-            OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), brokerDomain);
+            OIDCTokens tokens = tokenSenderService.getTokens(authCode, getClientID(brokerName), brokerDomain);
 
-            String verifiableCredential = tokenRequestService.getVerifiableCredential(tokens.getBearerAccessToken(), brokerDomain);
+            String verifiableCredential = tokenSenderService.getVerifiableCredential(tokens.getBearerAccessToken(), brokerDomain);
 //            UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());
 
 //            String userInfoToJson = userInfo.toJSONObject().toJSONString();

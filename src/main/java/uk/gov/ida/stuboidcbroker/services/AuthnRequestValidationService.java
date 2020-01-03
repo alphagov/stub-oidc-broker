@@ -17,45 +17,44 @@ import java.util.Optional;
 
 public class AuthnRequestValidationService {
 
-    private final TokenGeneratorService tokenGeneratorService;
+    private final TokenHandlerService tokenHandlerService;
     private final RedisService redisService;
 
-    public AuthnRequestValidationService(TokenGeneratorService tokenGeneratorService, RedisService redisService) {
-        this.tokenGeneratorService = tokenGeneratorService;
+    public AuthnRequestValidationService(TokenHandlerService tokenHandlerService, RedisService redisService) {
+        this.tokenHandlerService = tokenHandlerService;
         this.redisService = redisService;
     }
 
-    public AuthenticationErrorResponse handleAuthenticationRequest(AuthenticationRequest authenticationRequest, String transactionID) {
+    public Optional<AuthenticationErrorResponse> handleAuthenticationRequest(AuthenticationRequest authenticationRequest, String transactionID) {
 
         validateRedirectURI(authenticationRequest);
         Optional<ErrorObject> errorObject = validateAuthenticationRequest(authenticationRequest);
 
         if (errorObject.isPresent()) {
-            return new AuthenticationErrorResponse(
+            return Optional.of(new AuthenticationErrorResponse(
                     authenticationRequest.getRedirectionURI(),
                     errorObject.get(),
                     null,
-                    ResponseMode.FRAGMENT);
+                    ResponseMode.FRAGMENT));
         }
         String serialisedRequest = authenticationRequest.toQueryString();
         redisService.set(transactionID, serialisedRequest);
 
-        return null;
+        return Optional.empty();
     }
 
     public AuthenticationSuccessResponse handleAuthenticationRequestResponse(String transactionID) throws ParseException {
         String serialisedRequest = redisService.get(transactionID);
         AuthenticationRequest authenticationRequest = AuthenticationRequest.parse(serialisedRequest);
-        AuthorizationCode authorizationCode = tokenGeneratorService.getAuthorizationCode();
-
+        AuthorizationCode authorizationCode = new AuthorizationCode();
         AccessToken accessToken = new BearerAccessToken();
-
         AccessToken returnedAccessToken = null;
+
         if (authenticationRequest.getResponseType().contains("token")) {
             returnedAccessToken = accessToken;
         }
 
-        JWT idToken = tokenGeneratorService.generateAndGetIdToken(authorizationCode, authenticationRequest, accessToken);
+        JWT idToken = tokenHandlerService.generateAndGetIdToken(authorizationCode, authenticationRequest, accessToken);
 
         return new AuthenticationSuccessResponse(
                 authenticationRequest.getRedirectionURI(),

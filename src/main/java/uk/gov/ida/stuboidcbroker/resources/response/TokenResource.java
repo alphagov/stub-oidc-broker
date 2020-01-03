@@ -6,7 +6,7 @@ import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.gov.ida.stuboidcbroker.services.TokenGeneratorService;
+import uk.gov.ida.stuboidcbroker.services.TokenHandlerService;
 
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -22,11 +22,11 @@ import javax.ws.rs.core.Response;
 @Path("/")
 public class TokenResource {
 
-    private TokenGeneratorService tokenService;
+    private TokenHandlerService tokenService;
     private static final Logger LOG = LoggerFactory.getLogger(TokenResource.class);
 
 
-    public TokenResource(TokenGeneratorService tokenService) {
+    public TokenResource(TokenHandlerService tokenService) {
         this.tokenService = tokenService;
     }
 

@@ -20,9 +20,7 @@ import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.claims.AccessTokenHash;
 import com.nimbusds.openid.connect.sdk.claims.CodeHash;
-import com.nimbusds.openid.connect.sdk.claims.Gender;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
-import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import net.minidev.json.JSONObject;
 import org.slf4j.Logger;
@@ -39,15 +37,15 @@ import java.net.http.HttpResponse;
 import java.util.Collections;
 import java.util.Date;
 
-public class TokenGeneratorService {
+public class TokenHandlerService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TokenGeneratorService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TokenHandlerService.class);
 
     private static final String ISSUER = "stub-oidc-op";
     private RedisService redisService;
     private final StubOidcBrokerConfiguration configuration;
 
-    public TokenGeneratorService(RedisService redisService, StubOidcBrokerConfiguration configuration) {
+    public TokenHandlerService(RedisService redisService, StubOidcBrokerConfiguration configuration) {
         this.redisService = redisService;
         this.configuration = configuration;
     }
@@ -85,11 +83,6 @@ public class TokenGeneratorService {
 
         storeTokens(idToken, accessToken, authCode);
 
-        String idpName = authRequest.getCustomParameter("idp-name").get(0);
-        retrieveAndStoreVerifiableCredential(idpName, accessToken);
-
-//        createUserInfo(accessToken);
-
         return idToken;
     }
 
@@ -102,21 +95,6 @@ public class TokenGeneratorService {
             jsonObject = new JSONObject(JSONObjectUtils.parse(tokens));
             return OIDCTokens.parse(jsonObject);
         } catch (java.text.ParseException | ParseException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public AuthorizationCode getAuthorizationCode() {
-
-        return new AuthorizationCode();
-    }
-
-    public UserInfo getUserInfo(AccessToken accessToken) {
-        String serialisedUserInfo = redisService.get(accessToken.getValue());
-        try {
-            LOG.info("Have successfully retrieved user info from redis using access token");
-            return new UserInfo(new JSONObject(JSONObjectUtils.parse(serialisedUserInfo)));
-        } catch (java.text.ParseException e) {
             throw new RuntimeException(e);
         }
     }
@@ -153,34 +131,6 @@ public class TokenGeneratorService {
             return new RSAKeyGenerator(2048).keyID("123").generate();
         } catch (JOSEException e) {
             throw new RuntimeException("Unable to create RSA key");
-        }
-    }
-
-    private void createUserInfo(AccessToken accessToken) {
-        UserInfo userInfo = new UserInfo(new Subject());
-        userInfo.setGender(new Gender("male"));
-        userInfo.setFamilyName("Smith");
-        userInfo.setGivenName("John");
-        userInfo.setName("John Smith");
-        userInfo.setPhoneNumber("01234567890");
-        userInfo.setPhoneNumberVerified(false);
-        redisService.set(accessToken.getValue(), userInfo.toJSONObject().toJSONString());
-    }
-
-    private void retrieveAndStoreVerifiableCredential(String idpName, AccessToken accessToken) {
-        URI uri = UriBuilder.fromUri(configuration.getIdpURI()).path("/issue/jwt/credential").queryParam("idp-name", idpName).build();
-        HttpRequest request = HttpRequest.newBuilder()
-                .GET()
-                .uri(uri)
-                .build();
-
-        try {
-            HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-            redisService.set(accessToken.getValue(), response.body());
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-           throw new RuntimeException(e);
         }
     }
 }

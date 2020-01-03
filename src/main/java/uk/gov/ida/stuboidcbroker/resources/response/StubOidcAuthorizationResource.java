@@ -21,6 +21,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
+import java.util.Optional;
 
 @Path("/authorizeFormPost")
 public class StubOidcAuthorizationResource {
@@ -42,15 +43,15 @@ public class StubOidcAuthorizationResource {
         try {
             AuthenticationRequest authenticationRequest = AuthenticationRequest.parse(uri);
 
-            AuthenticationErrorResponse errorResponse = validationService.handleAuthenticationRequest(authenticationRequest, transactionID);
+            Optional<AuthenticationErrorResponse> errorResponse = validationService.handleAuthenticationRequest(authenticationRequest, transactionID);
 
-            if (errorResponse != null) {
+            if (errorResponse.isPresent()) {
                 return new BrokerErrorResponseView(
-                        errorResponse.getErrorObject().getCode(),
-                        errorResponse.getErrorObject().getDescription(),
-                        errorResponse.getErrorObject().getHTTPStatusCode(),
-                        errorResponse.getState(),
-                        errorResponse.getRedirectionURI(),
+                        errorResponse.get().getErrorObject().getCode(),
+                        errorResponse.get().getErrorObject().getDescription(),
+                        errorResponse.get().getErrorObject().getHTTPStatusCode(),
+                        errorResponse.get().getState(),
+                        errorResponse.get().getRedirectionURI(),
                         transactionID);
             }
             URI idpUri = UriBuilder.fromUri(
@@ -59,6 +60,7 @@ public class StubOidcAuthorizationResource {
                     .queryParam("transaction-id", transactionID)
                     .queryParam("redirect-path", Urls.StubBroker.RESPONSE_FOR_BROKER)
                     .build();
+
             return Response
                     .status(302)
                     .location(idpUri)
