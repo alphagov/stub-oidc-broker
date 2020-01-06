@@ -24,7 +24,6 @@ public class AuthorizationRequestClientResource {
 
     private final AuthnRequestGeneratorService authnRequestGeneratorService;
     private final RedisService redisService;
-    private URI authorisationURI;
     private URI redirectUri;
 
     public AuthorizationRequestClientResource(
@@ -33,7 +32,7 @@ public class AuthorizationRequestClientResource {
             RedisService redisService) {
         this.authnRequestGeneratorService = authnRequestGeneratorService;
         this.redisService = redisService;
-        redirectUri = UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBroker.REDIRECT_FORM_URI).build();
+        redirectUri = UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBrokerClient.REDIRECT_FORM_URI).build();
     }
 
     @POST
@@ -44,7 +43,7 @@ public class AuthorizationRequestClientResource {
         String brokerDomain = orgList.get(0);
         String brokerName = orgList.get(1);
         storeBrokerNameAndDomain(transactionID, brokerName, brokerDomain);
-        authorisationURI = UriBuilder.fromUri(brokerDomain).path(Urls.StubOp.AUTHORISATION_ENDPOINT_FORM_URI).build();
+        URI authorisationURI = UriBuilder.fromUri(brokerDomain).path(Urls.StubBrokerOPProvider.AUTHORISATION_ENDPOINT_FORM_URI).build();
         return Response
                 .status(302)
                 .location(authnRequestGeneratorService.generateFormPostAuthenticationRequest(

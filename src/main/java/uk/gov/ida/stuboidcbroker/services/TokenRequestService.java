@@ -43,7 +43,7 @@ public class TokenRequestService {
 
     public OIDCTokens getTokens(AuthorizationCode authorizationCode, ClientID clientID, String idpDomain) {
         ClientSecretBasic clientSecretBasic = new ClientSecretBasic(clientID, new Secret());
-        URI redirectURI = UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBroker.REDIRECT_URI).build();
+        URI redirectURI = UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBrokerClient.REDIRECT_URI).build();
         URI tokenURI = UriBuilder.fromUri(configuration.getMiddlewareURI()).path(Urls.Middleware.TOKEN_URI).build();
         Map<String, List<String>> customParams = new HashMap<>();
         customParams.put("destination-url", Collections.singletonList(idpDomain));
@@ -77,7 +77,7 @@ public class TokenRequestService {
     }
 
     public UserInfo getUserInfo(BearerAccessToken bearerAccessToken, String idpDomain) {
-        URI userInfoURI = UriBuilder.fromUri(idpDomain).path(Urls.StubOp.USERINFO_URI).build();
+        URI userInfoURI = UriBuilder.fromUri(idpDomain).path(Urls.StubBrokerOPProvider.USERINFO_URI).build();
         UserInfoRequest userInfoRequest = new UserInfoRequest(
                 userInfoURI,
                 bearerAccessToken);
@@ -107,8 +107,7 @@ public class TokenRequestService {
     private HTTPResponse sendHTTPRequest(HTTPRequest request) {
 
         try {
-            HTTPResponse httpResponse = request.send();
-            return httpResponse;
+            return request.send();
         } catch (IOException e) {
             throw new RuntimeException("Unable to send HTTP Request", e);
         }
@@ -116,7 +115,7 @@ public class TokenRequestService {
 
     public String getVerifiableCredential(BearerAccessToken bearerAccessToken, String brokerDomain) {
         URI userInfoURI = UriBuilder.fromUri(brokerDomain)
-                .path(Urls.StubBroker.USER_INFO).build();
+                .path(Urls.StubBrokerClient.USER_INFO).build();
 
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()

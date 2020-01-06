@@ -30,7 +30,7 @@ Stub OIDC Broker is a implementation of an OpenID Connect client and an OpenID P
 * A Broker will then need to dynamically register to a Broker on another scheme. To do so, obtain the SSA and Private key created from registration on the directory Admin page http://localhost:3000/admin and use it with either the Broker in Scheme 1 http://localhost:6610 or the Broker in Scheme 2 http://localhost:5510. (These Private keys will usually be created offline and are only displayed to demonstrate a simplified on-boarding process)
 * Once a Broker has been registered you can begin a journey using RP-1 using http://localhost:4410 or RP-2 using http://localhost:5510.
 
-### Trouble shooting and logging
+### Troubleshooting and logging
 * The logs to the applications are outputted to relevant log file in the Log directory within this repository. Apart from the Directory and the 2 IDP apps, where the logs are outputted to the log file within their respective repository. 
 
 ### Trust Framework prototype runs on the PAAS 

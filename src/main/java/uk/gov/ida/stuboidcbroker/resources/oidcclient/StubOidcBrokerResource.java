@@ -28,8 +28,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
@@ -70,11 +68,11 @@ public class StubOidcBrokerResource {
         String brokerName = orgList.get(1);
         this.brokerDomain = domain;
         URI requestURI = UriBuilder.fromUri(
-                domain).path(Urls.StubOp.AUTHORISATION_ENDPOINT_URI)
+                domain).path(Urls.StubBrokerOPProvider.AUTHORISATION_ENDPOINT_URI)
                 .build();
 
         URI redirectURI = UriBuilder.fromUri(
-                configuration.getStubBrokerURI()).path(Urls.StubBroker.REDIRECT_URI)
+                configuration.getStubBrokerURI()).path(Urls.StubBrokerClient.REDIRECT_URI)
                 .build();
 
         return Response
@@ -102,10 +100,10 @@ public class StubOidcBrokerResource {
     @Path("/validateAuthenticationResponse")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response validateAuthenticationResponse(String postBody) throws IOException, java.text.ParseException, ParseException {
+    public Response validateAuthenticationResponse(String postBody) throws java.text.ParseException, ParseException {
         Map<String, String> authenticationParams = splitQuery(postBody);
 
-        if (postBody == null || postBody.isEmpty()) {
+        if (postBody.isEmpty()) {
             return Response.status(500).entity("PostBody is empty").build();
         }
 
@@ -122,7 +120,7 @@ public class StubOidcBrokerResource {
     @GET
     @Path("/retrieveTokenAndUserInfo")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response retrieveTokenAndUserInfo(@Context UriInfo uriInfo) throws UnsupportedEncodingException {
+    public Response retrieveTokenAndUserInfo(@Context UriInfo uriInfo) {
 
             String query = uriInfo.getRequestUri().getQuery();
             Map<String, String> authenticationParams = splitQuery(query);

@@ -53,7 +53,7 @@ public class AuthorizationRequestProviderResource {
                     configuration.getIdpURI())
                     .path(Urls.IDP.AUTHENTICATION_URI)
                     .queryParam("transaction-id", transactionID)
-                    .queryParam("redirect-path", Urls.StubBroker.RESPONSE_FOR_BROKER)
+                    .queryParam("redirect-path", Urls.StubBrokerClient.RESPONSE_FOR_BROKER)
                     .build();
 
             return Response

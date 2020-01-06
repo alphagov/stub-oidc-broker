@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 public class RegistrationRequestService {
 
@@ -86,10 +87,10 @@ public class RegistrationRequestService {
 
         List<Organisation> orgList = new ArrayList<>();
 
-        for (int i = 0; i < jsonarray.size(); i++) {
-            JSONObject obj = (JSONObject) jsonarray.get(i);
+        for (Object obj : jsonarray) {
+            JSONObject jsonObj = (JSONObject) obj;
             ObjectMapper objectMapper = new ObjectMapper();
-            Organisation org = objectMapper.readValue(obj.toJSONString(), Organisation.class);
+            Organisation org = objectMapper.readValue(jsonObj.toJSONString(), Organisation.class);
             orgList.add(org);
         }
         return orgList;
@@ -108,7 +109,7 @@ public class RegistrationRequestService {
         }
     }
 
-    private HttpResponse sendClientRegRequest(SignedJWT jwt, String privateKey, String brokerDomain) throws JOSEException, IOException {
+    private HttpResponse<String> sendClientRegRequest(SignedJWT jwt, String privateKey, String brokerDomain) throws JOSEException, IOException {
         URI uri = UriBuilder.fromUri(configuration.getMiddlewareURI()).path(Urls.Middleware.REGISTRATION_URI).build();
         JWTClaimsSet registrationRequest = getRegistrationClaims(jwt.serialize(), brokerDomain);
         SignedJWT signedClientMetadata = createSignedClientMetadata(registrationRequest, privateKey);
@@ -122,10 +123,10 @@ public class RegistrationRequestService {
         .expirationTime(new Date())
         .audience(brokerDomain)
         .jwtID(UUID.randomUUID().toString())
-        .claim("redirect_uris", asList(UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBroker.REDIRECT_URI).build().toString()))
+        .claim("redirect_uris", singletonList(UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBrokerClient.REDIRECT_URI).build().toString()))
         .claim("token_endpoint_auth_method", "tls_client_auth")
         .claim("tls_client_auth_subject_dn", "This MUST contain the Distinguished name (DN) of the certificate that the Client will present to the OP token endpoint.")
-        .claim("grant_types", asList("hybrid"))
+        .claim("grant_types", singletonList("hybrid"))
         .claim("response_types", asList("code id_token", "code id_token token"))
         .claim("application_type", ApplicationType.WEB)
         .claim("id_token_signed_response_alg", JWSAlgorithm.RS256)

@@ -15,7 +15,6 @@ import com.nimbusds.openid.connect.sdk.claims.AccessTokenHash;
 import com.nimbusds.openid.connect.sdk.claims.CodeHash;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Map;
 import java.util.Optional;
 
@@ -60,7 +59,7 @@ public class AuthnResponseValidationService {
         return authorizationCode;
     }
 
-    public Optional<String> checkResponseForErrors(Map<String, String> authenticationParams) throws UnsupportedEncodingException {
+    public Optional<String> checkResponseForErrors(Map<String, String> authenticationParams) {
 
         if (authenticationParams.get("error") != null) {
             return Optional.of(authenticationParams.get("error") + " : " + authenticationParams.get("error_description"));

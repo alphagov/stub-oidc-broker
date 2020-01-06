@@ -2,7 +2,7 @@ package uk.gov.ida.stuboidcbroker.rest;
 
 public interface Urls {
 
-    interface StubBroker {
+    interface StubBrokerClient {
         String REDIRECT_FORM_URI = "/formPost/validateAuthenticationResponse";
         String REDIRECT_URI = "/authenticationCallback";
         String USER_INFO = "/userinfo";
@@ -10,7 +10,7 @@ public interface Urls {
         String RESPONSE_FOR_BROKER = "/authorizeFormPost/response";
     }
 
-    interface StubOp {
+    interface StubBrokerOPProvider {
         String AUTHORISATION_ENDPOINT_URI = "/authorize";
         String USERINFO_URI = "/userinfo";
         String AUTHORISATION_ENDPOINT_FORM_URI = "/authorizeFormPost/authorize";
@@ -19,10 +19,6 @@ public interface Urls {
     interface Directory {
         String REGISTERED_IDPS = "/organisation/idp/";
         String REGISTERED_BROKERS = "/organisation/broker/";
-    }
-
-    interface RP {
-        String AUTHORISATION_ENDPOINT_URI = "/response";
     }
 
     interface Middleware {

@@ -21,7 +21,6 @@ import java.net.http.HttpResponse;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
@@ -42,10 +41,10 @@ public class RegistrationHandlerService {
             .build();
 
     public String processHTTPRequest(SignedJWT signedJWT) {
-        boolean passedValidation = false;
+        boolean passedValidation;
         try {
             passedValidation = validateRegistrationRequest(signedJWT);
-        } catch (ParseException | CertificateException e) {
+        } catch (ParseException e) {
             throw new RuntimeException(e);
         }
 
@@ -56,7 +55,7 @@ public class RegistrationHandlerService {
         }
     }
 
-    private boolean validateRegistrationRequest(SignedJWT signedJWT) throws ParseException, CertificateException {
+    private boolean validateRegistrationRequest(SignedJWT signedJWT) throws ParseException {
         SignedJWT softwareStatement = SignedJWT.parse(signedJWT.getJWTClaimsSet().getClaim("software_statement").toString());
         String softwareJwksEndpoint = softwareStatement.getJWTClaimsSet().getClaim("software_jwks_endpoint").toString();
 
@@ -66,15 +65,11 @@ public class RegistrationHandlerService {
         PublicKey ssaPublicKey = getPublicKeyFromDirectoryForSSA(ssaURI);
         PublicKey jwtPublicKey = getPublicKeyFromDirectoryForRequest(softwareURI);
 
-         boolean passedSSASignatureValidation = validateJWTSignatureAndAlgorithm(ssaPublicKey, softwareStatement);
+        boolean passedSSASignatureValidation = validateJWTSignatureAndAlgorithm(ssaPublicKey, softwareStatement);
         boolean passedJWTSignatureValidation = validateJWTSignatureAndAlgorithm(jwtPublicKey, signedJWT);
 
 
-        if (passedJWTSignatureValidation && passedSSASignatureValidation) {
-            return true;
-        } else {
-            return false;
-        }
+       return passedJWTSignatureValidation && passedSSASignatureValidation;
     }
 
     private PublicKey getPublicKeyFromDirectoryForRequest(URI directoryEndpoint) throws ParseException {

@@ -66,10 +66,9 @@ public class PickerPageResource {
         List<Organisation> registeredBrokers = brokers.stream()
                 .filter(org -> redisService.get(org.getName()) != null)
                 .collect(Collectors.toList());
-        String branding = configuration.getBranding();
 
         LOG.info("Scheme number:" + configuration.getScheme());
-        return new PickerView(idps, registeredBrokers, transactionId, branding, configuration.getScheme());
+        return new PickerView(idps, registeredBrokers, transactionId, configuration.getBranding(), configuration.getScheme());
     }
 
     private List<Organisation> getOrganisationsFromResponse(HttpResponse<String> responseBody) throws IOException {
@@ -83,10 +82,11 @@ public class PickerPageResource {
         }
 
         List<Organisation> orgList = new ArrayList<>();
-        for (int i = 0; i < jsonarray.size(); i++) {
-            JSONObject obj = (JSONObject) jsonarray.get(i);
+
+        for (Object obj : jsonarray) {
+            JSONObject jsonObj = (JSONObject) obj;
             ObjectMapper objectMapper = new ObjectMapper();
-            Organisation org = objectMapper.readValue(obj.toJSONString(), Organisation.class);
+            Organisation org = objectMapper.readValue(jsonObj.toJSONString(), Organisation.class);
             orgList.add(org);
         }
         return orgList;

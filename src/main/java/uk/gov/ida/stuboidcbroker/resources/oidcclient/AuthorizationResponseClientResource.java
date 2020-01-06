@@ -99,7 +99,7 @@ public class AuthorizationResponseClientResource {
 
         URI idpUri = UriBuilder.fromUri(idpDomain).path(Urls.IDP.AUTHENTICATION_URI)
                 .queryParam("transaction-id", transactionID)
-                .queryParam("redirect-path", Urls.StubBroker.IDP_AUTHENTICATION_RESPONE)
+                .queryParam("redirect-path", Urls.StubBrokerClient.IDP_AUTHENTICATION_RESPONE)
                 .build();
         LOG.info("IDP URI is: " + idpUri);
 
