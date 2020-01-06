@@ -1,4 +1,4 @@
-package uk.gov.ida.stuboidcbroker.services;
+package uk.gov.ida.stuboidcbroker.services.oidcclient;
 
 import com.nimbusds.oauth2.sdk.ResponseMode;
 import com.nimbusds.oauth2.sdk.ResponseType;
@@ -7,6 +7,7 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.Nonce;
+import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 
 import java.net.URI;
 

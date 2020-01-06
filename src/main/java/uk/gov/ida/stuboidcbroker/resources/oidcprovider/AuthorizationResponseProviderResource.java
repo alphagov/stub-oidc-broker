@@ -3,7 +3,7 @@ package uk.gov.ida.stuboidcbroker.resources.oidcprovider;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import io.dropwizard.views.View;
-import uk.gov.ida.stuboidcbroker.services.AuthnRequestValidationService;
+import uk.gov.ida.stuboidcbroker.services.oidcprovider.AuthnResponseGeneratorService;
 import uk.gov.ida.stuboidcbroker.views.BrokerResponseView;
 
 import javax.ws.rs.GET;
@@ -15,17 +15,17 @@ import javax.ws.rs.core.MediaType;
 @Path("/authorizeFormPost")
 public class AuthorizationResponseProviderResource {
 
-    private final AuthnRequestValidationService validationService;
+    private final AuthnResponseGeneratorService generatorService;
 
-    public AuthorizationResponseProviderResource(AuthnRequestValidationService validationService) {
-        this.validationService = validationService;
+    public AuthorizationResponseProviderResource(AuthnResponseGeneratorService generatorService) {
+        this.generatorService = generatorService;
     }
 
     @GET
     @Path("/response")
     @Produces(MediaType.TEXT_HTML)
     public View authorizeResponseHandler(@QueryParam("transaction-id") String transactionID) throws ParseException {
-        AuthenticationSuccessResponse successResponse = validationService.handleAuthenticationRequestResponse(transactionID);
+        AuthenticationSuccessResponse successResponse = generatorService.handleAuthenticationRequestResponse(transactionID);
         return new BrokerResponseView(
                 successResponse.getState(),
                 successResponse.getAuthorizationCode(),

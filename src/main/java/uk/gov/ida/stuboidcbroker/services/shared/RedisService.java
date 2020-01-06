@@ -1,4 +1,4 @@
-package uk.gov.ida.stuboidcbroker.services;
+package uk.gov.ida.stuboidcbroker.services.shared;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

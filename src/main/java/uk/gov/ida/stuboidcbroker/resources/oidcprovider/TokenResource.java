@@ -4,7 +4,7 @@ import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.gov.ida.stuboidcbroker.services.TokenHandlerService;
+import uk.gov.ida.stuboidcbroker.services.oidcprovider.TokenHandlerService;
 
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;

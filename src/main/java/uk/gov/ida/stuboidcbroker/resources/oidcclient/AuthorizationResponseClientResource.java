@@ -12,9 +12,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
-import uk.gov.ida.stuboidcbroker.services.AuthnResponseValidationService;
-import uk.gov.ida.stuboidcbroker.services.RedisService;
-import uk.gov.ida.stuboidcbroker.services.TokenRequestService;
+import uk.gov.ida.stuboidcbroker.services.oidcclient.AuthnResponseValidationService;
+import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
+import uk.gov.ida.stuboidcbroker.services.oidcclient.TokenRequestService;
 import uk.gov.ida.stuboidcbroker.views.RPResponseView;
 
 import javax.ws.rs.Consumes;
@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static uk.gov.ida.stuboidcbroker.services.QueryParameterHelper.splitQuery;
+import static uk.gov.ida.stuboidcbroker.services.shared.QueryParameterHelper.splitQuery;
 
 @Path("/formPost")
 public class AuthorizationResponseClientResource {

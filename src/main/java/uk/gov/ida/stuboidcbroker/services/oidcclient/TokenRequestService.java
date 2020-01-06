@@ -1,4 +1,4 @@
-package uk.gov.ida.stuboidcbroker.services;
+package uk.gov.ida.stuboidcbroker.services.oidcclient;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
@@ -19,6 +19,7 @@ import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
+import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;

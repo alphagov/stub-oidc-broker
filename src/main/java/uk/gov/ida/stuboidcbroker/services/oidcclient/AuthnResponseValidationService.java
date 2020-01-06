@@ -1,4 +1,4 @@
-package uk.gov.ida.stuboidcbroker.services;
+package uk.gov.ida.stuboidcbroker.services.oidcclient;
 
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jwt.JWTClaimsSet;

@@ -1,4 +1,4 @@
-package uk.gov.ida.stuboidcbroker.services;
+package uk.gov.ida.stuboidcbroker.services.oidcclient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.domain.Organisation;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
+import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;

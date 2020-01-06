@@ -5,8 +5,8 @@ import io.dropwizard.views.View;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.domain.Organisation;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
-import uk.gov.ida.stuboidcbroker.services.RedisService;
-import uk.gov.ida.stuboidcbroker.services.RegistrationRequestService;
+import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
+import uk.gov.ida.stuboidcbroker.services.oidcclient.RegistrationRequestService;
 import uk.gov.ida.stuboidcbroker.views.RegistrationView;
 
 import javax.ws.rs.FormParam;

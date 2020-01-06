@@ -3,7 +3,7 @@ package uk.gov.ida.stuboidcbroker.resources.oidcprovider;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.JSONObjectUtils;
 import net.minidev.json.JSONObject;
-import uk.gov.ida.stuboidcbroker.services.RegistrationHandlerService;
+import uk.gov.ida.stuboidcbroker.services.oidcprovider.RegistrationHandlerService;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;

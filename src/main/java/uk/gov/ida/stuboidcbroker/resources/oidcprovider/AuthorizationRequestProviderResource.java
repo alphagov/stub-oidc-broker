@@ -5,7 +5,7 @@ import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
-import uk.gov.ida.stuboidcbroker.services.AuthnRequestValidationService;
+import uk.gov.ida.stuboidcbroker.services.oidcprovider.AuthnRequestValidationService;
 import uk.gov.ida.stuboidcbroker.views.BrokerErrorResponseView;
 
 import javax.ws.rs.GET;

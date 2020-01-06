@@ -1,4 +1,4 @@
-package uk.gov.ida.stuboidcbroker.services;
+package uk.gov.ida.stuboidcbroker.services.shared;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;

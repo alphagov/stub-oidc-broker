@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.domain.Organisation;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
-import uk.gov.ida.stuboidcbroker.services.RedisService;
+import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 import uk.gov.ida.stuboidcbroker.views.PickerView;
 
 import javax.ws.rs.GET;

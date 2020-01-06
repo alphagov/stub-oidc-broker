@@ -19,14 +19,15 @@ import uk.gov.ida.stuboidcbroker.resources.oidcclient.StubOidcBrokerResource;
 import uk.gov.ida.stuboidcbroker.resources.oidcprovider.AuthorizationRequestProviderResource;
 import uk.gov.ida.stuboidcbroker.resources.oidcprovider.TokenResource;
 import uk.gov.ida.stuboidcbroker.resources.oidcprovider.UserInfoResource;
-import uk.gov.ida.stuboidcbroker.services.AuthnRequestGeneratorService;
-import uk.gov.ida.stuboidcbroker.services.AuthnRequestValidationService;
-import uk.gov.ida.stuboidcbroker.services.AuthnResponseValidationService;
-import uk.gov.ida.stuboidcbroker.services.RegistrationHandlerService;
-import uk.gov.ida.stuboidcbroker.services.RegistrationRequestService;
-import uk.gov.ida.stuboidcbroker.services.TokenHandlerService;
-import uk.gov.ida.stuboidcbroker.services.TokenRequestService;
-import uk.gov.ida.stuboidcbroker.services.RedisService;
+import uk.gov.ida.stuboidcbroker.services.oidcclient.AuthnRequestGeneratorService;
+import uk.gov.ida.stuboidcbroker.services.oidcprovider.AuthnRequestValidationService;
+import uk.gov.ida.stuboidcbroker.services.oidcclient.AuthnResponseValidationService;
+import uk.gov.ida.stuboidcbroker.services.oidcprovider.AuthnResponseGeneratorService;
+import uk.gov.ida.stuboidcbroker.services.oidcprovider.RegistrationHandlerService;
+import uk.gov.ida.stuboidcbroker.services.oidcclient.RegistrationRequestService;
+import uk.gov.ida.stuboidcbroker.services.oidcprovider.TokenHandlerService;
+import uk.gov.ida.stuboidcbroker.services.oidcclient.TokenRequestService;
+import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 
 public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfiguration> {
 
@@ -74,10 +75,11 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
         TokenHandlerService tokenHandlerService = new TokenHandlerService(redisService, configuration);
         RegistrationHandlerService registrationHandlerService = new RegistrationHandlerService(redisService, configuration);
         AuthnRequestValidationService authnRequestValidationService = new AuthnRequestValidationService(tokenHandlerService, redisService);
+        AuthnResponseGeneratorService authnResponseGeneratorService = new AuthnResponseGeneratorService(tokenHandlerService, redisService);
 
         environment.jersey().register(new TokenResource(tokenHandlerService));
         environment.jersey().register(new UserInfoResource(tokenHandlerService));
-        environment.jersey().register(new AuthorizationResponseProviderResource(authnRequestValidationService));
+        environment.jersey().register(new AuthorizationResponseProviderResource(authnResponseGeneratorService));
         environment.jersey().register(new AuthorizationRequestProviderResource(authnRequestValidationService, configuration));
         environment.jersey().register(new RegistrationHandlerResource(registrationHandlerService));
     }

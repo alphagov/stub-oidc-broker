@@ -5,8 +5,8 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
-import uk.gov.ida.stuboidcbroker.services.AuthnRequestGeneratorService;
-import uk.gov.ida.stuboidcbroker.services.RedisService;
+import uk.gov.ida.stuboidcbroker.services.oidcclient.AuthnRequestGeneratorService;
+import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;

@@ -1,4 +1,4 @@
-package uk.gov.ida.stuboidcbroker.services;
+package uk.gov.ida.stuboidcbroker.services.oidcprovider;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -11,6 +11,7 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import net.minidev.json.JSONObject;
 import org.glassfish.jersey.internal.util.Base64;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
+import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
