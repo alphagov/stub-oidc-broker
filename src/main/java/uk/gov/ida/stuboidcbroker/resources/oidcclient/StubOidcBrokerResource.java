@@ -36,6 +36,9 @@ import java.util.Optional;
 
 import static uk.gov.ida.stuboidcbroker.services.QueryParameterHelper.splitQuery;
 
+//This class is an alternative to the AuthorizationRequestClientResource. Both are designed for the OpenID connect Hybrid flow. It's an example of how the client can parse the authentication response from the client using javascript. This is done in the authenticationCallbackHttp.mustache to parse the fragment of the response for the client.
+//What is currently happening as an alternative to the above method, is that the OP provider is sending the response through a HTML page meaning that the client isn't required to parse the response using Javascript.
+@Deprecated
 @Path("/")
 public class StubOidcBrokerResource {
 
