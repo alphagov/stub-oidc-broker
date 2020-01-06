@@ -3,6 +3,8 @@ set -e
 
 source ../stub-oidc-broker/scripts/service.sh
 
+check_if_dependencies_are_installed
+
 start_service broker1 stub-oidc-broker
 start_service broker2 stub-oidc-broker
 

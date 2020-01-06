@@ -36,3 +36,17 @@ function git_current_branch() {
 function echo_as_error {
 	echo "${red}$1${reset}"
 }
+
+function clone_if_not_present {
+  if [ -d "$1" ]
+  then
+    echo "$repo already exists. Skipping..."
+  else
+    if [ "$git_protocol" = "ssh" ]
+    then
+      git clone "git@github.com:alphagov/$1.git"
+    else
+      git clone "https://github.com/alphagov/$1"
+    fi
+  fi
+}

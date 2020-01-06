@@ -1,6 +1,26 @@
 #!/usr/bin/env bash
 set -e
 
+check_if_dependencies_are_installed() {
+  if ! command -v java >/dev/null 2>&1
+  then
+    echo "You must install 'java' to run this script" >&2
+    exit 1
+  elif ! command -v python3 >/dev/null 2>&1
+  then
+    echo "You must install 'python3' to run this script" >&2
+    exit 1
+  elif ! command -v ruby >/dev/null 2>&1
+  then
+    echo "You must install 'ruby' to run this script" >&2
+    exit 1
+  elif ! command -v node >/dev/null 2>&1
+  then
+    echo "You must install 'node' to run this script" >&2
+    exit 1
+  fi
+}
+
 start_service() {
   local servicename="$1"
   local directory="$2"
@@ -32,6 +52,5 @@ start_service() {
       echo -e "Starting ${servicename}\n"
       popd > /dev/null
   fi
-
 }
 
