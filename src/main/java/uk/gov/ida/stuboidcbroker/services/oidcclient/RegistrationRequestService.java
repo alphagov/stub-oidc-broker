@@ -82,7 +82,6 @@ public class RegistrationRequestService {
         try {
             jsonarray = (JSONArray) parser.parse(responseBody.body());
         } catch (net.minidev.json.parser.ParseException e) {
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
 

@@ -106,11 +106,13 @@ public class AuthnResponseValidationService {
         //3.1.3.7 - The Client MUST validate that the audience Claim contains it's client_id value.
         //The audience claim may contain multiple values but it must be rejected if the ID token does not list the Client
         //as a valid audience. It is up to the client whether to reject if it contains any other audience claims that are not trusted.
-        for (Audience audience : idToken.getAudience()) {
-            if (!audience.getValue().equals(clientId.getValue())) {
-                throw new RuntimeException("INVALID AUDIENCE: " + audience.getValue() + " - Stub OIDC Client only trusts audience where the client id is: " + clientId.getValue());
-            }
-        }
+        idToken.getAudience().forEach(aud -> {
+            if (!aud.getValue().equals(clientId.getValue()))
+                throw new RuntimeException(
+                        "INVALID AUDIENCE: " + aud.getValue() +
+                        " - Stub OIDC Client only trusts audience where the client id is: " + clientId.getValue());
+        });
+
         //TODO - As per 3.1.3.7 - We might need more specific validation to check if there are multiple audiences and if the client trusts them. As per point 3,4 and 5 on 3.1.3.7.a
     }
 

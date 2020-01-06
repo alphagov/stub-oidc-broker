@@ -77,7 +77,6 @@ public class PickerPageResource {
         try {
             jsonarray = (JSONArray) parser.parse(responseBody.body());
         } catch (ParseException e) {
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
 

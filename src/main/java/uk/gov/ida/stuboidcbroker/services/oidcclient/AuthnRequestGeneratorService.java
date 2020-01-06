@@ -23,28 +23,7 @@ public class AuthnRequestGeneratorService {
             URI requestUri,
             ClientID clientID,
             URI redirectUri,
-            ResponseType responseType) {
-        Scope scope = new Scope("openid");
-
-        State state = new State();
-        Nonce nonce = new Nonce();
-        AuthenticationRequest authenticationRequest = new AuthenticationRequest(
-                requestUri,
-                responseType,
-                scope, clientID, redirectUri, state, nonce);
-
-        redisService.set("state::" + state.getValue(), nonce.getValue());
-        redisService.incr("nonce::" + nonce.getValue());
-
-        return authenticationRequest;
-    }
-
-    public AuthenticationRequest generateFormPostAuthenticationRequest(
-            URI requestUri,
-            ClientID clientID,
-            URI redirectUri,
             ResponseType responseType,
-            String idpName,
             String transactionID) {
         Scope scope = new Scope("openid");
 
@@ -58,7 +37,6 @@ public class AuthnRequestGeneratorService {
                 .endpointURI(requestUri)
                 .state(state)
                 .nonce(nonce)
-                .customParameter("idp-name", idpName)
                 .customParameter("transaction-id", transactionID)
                 .build();
 

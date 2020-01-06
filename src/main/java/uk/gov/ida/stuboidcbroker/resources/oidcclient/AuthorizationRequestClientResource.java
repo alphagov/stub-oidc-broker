@@ -22,17 +22,17 @@ import java.util.List;
 @Path("/formPost")
 public class AuthorizationRequestClientResource {
 
+    private final StubOidcBrokerConfiguration configuration;
     private final AuthnRequestGeneratorService authnRequestGeneratorService;
     private final RedisService redisService;
-    private URI redirectUri;
 
     public AuthorizationRequestClientResource(
             StubOidcBrokerConfiguration configuration,
             AuthnRequestGeneratorService authnRequestGeneratorService,
             RedisService redisService) {
+        this.configuration = configuration;
         this.authnRequestGeneratorService = authnRequestGeneratorService;
         this.redisService = redisService;
-        redirectUri = UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBrokerClient.REDIRECT_FORM_URI).build();
     }
 
     @POST
@@ -43,15 +43,15 @@ public class AuthorizationRequestClientResource {
         String brokerDomain = orgList.get(0);
         String brokerName = orgList.get(1);
         storeBrokerNameAndDomain(transactionID, brokerName, brokerDomain);
+        URI redirectUri = UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBrokerClient.REDIRECT_FORM_URI).build();
         URI authorisationURI = UriBuilder.fromUri(brokerDomain).path(Urls.StubBrokerOPProvider.AUTHORISATION_ENDPOINT_FORM_URI).build();
         return Response
                 .status(302)
-                .location(authnRequestGeneratorService.generateFormPostAuthenticationRequest(
+                .location(authnRequestGeneratorService.generateAuthenticationRequest(
                         authorisationURI,
                         getClientID(brokerName),
                         redirectUri,
                         new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN),
-                        brokerName,
                         transactionID)
                         .toURI())
                 .build();

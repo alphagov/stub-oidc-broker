@@ -84,7 +84,8 @@ public class StubOidcBrokerResource {
                         requestURI,
                         getClientID(brokerDomain),
                         redirectURI,
-                        new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN))
+                        new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN),
+                        "transaction-id")
                         .toURI())
                         .build();
     }
