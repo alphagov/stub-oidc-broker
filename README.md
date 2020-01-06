@@ -22,6 +22,7 @@ Stub OIDC Broker is a implementation of an OpenID Connect client and an OpenID P
 * Clone the repo and run the `./clone-trustframework-repos.sh` script to clone all the necessary repo's required to run the trust framework prototype.
 * Run the `./startup-all-services.sh` script. This will start up applications to represent 2 different schemes. You can find log output under the logs directory within this repo. 
 * This will start up 2 schemes. Each scheme within this implementation currently contains 1 RP, 1 Broker and 1 IDP. The Middleware is used for establishing Mutual TLS when talking from Broker to Broker across schemes for solely the token and registration endpoints. The Directory and Registration services are used across Schemes within the Framework as a point of trust. 
+* You can pull the latest of all the trustframework repositories  by running the `./update-trustframework-repos.sh` script.
 
 
 ### Registering a Broker to the Directory 
