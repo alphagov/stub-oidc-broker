@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
-    <meta name="robots" content="noindex" />
-    <meta name="googlebot" content="noindex" />
-    <meta name="AdsBot-Google" content="noindex" />
+    <meta name="robots" content="noindex"/>
+    <meta name="googlebot" content="noindex"/>
+    <meta name="AdsBot-Google" content="noindex"/>
     <meta name="googlebot-news" content="nosnippet">
 
     <title>Pick an IDP</title>
@@ -19,76 +19,66 @@
 
 <body class="unbranded-component">
 
-    <div class="form-signin text-center p-4 pt-5">
-      <div class="container">
+<div class="form-signin text-center p-4 pt-5">
+    <div class="container">
         <div class="row justify-content-md-center">
-          <img class="pr-4 mr-5 border-right" src="/assets/images/idp{{scheme}}.svg" width="35%" alt="IDP logo">
-          <img src="/assets/images/trustmark.svg" width="35%" alt="Trustmark" />
+            <img class="pr-4 mr-5 border-right" src="/assets/images/idp{{scheme}}.svg" width="35%" alt="IDP logo">
+            <img src="/assets/images/trustmark.svg" width="35%" alt="Trustmark"/>
         </div>
-      </div>
-
-        <h1 class="h1 mb-3 font-weight-heavy" style="display:none;">Validating your identity</h1>
-
-        <form class="mt-5" method="post" action="/formPost/idpAuthenticationRequest">
-            <input type="hidden" name="transactionID" value="{{transactionID}}"/>
-
-            {{#idps}}
-            <button class="btn btn-lg btn-danger btn-block" name="idpDomain" value="{{domain}},{{name}}" type="submit">
-                {{#isSchemeOne}}
-                Continue with Post Office ID
-                {{/isSchemeOne}}
-                {{^isSchemeOne}}
-                Continue with MasterCard ID Check
-                {{/isSchemeOne}}
-            </button>
-            {{/idps}}
-        </form>
-
-        <form method="post" action="/formPost/serviceAuthenticationRequest">
-            <input type="hidden" name="transactionID" value="{{transactionID}}"/>
-            <div class="border mt-5 mb-5"></div>
-            <p class="mt-5 mb-5">or use an existing identity</p>
-
-            <div class="row">
-                <div class="col broker-logo">
-                    {{#brokers}}
-                        <button class="logo {{getSchemeLogoClassName}}" name="brokerDomain" value="{{domain}},{{name}}" type="submit"></button>
-                    {{/brokers}}
-                    {{^brokers}}
-                        Remember to register the broker
-                    {{/brokers}}
-                </div>
-                <div class="col broker-logo">
-                    <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
-                </div>
-            </div>
-
-            <div class="row mt-3">
-                <div class="col broker-logo">
-                    <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
-                </div>
-                <div class="col broker-logo">
-                    <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col">
-                    <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
-                </div>
-                <div class="col">
-                    <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col">
-                    <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
-                </div>
-                <div class="col">
-                    <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
-                </div>
-            </div>
-        </form>
-        <p class="mt-5 mb-3"><a href="#" class="text-danger">How we use your data</a></p>
     </div>
+
+    <h1 class="h1 mb-3 font-weight-heavy" style="display:none;">Validating your identity</h1>
+
+    <form class="mt-5" method="post" action="/formPost/idpAuthenticationRequest">
+        <input type="hidden" name="transactionID" value="{{transactionID}}"/>
+
+        {{#idps}}
+        <button class="btn btn-lg btn-danger btn-block" name="idpDomain" value="{{domain}},{{name}}" type="submit">
+            {{#isSchemeOne}}
+            Continue with Post Office ID
+            {{/isSchemeOne}}
+            {{^isSchemeOne}}
+            Continue with MasterCard ID Check
+            {{/isSchemeOne}}
+        </button>
+        {{/idps}}
+    </form>
+
+    <form method="post" action="/formPost/serviceAuthenticationRequest">
+        <input type="hidden" name="transactionID" value="{{transactionID}}"/>
+        <div class="border mt-5 mb-5"></div>
+        <p class="mt-5 mb-5">or use an existing identity</p>
+        {{#brokers}}
+            {{#startNewRow}}
+                <div class="row">
+            {{/startNewRow}}
+            <div class="col broker-logo">
+                <button class="logo {{getSchemeLogoClassName}}" name="brokerDomain" value="{{domain}},{{name}}"
+                        type="submit"></button>
+            </div>
+            {{^startNewRow}}
+            </div>
+            {{/startNewRow}}
+            <input type="hidden" name="index" value="{{index}}"/>
+        {{/brokers}}
+        {{^brokers}}
+            Remember to register the broker
+        {{/brokers}}
+
+        {{#getDummyBrokers}}
+            {{#startNewRow}}
+                <div class="row mt-3">
+            {{/startNewRow}}
+            <div class="col broker-logo">
+                <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
+            </div>
+            {{^startNewRow}}
+                </div>
+            {{/startNewRow}}
+            <input type="hidden" name="index" value="{{index}}"/>
+        {{/getDummyBrokers}}
+    </form>
+    <p class="mt-5 mb-3"><a href="#" class="text-danger">How we use your data</a></p>
+</div>
 </body>
 </html>

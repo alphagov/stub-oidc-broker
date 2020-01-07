@@ -84,45 +84,34 @@
                 <input type="hidden" name="transactionID" value="{{transactionID}}"/>
                 <div class="border mt-5 mb-5"></div>
                 <p class="mt-5 mb-5">or use an existing identity</p>
-
+                {{#brokers}}
+                {{#startNewRow}}
                 <div class="row">
+                    {{/startNewRow}}
                     <div class="col broker-logo">
-                        {{#brokers}}
-                            <button class="logo {{getSchemeLogoClassName}}" name="brokerDomain" value="{{domain}},{{name}}" type="submit"></button>
-                        {{/brokers}}
-                        {{^brokers}}
-                            Remember to register the broker
-                        {{/brokers}}
+                        <button class="logo {{getSchemeLogoClassName}}" name="brokerDomain" value="{{domain}},{{name}}" type="submit"></button>
                     </div>
-                    <div class="col broker-logo">
-                        <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
-                    </div>
+                    {{^startNewRow}}
                 </div>
+                {{/startNewRow}}
+                 <input type="hidden" name="index" value="{{index}}"/>
+                {{/brokers}}
+                {{^brokers}}
+                Remember to register the broker
+                {{/brokers}}
 
-                <div class="row mt-3">
-                    <div class="col broker-logo">
-                        <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
-                    </div>
-                    <div class="col broker-logo">
-                        <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col">
-                        <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
-                    </div>
-                    <div class="col">
-                        <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col">
-                        <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
-                    </div>
-                    <div class="col">
-                        <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
-                    </div>
-                </div>
+                {{#getDummyBrokers}}
+                    {{#startNewRow}}
+                        <div class="row mt-3">
+                    {{/startNewRow}}
+                        <div class="col broker-logo">
+                            <button class="logo placeholder-logo" name="brokerDomain" value="#,#" type="submit"></button>
+                        </div>
+                    {{^startNewRow}}
+                        </div>
+                    {{/startNewRow}}
+                    <input type="hidden" name="index" value="{{index}}"/>
+                {{/getDummyBrokers}}
             </form>
             <p class="mt-5 mb-3"><a href="#" class="govuk-link">How we use your data</a></p>
         </div>
