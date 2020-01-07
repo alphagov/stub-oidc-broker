@@ -10,6 +10,7 @@ import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.resources.oidcclient.AuthorizationResponseClientResource;
+import uk.gov.ida.stuboidcbroker.resources.oidcclient.IdpClientResource;
 import uk.gov.ida.stuboidcbroker.resources.oidcprovider.AuthorizationResponseProviderResource;
 import uk.gov.ida.stuboidcbroker.resources.oidcprovider.RegistrationHandlerResource;
 import uk.gov.ida.stuboidcbroker.resources.oidcclient.AuthorizationRequestClientResource;
@@ -67,7 +68,8 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
         environment.jersey().register(new JsonProcessingExceptionMapper(true));
         environment.jersey().register(new RegistrationRequestResource(registrationRequestService, redisService, configuration));
         environment.jersey().register(new PickerPageResource(configuration, redisService));
-        environment.jersey().register(new AuthorizationResponseClientResource(configuration, tokenRequestService, authResponseService, redisService));
+        environment.jersey().register(new AuthorizationResponseClientResource(tokenRequestService, authResponseService, redisService));
+        environment.jersey().register(new IdpClientResource(redisService, configuration));
     }
 
 
