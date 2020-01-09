@@ -24,11 +24,3 @@ button{
 .placeholder-logo {
     background-image: url('/assets/images/idp0.svg');
 }
-
-.scheme-1 {
-    background-image: url('/assets/images/idp1.svg');
-}
-
-.scheme-2 {
-    background-image: url('/assets/images/idp2.svg');
-}

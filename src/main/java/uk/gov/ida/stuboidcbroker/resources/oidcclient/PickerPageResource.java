@@ -62,13 +62,12 @@ public class PickerPageResource {
 
         List<Organisation> idps = getOrganisationsFromResponse(idpsResponse);
         List<Organisation> brokers = getOrganisationsFromResponse(brokersResponse);
-
         List<Organisation> registeredBrokers = brokers.stream()
                 .filter(org -> redisService.get(org.getName()) != null)
                 .collect(Collectors.toList());
 
         LOG.info("Scheme number:" + configuration.getScheme());
-        return new PickerView(idps, registeredBrokers, transactionId, configuration.getBranding(), configuration.getScheme());
+        return new PickerView(idps, registeredBrokers, transactionId, configuration.getBranding(), configuration.getScheme(), configuration.getDirectoryURI());
     }
 
     private List<Organisation> getOrganisationsFromResponse(HttpResponse<String> responseBody) throws IOException {

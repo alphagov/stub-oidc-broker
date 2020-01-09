@@ -14,16 +14,18 @@ public class PickerView extends View {
     private List<Organisation> brokers;
     private String transactionID;
     private String scheme;
+    private String directoryUri;
 
     public PickerView(List<Organisation> idps, List<Organisation> brokers,
                       String transactionID, String branding,
-                      String scheme) {
+                      String scheme, String directoryUri) {
         super(branding + "-picker.mustache");
         this.idps = idps;
         this.brokers = brokers;
         this.transactionID = transactionID;
         this.index = 0;
         this.scheme = scheme;
+        this.directoryUri = directoryUri;
     }
 
     public String getTransactionID() {
@@ -45,6 +47,10 @@ public class PickerView extends View {
 
     public String getScheme() {
         return scheme;
+    }
+
+    public String getDirectoryUri() {
+        return directoryUri;
     }
 
     public boolean isSchemeOne() {

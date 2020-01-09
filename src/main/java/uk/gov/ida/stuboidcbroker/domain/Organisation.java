@@ -15,6 +15,8 @@ public class Organisation {
 
     private String scheme;
 
+    private String id;
+
     public String getName() {
         return name;
     }
@@ -35,6 +37,10 @@ public class Organisation {
         return scheme;
     }
 
+    public String getId() {
+        return id;
+    }
+
     @Override
     public String toString() {
         return "Organisation{" +
@@ -43,6 +49,7 @@ public class Organisation {
                 ", domain='" + domain + '\'' +
                 ", loa='" + loa + '\'' +
                 ", scheme='" + scheme + '\'' +
+                ", id='" + id + '\'' +
                 '}';
     }
 }
