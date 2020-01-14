@@ -37,7 +37,7 @@ Stub OIDC Broker is a implementation of an OpenID Connect client and an OpenID P
 ### Trust Framework prototype runs on the PAAS 
 * All Trust Framework prototype applications apart from the Middleware run on the PAAS. The Middleware runs on AWS Lightsail. 
 * To deploy Stub OIDC Broker simply login to the PAAS and select the build-learn space. 
-* Run `./gradlew pushToPaas` and this will deploy the app. 
+* Run `./gradlew pushToPaas` and this will deploy both instances of Stub Broker to the PAAS. 
 
 ### For more information about Open ID Connect - 
 * Open ID Connect Spec - https://openid.net/specs/openid-connect-core-1_0.html

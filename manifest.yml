@@ -1,6 +1,7 @@
 ---
 applications:
   - name: stub-oidc-broker-1
+    path: build/distributions/stub-oidc-broker.zip
     memory: 1G
     buildpacks:
       - java_buildpack
@@ -19,6 +20,7 @@ applications:
     services:
       - redis-service
   - name: stub-oidc-broker-2
+    path: build/distributions/stub-oidc-broker.zip
     memory: 1G
     buildpacks:
       - java_buildpack

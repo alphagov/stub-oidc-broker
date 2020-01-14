@@ -51,16 +51,11 @@ run {
     args 'server'
 }
 
-task pushB2toPaas(type: Exec) {
-    commandLine 'cf', 'push', 'stub-oidc-broker-2', '-p', 'build/distributions/stub-oidc-broker.zip'
-}
 
 task pushToPaas(type: Exec) {
-    commandLine 'cf', 'push', 'stub-oidc-broker-1', '-p', 'build/distributions/stub-oidc-broker.zip'
+    commandLine 'cf', 'push'
 }
 
 pushToPaas.dependsOn distZip
-pushToPaas.dependsOn 'pushB2toPaas'
-
 
 
