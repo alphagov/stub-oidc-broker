@@ -23,30 +23,10 @@ Stub OIDC Broker is a implementation of an OpenID Connect client and an OpenID P
 
 * Clone the `stub-oidc-broker` repo and run `./clone-trustframework-repos.sh` to clone the others.
 
-* Install postgres:
+* Install postgres (if you don't have an instance already):
   
   ```bash
   brew install postgres
-  ```
-
-* In the `trust-framework-directory-prototype` repo prepare the rails app:
-
-  ```bash
-  bundle install
-  yarn install --check-files
-  export IDP=idp1
-  bundle exec rails db:setup
-  bundle exec rails db:migrate
-  ```
-
-* In the `trust-framework-idp` repo, prepare the rails app:
-
-  ```bash
-  bundle install
-  yarn install --check-files
-  export IDP=idp1
-  bundle exec rails db:setup
-  bundle exec rails db:migrate
   ```
 
 ### starting the apps
@@ -55,7 +35,9 @@ Stub OIDC Broker is a implementation of an OpenID Connect client and an OpenID P
 
 This will start up applications to represent 2 different schemes. You can find log output under the logs directory within this repo.
 
-Each scheme within this implementation currently contains 1 RP, 1 Broker and 1 IDP. The Middleware is used for establishing Mutual TLS when talking from Broker to Broker across schemes for solely the token and registration endpoints. The Directory and Registration services are used across Schemes within the Framework as a point of trust.
+The Middleware is used for establishing Mutual TLS when talking from Broker to Broker across schemes for solely the token and registration endpoints. The Directory and Registration services are used across Schemes within the Framework as a point of trust.
+
+Use the onboarding app to add brokers and IDPs to the directory.
 
 You can pull the latest of all the trustframework repositories  by running the `./update-trustframework-repos.sh` script.
 
