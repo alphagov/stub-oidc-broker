@@ -16,7 +16,6 @@ import uk.gov.ida.stuboidcbroker.views.RPResponseView;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
@@ -46,9 +45,8 @@ public class AuthorizationResponseClientResource {
 
     @POST
     @Path("/validateAuthenticationResponse")
-    @Produces(MediaType.TEXT_HTML)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public View validateAuthenticationResponse(String postBody) throws IOException, java.text.ParseException, ParseException {
+    public View validateAuthenticationResponse(String postBody) throws java.text.ParseException, ParseException {
         Map<String, String> authenticationParams = splitQuery(postBody);
         String transactionID = authenticationParams.get("transactionID");
         String rpDomain = redisService.get(transactionID);

@@ -82,7 +82,7 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
         environment.jersey().register(new TokenResource(tokenHandlerService));
         environment.jersey().register(new UserInfoResource(tokenHandlerService));
         environment.jersey().register(new AuthorizationResponseProviderResource(authnResponseGeneratorService));
-        environment.jersey().register(new AuthorizationRequestProviderResource(authnRequestValidationService, configuration));
+        environment.jersey().register(new AuthorizationRequestProviderResource(authnRequestValidationService, configuration, redisService));
         environment.jersey().register(new RegistrationHandlerResource(registrationHandlerService));
     }
 }
