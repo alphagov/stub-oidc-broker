@@ -83,7 +83,7 @@ public class AuthorizationRequestProviderResource {
         }
     }
 
-    //TODO: The spec states there should be a post method for this endpoint as well
+    //This is the same as the above but this supplies us a picker page. There might be a nicer way of doing this where we are not duplicating code
     @GET
     @Path("/authorize-sp")
     public View authorize(@Context UriInfo uriInfo, @QueryParam("transaction-id") String transactionID, @QueryParam("response-uri") String spURI) {
@@ -107,7 +107,7 @@ public class AuthorizationRequestProviderResource {
 
             URI serviceProviderURI = UriBuilder.fromUri(spURI).build();
 
-            storeTransactionID(transactionID + "service-provider", serviceProviderURI.toString());
+            storeRpResponseURI(transactionID, serviceProviderURI.toString());
 
             String scheme = configuration.getScheme();
             URI idpRequestURI = UriBuilder.fromUri(configuration.getDirectoryURI()).path(Urls.Directory.REGISTERED_IDPS + scheme)
@@ -164,8 +164,8 @@ public class AuthorizationRequestProviderResource {
         }
     }
 
-    private void storeTransactionID(String transactionID, String rpResponsePath) {
+    private void storeRpResponseURI(String transactionID, String rpResponsePath) {
 
-        redisService.set(transactionID, rpResponsePath);
+        redisService.set(transactionID + "service-provider", rpResponsePath);
     }
 }

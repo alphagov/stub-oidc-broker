@@ -3,6 +3,7 @@ package uk.gov.ida.stuboidcbroker.resources.oidcclient;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.dropwizard.views.View;
 import org.apache.http.HttpStatus;
@@ -10,7 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.ida.stuboidcbroker.services.oidcclient.AuthnResponseValidationService;
 import uk.gov.ida.stuboidcbroker.services.oidcclient.TokenRequestService;
+import uk.gov.ida.stuboidcbroker.services.oidcprovider.AuthnResponseGeneratorService;
 import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
+import uk.gov.ida.stuboidcbroker.views.BrokerResponseView;
 import uk.gov.ida.stuboidcbroker.views.RPResponseView;
 
 import javax.ws.rs.Consumes;
@@ -33,14 +36,17 @@ public class AuthorizationResponseClientResource {
     private final TokenRequestService tokenRequestService;
     private final AuthnResponseValidationService authnResponseValidationService;
     private final RedisService redisService;
+    private final AuthnResponseGeneratorService generatorService;
 
     public AuthorizationResponseClientResource(
             TokenRequestService tokenRequestService,
             AuthnResponseValidationService authnResponseValidationService,
-            RedisService redisService) {
+            RedisService redisService,
+            AuthnResponseGeneratorService generatorService) {
         this.tokenRequestService = tokenRequestService;
         this.authnResponseValidationService = authnResponseValidationService;
         this.redisService = redisService;
+        this.generatorService = generatorService;
     }
 
     @POST
@@ -49,7 +55,7 @@ public class AuthorizationResponseClientResource {
     public View validateAuthenticationResponse(String postBody) throws java.text.ParseException, ParseException {
         Map<String, String> authenticationParams = splitQuery(postBody);
         String transactionID = authenticationParams.get("transactionID");
-        String rpDomain = redisService.get(transactionID);
+        String rpDomain = redisService.get(transactionID  + "service-provider");
         LOG.info("RP Domain is :" + rpDomain);
         URI rpUri = UriBuilder.fromUri(rpDomain).build();
 
@@ -69,6 +75,25 @@ public class AuthorizationResponseClientResource {
         String userInfoInJson = retrieveTokenAndUserInfo(authorizationCode, brokerName, brokerDomain);
 
         return new RPResponseView(rpUri, userInfoInJson, Integer.toString(HttpStatus.SC_OK));
+    }
+
+    @POST
+    @Path("/validateAuthenticationResponseForService")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public View validateAuthenticationResponseForService(String postBody) throws ParseException {
+        Map<String, String> authenticationParams = splitQuery(postBody);
+        String transactionID = authenticationParams.get("transactionID");
+        redisService.set(transactionID + "response-from-broker", postBody);
+
+
+        AuthenticationSuccessResponse successResponse = generatorService.handleAuthenticationRequestResponse(transactionID);
+        return new BrokerResponseView(
+                successResponse.getState(),
+                successResponse.getAuthorizationCode(),
+                successResponse.getIDToken(),
+                successResponse.getRedirectionURI(),
+                successResponse.getAccessToken(),
+                transactionID);
     }
 
     private String retrieveTokenAndUserInfo(AuthorizationCode authCode, String brokerName, String brokerDomain) {

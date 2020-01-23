@@ -40,8 +40,7 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
     public void run(StubOidcBrokerConfiguration configuration, Environment environment) {
         RedisService redisService = new RedisService(configuration);
 
-        registerOidcClientResources(environment, configuration, redisService);
-        registerOidcProviderResources(environment, configuration, redisService);
+        registerResources(environment, configuration, redisService);
     }
 
     @Override
@@ -57,7 +56,11 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
                         new EnvironmentVariableSubstitutor(false)));
     }
 
-    private void registerOidcClientResources(Environment environment, StubOidcBrokerConfiguration configuration, RedisService redisService) {
+    private void registerResources(Environment environment, StubOidcBrokerConfiguration configuration, RedisService redisService) {
+        TokenHandlerService tokenHandlerService = new TokenHandlerService(redisService, configuration);
+        RegistrationHandlerService registrationHandlerService = new RegistrationHandlerService(redisService, configuration);
+        AuthnRequestValidationService authnRequestValidationService = new AuthnRequestValidationService(tokenHandlerService, redisService);
+        AuthnResponseGeneratorService authnResponseGeneratorService = new AuthnResponseGeneratorService(tokenHandlerService, redisService);
         TokenRequestService tokenRequestService = new TokenRequestService(configuration, redisService);
         AuthnRequestGeneratorService authnRequestGeneratorService = new AuthnRequestGeneratorService(redisService);
         AuthnResponseValidationService authResponseService = new AuthnResponseValidationService(tokenRequestService);
@@ -68,19 +71,10 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
         environment.jersey().register(new JsonProcessingExceptionMapper(true));
         environment.jersey().register(new RegistrationRequestResource(registrationRequestService, redisService, configuration));
         environment.jersey().register(new PickerPageResource(configuration, redisService));
-        environment.jersey().register(new AuthorizationResponseClientResource(tokenRequestService, authResponseService, redisService));
+        environment.jersey().register(new AuthorizationResponseClientResource(tokenRequestService, authResponseService, redisService, authnResponseGeneratorService));
         environment.jersey().register(new IdpClientResource(redisService, configuration));
-    }
-
-
-    private void registerOidcProviderResources(Environment environment, StubOidcBrokerConfiguration configuration, RedisService redisService) {
-        TokenHandlerService tokenHandlerService = new TokenHandlerService(redisService, configuration);
-        RegistrationHandlerService registrationHandlerService = new RegistrationHandlerService(redisService, configuration);
-        AuthnRequestValidationService authnRequestValidationService = new AuthnRequestValidationService(tokenHandlerService, redisService);
-        AuthnResponseGeneratorService authnResponseGeneratorService = new AuthnResponseGeneratorService(tokenHandlerService, redisService);
-
         environment.jersey().register(new TokenResource(tokenHandlerService));
-        environment.jersey().register(new UserInfoResource(tokenHandlerService));
+        environment.jersey().register(new UserInfoResource(tokenHandlerService, redisService, authResponseService, tokenRequestService));
         environment.jersey().register(new AuthorizationResponseProviderResource(authnResponseGeneratorService));
         environment.jersey().register(new AuthorizationRequestProviderResource(authnRequestValidationService, configuration, redisService));
         environment.jersey().register(new RegistrationHandlerResource(registrationHandlerService));

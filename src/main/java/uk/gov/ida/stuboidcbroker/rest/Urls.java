@@ -3,7 +3,7 @@ package uk.gov.ida.stuboidcbroker.rest;
 public interface Urls {
 
     interface StubBrokerClient {
-        String REDIRECT_FORM_URI = "/formPost/validateAuthenticationResponse";
+        String REDIRECT_FORM_URI = "/formPost/validateAuthenticationResponseForService";
         String REDIRECT_URI = "/authenticationCallback";
         String USER_INFO = "/userinfo";
         String RESPONSE_FOR_BROKER = "/authorizeFormPost/response";
