@@ -45,8 +45,11 @@ You can pull the latest of all the trustframework repositories  by running the `
 
 * The Directory is the point of trust for the framework and the Registration service is the frontend to the Directory. A Broker/Scheme will need to be registered to the Directory before a Broker on another scheme can register to that Broker. 
 * When running locally the Registration service can be located at http://localhost:5000. 
-* A Broker will then need to dynamically register to a Broker on another scheme. To do so, obtain the SSA and Private key created from registration on the directory Admin page http://localhost:3000/admin and use it with either the Broker in Scheme 1 http://localhost:6610 or the Broker in Scheme 2 http://localhost:5510. (These Private keys will usually be created offline and are only displayed to demonstrate a simplified on-boarding process)
-* Once a Broker has been registered you can begin a journey using RP-1 using http://localhost:4410 or RP-2 using http://localhost:5510.
+* A Broker will then need to dynamically register to a Broker on another scheme. To do so:
+  * obtain the SSA and Private key created from registration on the directory Admin page http://localhost:3000/admin, and
+  * use it with either the Broker in Scheme 1 http://localhost:6610 or the Broker in Scheme 2 http://localhost:5510.
+* (These Private keys will usually be created offline and are only displayed to demonstrate a simplified on-boarding process.)
+* Once a Broker has been registered you can begin a journey using RP-1 using http://localhost:4410 or RP-2 using http://localhost:4412.
 
 ### Troubleshooting and logging
 
