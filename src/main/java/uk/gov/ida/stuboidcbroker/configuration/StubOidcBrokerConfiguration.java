@@ -13,6 +13,7 @@ public class StubOidcBrokerConfiguration extends Configuration {
     private String idpURI;
     private String scheme;
     private String branding;
+    private String orgID;
 
     public String getStubBrokerURI() {
         return stubBrokerURI;
@@ -48,5 +49,9 @@ public class StubOidcBrokerConfiguration extends Configuration {
 
     public String getBranding() {
         return branding;
+    }
+
+    public String getOrgID() {
+        return orgID;
     }
 }

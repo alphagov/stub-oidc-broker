@@ -1,5 +1,6 @@
 package uk.gov.ida.stuboidcbroker.resources.oidcprovider;
 
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.id.ClientID;
@@ -19,6 +20,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.util.Map;
 
 import static uk.gov.ida.stuboidcbroker.services.shared.QueryParameterHelper.splitQuery;
@@ -89,7 +91,12 @@ public class UserInfoResource {
 
     private String retrieveTokenAndUserInfo(AuthorizationCode authCode, String brokerName, String brokerDomain) {
 
-        OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), brokerDomain);
+        OIDCTokens tokens;
+        try {
+            tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), brokerDomain);
+        } catch (IOException|JOSEException  e) {
+            throw new RuntimeException(e);
+        }
 //      UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());
 //      String userInfoToJson = userInfo.toJSONObject().toJSONString();
 

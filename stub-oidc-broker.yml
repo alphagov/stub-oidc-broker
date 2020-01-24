@@ -8,7 +8,7 @@ server:
 
 stubBrokerURI: ${STUB_BROKER_URI:-"http://localhost:6610"}
 
-redisURI: ${REDIS_URI:-"redis://192.168.204.170:6380"}
+redisURI: ${REDIS_URI:-"redis://192.168.205.9:6380"}
 
 directoryURI: ${DIRECTORY_URI:-"http://localhost:3000"}
 
@@ -23,3 +23,5 @@ softwareID: "Stub OIDC Broker Software"
 scheme: ${SCHEME:-"1"}
 
 branding: ${BRANDING:-"private"}
+
+orgID: ${ORG_ID:-"Broker1"}

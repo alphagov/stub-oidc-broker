@@ -1,5 +1,6 @@
 package uk.gov.ida.stuboidcbroker.resources.oidcclient;
 
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.ResponseType;
@@ -28,6 +29,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
+import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
@@ -124,7 +126,7 @@ public class StubOidcBrokerResource {
     @GET
     @Path("/retrieveTokenAndUserInfo")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response retrieveTokenAndUserInfo(@Context UriInfo uriInfo) {
+    public Response retrieveTokenAndUserInfo(@Context UriInfo uriInfo) throws IOException, JOSEException {
 
             String query = uriInfo.getRequestUri().getQuery();
             Map<String, String> authenticationParams = splitQuery(query);

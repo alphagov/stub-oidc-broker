@@ -68,6 +68,9 @@ public class RegistrationRequestService {
         String body = httpResponse.body();
         LOG.info("HTTP RESPONSE AS STRING: " + body);
 
+        if (body.equals("Failed Validation")) {
+            return body;
+        }
             JSONObject jsonObjectResponse = JSONObjectUtils.parse(body);
 
             if (jsonObjectResponse.get("client_id") != null) {

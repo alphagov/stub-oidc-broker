@@ -48,11 +48,13 @@ import java.util.Optional;
 @Path("/")
 public class TokenResource {
 
-    private TokenHandlerService tokenHandlerService;
+    private final TokenHandlerService tokenHandlerService;
+    private final StubOidcBrokerConfiguration configuration;
     private static final Logger LOG = LoggerFactory.getLogger(TokenResource.class);
 
-    public TokenResource(TokenHandlerService tokenHandlerService) {
+    public TokenResource(TokenHandlerService tokenHandlerService, StubOidcBrokerConfiguration configuration) {
         this.tokenHandlerService = tokenHandlerService;
+        this.configuration = configuration;
     }
 
     private final HttpClient httpClient = HttpClient.newBuilder()
@@ -66,7 +68,9 @@ public class TokenResource {
             MultivaluedMap<String, String> formParams) throws ParseException, JOSEException, InvalidClientException {
         LOG.info("Token end point");
 
-        if (formParams.get("client_assertion") != null) {
+        if (formParams.get("client_assertion") == null) {
+            return Response.status(Response.Status.FORBIDDEN).build();
+        }
             PrivateKeyJWT privateKeyJWT = PrivateKeyJWT.parse(formParams);
 
             ClientCredentialsSelector<ClientMetadata> clientCredentialsSelector = new ClientCredentialsSelector<>() {
@@ -88,9 +92,8 @@ public class TokenResource {
                 }
             };
 
-            ClientAuthenticationVerifier authenticationVerifier = new ClientAuthenticationVerifier(clientCredentialsSelector, Collections.singleton(new Audience("http://localhost:6610/token")));
+            ClientAuthenticationVerifier authenticationVerifier = new ClientAuthenticationVerifier(clientCredentialsSelector, Collections.singleton(new Audience(configuration.getStubBrokerURI() + "/token")));
             authenticationVerifier.verify(privateKeyJWT, null, null);
-        }
 
         Optional<String> authCodeString = formParams.get("code").stream().findFirst();
         AuthorizationCode authCode = new AuthorizationCode(authCodeString.orElseThrow(() -> new RuntimeException("AuthorizationCode is null at token endpoint")));
