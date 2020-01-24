@@ -41,23 +41,24 @@ public class RegistrationHandlerService {
     private final HttpClient httpClient = HttpClient.newBuilder()
             .build();
 
-    public String processHTTPRequest(SignedJWT signedJWT) {
+    public String processHTTPRequest(SignedJWT signedJWT) throws ParseException {
         boolean passedValidation;
+        SignedJWT softwareStatement = SignedJWT.parse(signedJWT.getJWTClaimsSet().getClaim("software_statement").toString());
+
         try {
-            passedValidation = validateRegistrationRequest(signedJWT);
+            passedValidation = validateRegistrationRequest(signedJWT, softwareStatement);
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
 
         if (passedValidation) {
-            return generateClientInformationResponse(signedJWT).toJSONString();
+            return generateClientInformationResponse(signedJWT, softwareStatement).toJSONString();
         } else {
             return "Failed Validation";
         }
     }
 
-    private boolean validateRegistrationRequest(SignedJWT signedJWT) throws ParseException {
-        SignedJWT softwareStatement = SignedJWT.parse(signedJWT.getJWTClaimsSet().getClaim("software_statement").toString());
+    private boolean validateRegistrationRequest(SignedJWT signedJWT, SignedJWT softwareStatement) throws ParseException {
         String softwareJwksEndpoint = softwareStatement.getJWTClaimsSet().getClaim("software_jwks_endpoint").toString();
 
         URI ssaURI = UriBuilder.fromUri(configuration.getDirectoryURI()).path("directory/" + softwareStatement.getJWTClaimsSet().getClaim("software_client_id") + "/key").build();
@@ -141,8 +142,9 @@ public class RegistrationHandlerService {
         }
     }
 
-    private JSONObject generateClientInformationResponse(SignedJWT signedJWT) {
+    private JSONObject generateClientInformationResponse(SignedJWT signedJWT, SignedJWT softwareStatement) throws ParseException {
         ClientMetadata clientMetadata;
+         String url = softwareStatement.getJWTClaimsSet().getClaim("software_jwks_endpoint").toString();
         try {
             JSONObject responseJson = signedJWT.getJWTClaimsSet().toJSONObject();
             responseJson.remove("software_statement");
@@ -151,14 +153,14 @@ public class RegistrationHandlerService {
             throw new RuntimeException(e);
         }
         ClientID clientID = new ClientID();
-        persistClientID(clientID);
+        persistClientID(clientID, url);
         ClientInformation clientInformation = new ClientInformation(clientID, new Date(), clientMetadata, null);
 
         return clientInformation.toJSONObject();
     }
 
-    private void persistClientID(ClientID clientID) {
+    private void persistClientID(ClientID clientID, String url) {
         String clientIdString = clientID.toString();
-        redisService.set(clientIdString, clientIdString);
+        redisService.set(clientIdString, url);
     }
 }

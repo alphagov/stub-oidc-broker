@@ -20,6 +20,7 @@ import net.minidev.json.JSONObject;
 import org.glassfish.jersey.internal.util.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.services.oidcprovider.TokenHandlerService;
 
 import javax.ws.rs.Consumes;
@@ -76,7 +77,9 @@ public class TokenResource {
 
                 @Override
                 public List<? extends PublicKey> selectPublicKeys(ClientID claimedClientID, ClientAuthenticationMethod authMethod, JWSHeader jwsHeader, boolean forceRefresh, Context<ClientMetadata> context) {
-                    URI uri = UriBuilder.fromUri("http://localhost:3000/organisation/rp/RP-1/software-statement/RP-1/certificates").build();
+                    String clientID = privateKeyJWT.getClientID().toString();
+                    URI uri = UriBuilder.fromUri(tokenHandlerService.getCertificateUrl(clientID)).build();
+
                     try {
                         return Collections.singletonList(getPublicKeyFromDirectory(uri));
                     } catch (java.text.ParseException e) {

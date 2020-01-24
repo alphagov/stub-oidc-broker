@@ -130,4 +130,8 @@ public class TokenHandlerService {
             throw new RuntimeException("Unable to create RSA key");
         }
     }
+
+    public String getCertificateUrl(String clientID) {
+        return redisService.get(clientID);
+    }
 }
