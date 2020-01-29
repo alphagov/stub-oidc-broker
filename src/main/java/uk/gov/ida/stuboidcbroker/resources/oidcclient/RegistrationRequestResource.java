@@ -52,13 +52,13 @@ public class RegistrationRequestResource {
     @POST
     @Path("/sendRegistrationRequest")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response sendRegistrationRequest(@FormParam("ssa") String ssa, @FormParam("privateKey") String privateKey, @FormParam("brokerDomain") String brokerDomain) throws JOSEException, java.text.ParseException, IOException {
+    public Response sendRegistrationRequest(@FormParam("ssa") String ssa, @FormParam("privateKey") String privateKey, @FormParam("brokerDomain") String brokerDomain, @FormParam("clientToken") String clientToken) throws JOSEException, java.text.ParseException, IOException {
         // get ssa for this broker from directory
         // get private key for this broker directory
         List<String> orgList = Arrays.asList(brokerDomain.split(","));
         String domain = orgList.get(0).trim();
         String brokerName = orgList.get(1).trim();
-        String responseString = registrationRequestService.sendRegistrationRequest(ssa, privateKey, domain, brokerName);
+        String responseString = registrationRequestService.sendRegistrationRequest(ssa, privateKey, domain, brokerName, clientToken);
 
         return Response.ok(responseString).build();
     }

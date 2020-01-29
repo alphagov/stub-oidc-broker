@@ -13,6 +13,7 @@ public interface Urls {
         String AUTHORISATION_ENDPOINT_URI = "/authorize";
         String USERINFO_URI = "/userinfo";
         String TOKEN_URI = "/token";
+        String REGISTER_URI = "/register";
         String AUTHORISATION_ENDPOINT_FORM_URI = "/authorizeFormPost/authorize";
     }
 
