@@ -19,6 +19,7 @@ public interface Urls {
     interface Directory {
         String REGISTERED_IDPS = "/organisation/idp/";
         String REGISTERED_BROKERS = "/organisation/broker/";
+        String VERIFY_CLIENT_TOKEN = "/verify-client-token";
     }
 
     interface Middleware {

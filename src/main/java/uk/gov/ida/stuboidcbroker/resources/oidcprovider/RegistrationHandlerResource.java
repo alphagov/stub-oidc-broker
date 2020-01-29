@@ -3,6 +3,8 @@ package uk.gov.ida.stuboidcbroker.resources.oidcprovider;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.JSONObjectUtils;
 import net.minidev.json.JSONObject;
+import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
+import uk.gov.ida.stuboidcbroker.rest.Urls;
 import uk.gov.ida.stuboidcbroker.services.oidcprovider.RegistrationHandlerService;
 
 import javax.validation.constraints.NotNull;
@@ -25,8 +27,11 @@ public class RegistrationHandlerResource {
 
     private final RegistrationHandlerService registrationHandlerService;
 
-    public RegistrationHandlerResource(RegistrationHandlerService registrationHandlerService) {
+    private final StubOidcBrokerConfiguration configuration;
+
+    public RegistrationHandlerResource(RegistrationHandlerService registrationHandlerService, StubOidcBrokerConfiguration configuration) {
         this.registrationHandlerService = registrationHandlerService;
+        this.configuration = configuration;
     }
 
     private final HttpClient httpClient = HttpClient.newBuilder()
@@ -37,13 +42,15 @@ public class RegistrationHandlerResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response register(String requestBody, @HeaderParam("Authorization") @NotNull String authorizationHeader) throws ParseException, com.nimbusds.oauth2.sdk.ParseException {
 
-        HttpResponse<String> directoryResponse = sendHttpRequest(UriBuilder.fromUri("http://localhost:3000/verify-client-token").build(), authorizationHeader);
+        HttpResponse<String> directoryResponse = sendHttpRequest(UriBuilder.fromUri(configuration.getDirectoryURI()).path(Urls.Directory.VERIFY_CLIENT_TOKEN).build(), authorizationHeader);
 
         String orgId = JSONObjectUtils.parse(directoryResponse.body()).getAsString("organisation_id");
 
         if (orgId == null) {
             return Response.status(Response.Status.FORBIDDEN).build();
         }
+
+        // Maybe validate against the orgId in the SSA
 
         JSONObject jwtObject = JSONObjectUtils.parse(requestBody);
         String signedJwt = jwtObject.get("signed-jwt").toString();
@@ -55,8 +62,12 @@ public class RegistrationHandlerResource {
 
     private HttpResponse<String> sendHttpRequest(URI uri, String clientToken) {
 
+        JSONObject json = new JSONObject();
+        json.put("client_token", clientToken);
+
         HttpRequest request = HttpRequest.newBuilder()
-                .POST(HttpRequest.BodyPublishers.ofString(("client_token=" + clientToken)))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(json.toJSONString()))
                 .uri(uri)
                 .build();
 
