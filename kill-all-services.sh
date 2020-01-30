@@ -18,9 +18,8 @@ pushd ../stub-trustframework-rp> /dev/null
 ./kill-rp2.sh
 popd > /dev/null
 
-pushd ../middleware-in-the-middle> /dev/null
-./kill-local-initiator.sh
-./kill-local-receiver.sh
+pushd ../trust-framework-service-provider-prototype> /dev/null
+./kill-tfsp.sh
 popd > /dev/null
 
 pushd ../trust-framework-idp> /dev/null

@@ -11,8 +11,7 @@ start_service broker2 stub-oidc-broker
 start_service rp1 stub-trustframework-rp
 start_service rp2 stub-trustframework-rp
 
-start_service local-initiator middleware-in-the-middle
-start_service local-receiver middleware-in-the-middle
+start_service tfsp trust-framework-service-provider-prototype
 
 start_service directory trust-framework-directory-prototype
 start_service registration tpp-registration-prototype

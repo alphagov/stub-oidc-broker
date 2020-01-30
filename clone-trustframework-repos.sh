@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.."
 
 git_protocol=$(check_for_github_ssh)
 
-github_repos="stub-trustframework-rp middleware-in-the-middle trust-framework-directory-prototype tpp-registration-prototype trust-framework-idp"
+github_repos="stub-trustframework-rp trust-framework-directory-prototype tpp-registration-prototype trust-framework-idp trust-framework-service-provider-prototype"
 
 for repo in $github_repos; do
   clone_if_not_present $repo

@@ -20,7 +20,7 @@ done
 red=`tput setaf 1`
 reset=`tput sgr0`
 
-dependencies="stub-oidc-broker stub-trustframework-rp middleware-in-the-middle trust-framework-directory-prototype tpp-registration-prototype trust-framework-idp"
+dependencies="stub-oidc-broker stub-trustframework-rp trust-framework-directory-prototype tpp-registration-prototype trust-framework-idp trust-framework-service-provider-prototype"
 
 for project in $dependencies; do
 
