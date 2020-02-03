@@ -124,7 +124,9 @@ public class AuthorizationRequestProviderResource {
                     .filter(org -> redisService.get(org.getName()) != null)
                     .collect(Collectors.toList());
 
-            return new PickerView(idps, registeredBrokers, transactionID, configuration.getBranding(), configuration.getScheme(), configuration.getDirectoryURI());
+            String redirectUri = UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBrokerClient.REDIRECT_FOR_SERVICE_PROVIDER_URI).build().toString();
+
+            return new PickerView(idps, registeredBrokers, transactionID, configuration.getBranding(), configuration.getScheme(), configuration.getDirectoryURI(), redirectUri);
 
         } catch (ParseException | IOException e) {
             throw new RuntimeException("Unable to parse URI: " + requestURI.toString() + " to authentication request", e);

@@ -38,12 +38,12 @@ public class AuthorizationRequestClientResource {
     @POST
     @Path("/serviceAuthenticationRequest")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response formPostAuthenticationRequest(@FormParam("brokerDomain") String domain, @FormParam("transactionID") String transactionID) {
+    public Response formPostAuthenticationRequest(@FormParam("brokerDomain") String domain, @FormParam("transactionID") String transactionID, @FormParam("redirectURI") String redirectURI) {
+        URI redirectUri = URI.create(redirectURI);
         List<String> orgList = Arrays.asList(domain.split(","));
         String brokerDomain = orgList.get(0);
         String brokerName = orgList.get(1);
         storeBrokerNameAndDomain(transactionID, brokerName, brokerDomain);
-        URI redirectUri = UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBrokerClient.REDIRECT_FORM_URI).build();
         URI authorisationURI = UriBuilder.fromUri(brokerDomain).path(Urls.StubBrokerOPProvider.AUTHORISATION_ENDPOINT_FORM_URI).build();
         return Response
                 .status(302)
@@ -66,7 +66,8 @@ public class AuthorizationRequestClientResource {
         String client_id = redisService.get(brokerName);
         if (client_id != null) {
             return new ClientID(client_id);
+        } else {
+            throw new RuntimeException("No client ID exists");
         }
-        return new ClientID();
     }
 }

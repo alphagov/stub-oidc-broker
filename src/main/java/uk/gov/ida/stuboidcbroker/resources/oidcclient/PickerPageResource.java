@@ -21,6 +21,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -49,7 +50,7 @@ public class PickerPageResource {
 
         URI uri = UriBuilder.fromUri(rpURI).build();
 
-        storeTransactionID(transactionId, uri.toString());
+        storeTransactionID(transactionId + "response-uri", uri.toString());
 
         String scheme = configuration.getScheme();
         URI idpRequestURI = UriBuilder.fromUri(configuration.getDirectoryURI()).path(Urls.Directory.REGISTERED_IDPS + scheme)
@@ -66,8 +67,10 @@ public class PickerPageResource {
                 .filter(org -> redisService.get(org.getName()) != null)
                 .collect(Collectors.toList());
 
+        String redirectUri = UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBrokerClient.REDIRECT_FOR_SERVICE_URI).build().toString();
+
         LOG.info("Scheme number:" + configuration.getScheme());
-        return new PickerView(idps, registeredBrokers, transactionId, configuration.getBranding(), configuration.getScheme(), configuration.getDirectoryURI());
+        return new PickerView(idps, registeredBrokers, transactionId, configuration.getBranding(), configuration.getScheme(), configuration.getDirectoryURI(), redirectUri);
     }
 
     private List<Organisation> getOrganisationsFromResponse(HttpResponse<String> responseBody) throws IOException {

@@ -56,7 +56,7 @@ public class AuthorizationResponseClientResource {
     public View validateAuthenticationResponse(String postBody) throws java.text.ParseException, ParseException, IOException, JOSEException {
         Map<String, String> authenticationParams = splitQuery(postBody);
         String transactionID = authenticationParams.get("transactionID");
-        String rpDomain = redisService.get(transactionID  + "service-provider");
+        String rpDomain = redisService.get(transactionID  + "response-uri");
         LOG.info("RP Domain is :" + rpDomain);
         URI rpUri = UriBuilder.fromUri(rpDomain).build();
 
@@ -79,15 +79,14 @@ public class AuthorizationResponseClientResource {
     }
 
     @POST
-    @Path("/validateAuthenticationResponseForService")
+    @Path("/validateAuthenticationResponseForServiceProvider")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public View validateAuthenticationResponseForService(String postBody) throws ParseException {
         Map<String, String> authenticationParams = splitQuery(postBody);
         String transactionID = authenticationParams.get("transactionID");
         redisService.set(transactionID + "response-from-broker", postBody);
-
-
         AuthenticationSuccessResponse successResponse = generatorService.handleAuthenticationRequestResponse(transactionID);
+
         return new BrokerResponseView(
                 successResponse.getState(),
                 successResponse.getAuthorizationCode(),

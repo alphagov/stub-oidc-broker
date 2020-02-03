@@ -13,6 +13,7 @@ export ADMIN_PORT=6611
 export IDP_URI=http://localhost:3333
 export SCHEME=1
 export BRANDING=public
+export ORG_ID=Broker1
 log="logs/broker1_console.log"
 
 

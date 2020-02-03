@@ -15,10 +15,12 @@ public class PickerView extends View {
     private String transactionID;
     private String scheme;
     private String directoryUri;
+    private String redirectURI;
 
     public PickerView(List<Organisation> idps, List<Organisation> brokers,
                       String transactionID, String branding,
-                      String scheme, String directoryUri) {
+                      String scheme, String directoryUri,
+                      String redirectURI) {
         super(branding + "-picker.mustache");
         this.idps = idps;
         this.brokers = brokers;
@@ -26,6 +28,7 @@ public class PickerView extends View {
         this.index = 0;
         this.scheme = scheme;
         this.directoryUri = directoryUri;
+        this.redirectURI = redirectURI;
     }
 
     public String getTransactionID() {
@@ -43,6 +46,10 @@ public class PickerView extends View {
     public int getIndex() {
         ++index;
         return index;
+    }
+
+    public String getRedirectURI() {
+        return redirectURI;
     }
 
     public String getScheme() {

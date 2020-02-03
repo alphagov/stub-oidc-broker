@@ -12,7 +12,8 @@ export STUB_BROKER_URI=http://localhost:5510
 export ADMIN_PORT=5511
 export IDP_URI=http://localhost:3334
 export SCHEME=2
-export BRANDING=public
+export BRANDING=private
+export ORG_ID=Broker2
 log="logs/broker2_console.log"
 
 ./gradlew installDist

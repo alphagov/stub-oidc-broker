@@ -46,6 +46,7 @@
 
     <form method="post" action="/formPost/serviceAuthenticationRequest">
         <input type="hidden" name="transactionID" value="{{transactionID}}"/>
+        <input type="hidden" name="redirectURI" value="{{redirectURI}}"/>
         <div class="border mt-5 mb-5"></div>
         <p class="mt-5 mb-5">or use an existing identity</p>
         {{#brokers}}
