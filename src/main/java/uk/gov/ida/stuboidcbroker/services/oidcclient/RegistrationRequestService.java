@@ -17,8 +17,6 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.domain.Organisation;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
@@ -53,30 +51,24 @@ public class RegistrationRequestService {
         this.configuration = configuration;
     }
 
-    private static final Logger LOG = LoggerFactory.getLogger(RegistrationRequestService.class);
-
-    public String sendRegistrationRequest(String ssa, String privateKey, String brokerDomain, String brokerName, String clientToken)
-            throws JOSEException, ParseException, IOException {
+    public String sendRegistrationRequest(String ssa, String privateKey, String brokerDomain, String brokerName, String clientToken) {
 
         SignedJWT signedJWT;
         try {
             signedJWT = SignedJWT.parse(ssa);
         } catch (ParseException e) {
-            throw new RuntimeException(e);
+            return "Unable to parse SSA:\n\n " + e;
         }
-        HttpResponse<String> httpResponse = sendClientRegRequest(signedJWT, privateKey, brokerDomain, clientToken);
-        String body = httpResponse.body();
-        LOG.info("HTTP RESPONSE AS STRING: " + body);
-
-        if (body.equals("Failed Validation")) {
-            return body;
+        String httpResponse;
+        try {
+            httpResponse = sendHttpRegistrationRequest(signedJWT, privateKey, brokerDomain, clientToken);
+        } catch (IOException| JOSEException e) {
+            return "There was an error with the Private Key used in the Registration Request:\n\n " + e;
         }
-            JSONObject jsonObjectResponse = JSONObjectUtils.parse(body);
 
-            if (jsonObjectResponse.get("client_id") != null) {
-                saveClientID(brokerName, jsonObjectResponse.get("client_id").toString());
-            }
-        return body;
+        String processedHttpResponse = processHttpRegistrationResponse(httpResponse, brokerName);
+
+        return processedHttpResponse;
     }
 
     public List<Organisation> getListOfBrokersFromResponse(HttpResponse<String> responseBody) throws IOException {
@@ -112,11 +104,14 @@ public class RegistrationRequestService {
         }
     }
 
-    private HttpResponse<String> sendClientRegRequest(SignedJWT jwt, String privateKey, String brokerDomain, String clientToken) throws JOSEException, IOException {
+    private String sendHttpRegistrationRequest(SignedJWT jwt, String privateKey, String brokerDomain, String clientToken) throws JOSEException, IOException {
         URI uri = UriBuilder.fromUri(brokerDomain).path(Urls.StubBrokerOPProvider.REGISTER_URI).build();
         JWTClaimsSet registrationRequest = getRegistrationClaims(jwt.serialize(), brokerDomain);
         SignedJWT signedClientMetadata = createSignedClientMetadata(registrationRequest, privateKey);
-        return sendHttpRequest(uri, signedClientMetadata.serialize(), brokerDomain, clientToken);
+
+        HttpResponse<String> httpResponse = sendHttpRequest(uri, signedClientMetadata.serialize(), brokerDomain, clientToken);
+
+        return httpResponse.body();
     }
 
     private JWTClaimsSet getRegistrationClaims(String seralizedSoftwareStatement, String brokerDomain) {
@@ -179,6 +174,25 @@ public class RegistrationRequestService {
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException("This could be 1 out of 2 exceptions. Take your pick", e);
         }
+    }
+
+    private String processHttpRegistrationResponse(String httpResponse, String brokerName) {
+        if (httpResponse.equals("Failed Validation")) {
+            return httpResponse;
+        }
+
+        JSONObject jsonObjectResponse;
+        try {
+            jsonObjectResponse = JSONObjectUtils.parse(httpResponse);
+        } catch (ParseException e) {
+            return "Unable to parse registration response:\n\n " + httpResponse;
+        }
+
+        if (jsonObjectResponse.get("client_id") != null) {
+            saveClientID(brokerName, jsonObjectResponse.get("client_id").toString());
+        }
+
+        return httpResponse;
     }
 
     private void saveClientID(String brokerName, String clientID) {

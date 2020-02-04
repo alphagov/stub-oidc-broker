@@ -66,9 +66,10 @@ public class PickerPageResource {
                 .filter(org -> redisService.get(org.getName()) != null)
                 .collect(Collectors.toList());
 
-        String redirectUri = UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBrokerClient.REDIRECT_FOR_SERVICE_URI).build().toString();
+        String redirectUri = UriBuilder.fromUri(configuration.getStubBrokerURI())
+                .path(Urls.StubBrokerClient.REDIRECT_FOR_SERVICE_URI)
+                .build().toString();
 
-        LOG.info("Scheme number:" + configuration.getScheme());
         return new PickerView(idps, registeredBrokers, transactionId, configuration.getBranding(), configuration.getScheme(), configuration.getDirectoryURI(), redirectUri);
     }
 

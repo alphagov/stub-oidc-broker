@@ -88,6 +88,7 @@ public class IdpClientResource {
 
         HttpResponse<String> responseBody;
         try {
+
             responseBody = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);

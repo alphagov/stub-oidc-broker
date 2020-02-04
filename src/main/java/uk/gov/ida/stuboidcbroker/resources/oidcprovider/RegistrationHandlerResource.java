@@ -44,7 +44,7 @@ public class RegistrationHandlerResource {
         String orgId = JSONObjectUtils.parse(directoryResponse.body()).getAsString("organisation_id");
 
         if (orgId == null) {
-            return Response.status(Response.Status.FORBIDDEN).build();
+            return Response.status(Response.Status.FORBIDDEN).entity("Org ID not found in Directory. Probably because the client token sent in the registration request is invalid").build();
         }
 
         // Maybe validate against the orgId in the SSA
