@@ -57,9 +57,6 @@ public class TokenResource {
         this.configuration = configuration;
     }
 
-    private final HttpClient httpClient = HttpClient.newBuilder()
-            .build();
-
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
@@ -83,6 +80,8 @@ public class TokenResource {
                 public List<? extends PublicKey> selectPublicKeys(ClientID claimedClientID, ClientAuthenticationMethod authMethod, JWSHeader jwsHeader, boolean forceRefresh, Context<ClientMetadata> context) {
                     String clientID = privateKeyJWT.getClientID().toString();
                     URI uri = UriBuilder.fromUri(tokenHandlerService.getCertificateUrl(clientID)).build();
+
+                    LOG.info("Directory URI for retrieving public key on token endpoint: " + uri.toString());
 
                     try {
                         return Collections.singletonList(getPublicKeyFromDirectory(uri));
@@ -130,7 +129,8 @@ public class TokenResource {
                 .build();
 
         try {
-            return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+            return response;
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }

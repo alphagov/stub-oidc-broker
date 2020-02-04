@@ -54,9 +54,6 @@ public class TokenRequestService {
         this.redisService = redisService;
     }
 
-    private final HttpClient httpClient = HttpClient.newBuilder()
-            .build();
-
     public OIDCTokens getTokens(AuthorizationCode authorizationCode, ClientID clientID, String idpDomain) throws IOException, JOSEException {
         URI redirectURI = UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBrokerClient.REDIRECT_URI).build();
         URI tokenURI = UriBuilder.fromUri(idpDomain).path(Urls.StubBrokerOPProvider.TOKEN_URI).build();
@@ -161,7 +158,7 @@ public class TokenRequestService {
         JSONObject jsonResponse;
 
         try {
-            HttpResponse<String>  httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String>  httpResponse = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
             jsonResponse = JSONObjectUtils.parse(httpResponse.body());
         } catch (IOException | InterruptedException | java.text.ParseException e) {
             throw new RuntimeException(e);

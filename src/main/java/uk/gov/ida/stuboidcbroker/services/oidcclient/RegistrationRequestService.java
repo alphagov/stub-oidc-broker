@@ -163,8 +163,6 @@ public class RegistrationRequestService {
     }
 
     private HttpResponse<String> sendHttpRequest(URI uri, String postObject, String brokerDomain, String clientToken) {
-        HttpClient httpClient = HttpClient.newBuilder()
-                .build();
         JSONObject jwtJson = new JSONObject();
         jwtJson.put("signed-jwt", postObject);
         jwtJson.put("destination-url", brokerDomain);
@@ -177,7 +175,7 @@ public class RegistrationRequestService {
                 .build();
 
         try {
-            return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException("This could be 1 out of 2 exceptions. Take your pick", e);
         }

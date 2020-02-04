@@ -34,9 +34,6 @@ public class RegistrationHandlerResource {
         this.configuration = configuration;
     }
 
-    private final HttpClient httpClient = HttpClient.newBuilder()
-            .build();
-
     @POST
     @Path("/register")
     @Produces(MediaType.APPLICATION_JSON)
@@ -72,7 +69,7 @@ public class RegistrationHandlerResource {
                 .build();
 
         try {
-            return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }

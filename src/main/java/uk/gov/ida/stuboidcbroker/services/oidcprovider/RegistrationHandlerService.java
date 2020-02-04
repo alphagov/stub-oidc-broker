@@ -38,9 +38,6 @@ public class RegistrationHandlerService {
         this.configuration = configuration;
     }
 
-    private final HttpClient httpClient = HttpClient.newBuilder()
-            .build();
-
     public String processHTTPRequest(SignedJWT signedJWT) throws ParseException {
         boolean passedValidation;
         SignedJWT softwareStatement = SignedJWT.parse(signedJWT.getJWTClaimsSet().getClaim("software_statement").toString());
@@ -136,8 +133,9 @@ public class RegistrationHandlerService {
                 .build();
 
         try {
-            return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
+
             throw new RuntimeException(e);
         }
     }
