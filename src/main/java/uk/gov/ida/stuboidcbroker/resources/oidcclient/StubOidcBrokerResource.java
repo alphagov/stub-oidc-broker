@@ -1,8 +1,6 @@
 package uk.gov.ida.stuboidcbroker.resources.oidcclient;
 
-import com.nimbusds.jose.JOSEException;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
-import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
@@ -29,7 +27,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
-import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
@@ -106,7 +103,7 @@ public class StubOidcBrokerResource {
     @Path("/validateAuthenticationResponse")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response validateAuthenticationResponse(String postBody) throws java.text.ParseException, ParseException {
+    public Response validateAuthenticationResponse(String postBody) {
         Map<String, String> authenticationParams = splitQuery(postBody);
 
         if (postBody.isEmpty()) {
@@ -119,6 +116,7 @@ public class StubOidcBrokerResource {
             return Response.status(400).entity(errors.get()).build();
         }
 
+
         AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(authenticationParams, getClientID(brokerDomain));
         return Response.ok(authorizationCode.getValue()).build();
     }
@@ -126,7 +124,7 @@ public class StubOidcBrokerResource {
     @GET
     @Path("/retrieveTokenAndUserInfo")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response retrieveTokenAndUserInfo(@Context UriInfo uriInfo) throws IOException, JOSEException {
+    public Response retrieveTokenAndUserInfo(@Context UriInfo uriInfo) {
 
             String query = uriInfo.getRequestUri().getQuery();
             Map<String, String> authenticationParams = splitQuery(query);

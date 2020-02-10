@@ -54,10 +54,16 @@ public class TokenRequestService {
         this.redisService = redisService;
     }
 
-    public OIDCTokens getTokens(AuthorizationCode authorizationCode, ClientID clientID, String idpDomain) throws IOException, JOSEException {
+    public OIDCTokens getTokens(AuthorizationCode authorizationCode, ClientID clientID, String idpDomain) {
         URI redirectURI = UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBrokerClient.REDIRECT_URI).build();
         URI tokenURI = UriBuilder.fromUri(idpDomain).path(Urls.StubBrokerOPProvider.TOKEN_URI).build();
-        PrivateKeyJWT privateKeyJWT = new PrivateKeyJWT(clientID, tokenURI, JWSAlgorithm.RS256, (RSAPrivateKey) getPrivateKey(),null, null);
+
+        PrivateKeyJWT privateKeyJWT;
+        try {
+            privateKeyJWT = new PrivateKeyJWT(clientID, tokenURI, JWSAlgorithm.RS256, (RSAPrivateKey) getPrivateKey(),null, null);
+        } catch (JOSEException e) {
+            throw new RuntimeException("Unable to create PrivateKeyJWT for TokenRequest", e);
+        }
         Map<String, List<String>> customParams = new HashMap<>();
         customParams.put("destination-url", Collections.singletonList(idpDomain));
 
@@ -146,7 +152,7 @@ public class TokenRequestService {
     }
 
     //For testing purposes
-    private PrivateKey getPrivateKey() throws IOException {
+    private PrivateKey getPrivateKey() {
         Security.addProvider(new BouncyCastleProvider());
 
         URI directoryURI = UriBuilder.fromUri(configuration.getDirectoryURI()).path("keys").path(configuration.getOrgID()).build();
@@ -169,8 +175,14 @@ public class TokenRequestService {
         String anotherString = "-----BEGIN RSA PRIVATE KEY-----\n" + responseString + "\n-----END RSA PRIVATE KEY-----";
         PEMParser pemParser = new PEMParser(new StringReader(anotherString));
         JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
-        Object object = pemParser.readObject();
-        KeyPair kp = converter.getKeyPair((PEMKeyPair) object);
+        KeyPair kp;
+
+        try {
+            Object object = pemParser.readObject();
+            kp = converter.getKeyPair((PEMKeyPair) object);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         return kp.getPrivate();
     }

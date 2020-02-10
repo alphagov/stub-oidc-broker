@@ -1,6 +1,5 @@
 package uk.gov.ida.stuboidcbroker.resources.oidcclient;
 
-import com.nimbusds.jose.JOSEException;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.id.ClientID;
@@ -22,7 +21,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
-import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
@@ -53,7 +51,7 @@ public class AuthorizationResponseClientResource {
     @POST
     @Path("/validateAuthenticationResponse")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public View validateAuthenticationResponse(String postBody) throws java.text.ParseException, ParseException, IOException, JOSEException {
+    public View validateAuthenticationResponse(String postBody) {
         Map<String, String> authenticationParams = splitQuery(postBody);
         String transactionID = authenticationParams.get("transactionID");
         String rpDomain = redisService.get(transactionID  + "response-uri");
@@ -66,16 +64,9 @@ public class AuthorizationResponseClientResource {
 
         Optional<String> errors = authnResponseValidationService.checkResponseForErrors(authenticationParams);
 
-        if (errors.isPresent()) {
-            return new RPResponseView(rpUri, "Errors in Response: " + errors.get(), Integer.toString(HttpStatus.SC_BAD_REQUEST));
-        }
-
-        String brokerName = getBrokerName(transactionID);
-        String brokerDomain = getBrokerDomain(transactionID);
-        AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(authenticationParams, getClientID(brokerName));
-        String userInfoInJson = retrieveTokenAndUserInfo(authorizationCode, brokerName, brokerDomain);
-
-        return new RPResponseView(rpUri, userInfoInJson, Integer.toString(HttpStatus.SC_OK));
+        return errors
+                .map(e -> new RPResponseView(rpUri, "Errors in Response: " + e, Integer.toString(HttpStatus.SC_BAD_REQUEST)))
+                .orElseGet(() -> new RPResponseView(rpUri, getUserInfoForRPResponse(transactionID, authenticationParams), Integer.toString(HttpStatus.SC_OK)));
     }
 
     @POST
@@ -96,7 +87,16 @@ public class AuthorizationResponseClientResource {
                 transactionID);
     }
 
-    private String retrieveTokenAndUserInfo(AuthorizationCode authCode, String brokerName, String brokerDomain) throws IOException, JOSEException {
+    private String getUserInfoForRPResponse(String transactionID, Map<String, String> authenticationParams) {
+        String brokerName = getBrokerName(transactionID);
+        String brokerDomain = getBrokerDomain(transactionID);
+        AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(authenticationParams, getClientID(brokerName));
+        String userInfoInJson = retrieveTokenAndUserInfo(authorizationCode, brokerName, brokerDomain);
+
+        return userInfoInJson;
+    }
+
+    private String retrieveTokenAndUserInfo(AuthorizationCode authCode, String brokerName, String brokerDomain) {
 
         OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), brokerDomain);
 //      UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());

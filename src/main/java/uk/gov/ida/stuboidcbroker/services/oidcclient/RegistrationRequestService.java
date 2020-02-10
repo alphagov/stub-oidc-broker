@@ -33,10 +33,10 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.Security;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -71,7 +71,7 @@ public class RegistrationRequestService {
         return processedHttpResponse;
     }
 
-    public List<Organisation> getListOfBrokersFromResponse(HttpResponse<String> responseBody) throws IOException {
+    public List<Organisation> getListOfBrokersFromResponse(HttpResponse<String> responseBody) {
         JSONParser parser = new JSONParser(JSONParser.MODE_JSON_SIMPLE);
         JSONArray jsonarray;
         try {
@@ -80,14 +80,11 @@ public class RegistrationRequestService {
             throw new RuntimeException(e);
         }
 
-        List<Organisation> orgList = new ArrayList<>();
+        List<Organisation> orgList = jsonarray
+                .stream()
+                .map(this::createOrganisationObject)
+                .collect(Collectors.toList());
 
-        for (Object obj : jsonarray) {
-            JSONObject jsonObj = (JSONObject) obj;
-            ObjectMapper objectMapper = new ObjectMapper();
-            Organisation org = objectMapper.readValue(jsonObj.toJSONString(), Organisation.class);
-            orgList.add(org);
-        }
         return orgList;
     }
 
@@ -102,6 +99,19 @@ public class RegistrationRequestService {
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+
+    private Organisation createOrganisationObject(Object obj) {
+        JSONObject jsonObj = (JSONObject) obj;
+        ObjectMapper objectMapper = new ObjectMapper();
+        Organisation org;
+        try {
+            org = objectMapper.readValue(jsonObj.toJSONString(), Organisation.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return org;
     }
 
     private String sendHttpRegistrationRequest(SignedJWT jwt, String privateKey, String brokerDomain, String clientToken) throws JOSEException, IOException {

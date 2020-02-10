@@ -4,7 +4,6 @@ import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
-import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
@@ -14,6 +13,7 @@ import com.nimbusds.openid.connect.sdk.claims.AccessTokenHash;
 import com.nimbusds.openid.connect.sdk.claims.CodeHash;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 
+import java.text.ParseException;
 import java.util.Map;
 import java.util.Optional;
 
@@ -25,16 +25,21 @@ public class AuthnResponseValidationService {
         this.tokenRequestService = tokenRequestService;
     }
 
-    public AuthorizationCode handleAuthenticationResponse(Map<String, String> authenticationParams, ClientID clientID)
-            throws ParseException, java.text.ParseException {
+    public AuthorizationCode handleAuthenticationResponse(Map<String, String> authenticationParams, ClientID clientID) {
 
         String authCode = authenticationParams.get("code");
         AuthorizationCode authorizationCode = new AuthorizationCode(authCode);
 
         String id_token = authenticationParams.get("id_token");
-        SignedJWT signedJWT = SignedJWT.parse(id_token);
-        JWTClaimsSet jwtClaimsSet = signedJWT.getJWTClaimsSet();
-        IDTokenClaimsSet idToken = new IDTokenClaimsSet(jwtClaimsSet);
+
+        IDTokenClaimsSet idToken;
+        try {
+            SignedJWT signedJWT = SignedJWT.parse(id_token);
+            JWTClaimsSet jwtClaimsSet = signedJWT.getJWTClaimsSet();
+            idToken = new IDTokenClaimsSet(jwtClaimsSet);
+        } catch (ParseException | com.nimbusds.oauth2.sdk.ParseException e) {
+            throw new RuntimeException(e);
+        }
 
         String stringAccessToken = authenticationParams.get("access_token");
 
