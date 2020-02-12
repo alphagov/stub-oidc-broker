@@ -5,8 +5,10 @@ import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
+import com.nimbusds.openid.connect.sdk.OIDCError;
 import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 
 public class AuthnResponseGeneratorService {
@@ -47,5 +49,24 @@ public class AuthnResponseGeneratorService {
                 null,
                 null
         );
+    }
+
+    public AuthenticationErrorResponse handleAuthenticationErrorResponse(String transactionID, String errorCode) {
+        //TODO - Map errorcode to OIDCError object
+
+        String serialisedRequest = redisService.get(transactionID);
+
+        AuthenticationRequest authenticationRequest;
+        try {
+            authenticationRequest = AuthenticationRequest.parse(serialisedRequest);
+        } catch (ParseException e) {
+            throw new RuntimeException("Unable to parse authentication request", e);
+        }
+
+        return new AuthenticationErrorResponse(
+                authenticationRequest.getRedirectionURI(),
+                OIDCError.LOGIN_REQUIRED,
+                authenticationRequest.getState(),
+                null);
     }
 }

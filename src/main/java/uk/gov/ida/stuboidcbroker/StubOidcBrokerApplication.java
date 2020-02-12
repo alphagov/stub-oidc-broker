@@ -28,6 +28,7 @@ import uk.gov.ida.stuboidcbroker.services.oidcprovider.RegistrationHandlerServic
 import uk.gov.ida.stuboidcbroker.services.oidcclient.RegistrationRequestService;
 import uk.gov.ida.stuboidcbroker.services.oidcprovider.TokenHandlerService;
 import uk.gov.ida.stuboidcbroker.services.oidcclient.TokenRequestService;
+import uk.gov.ida.stuboidcbroker.services.shared.PickerService;
 import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 
 public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfiguration> {
@@ -58,6 +59,7 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
 
     private void registerResources(Environment environment, StubOidcBrokerConfiguration configuration, RedisService redisService) {
         TokenHandlerService tokenHandlerService = new TokenHandlerService(redisService, configuration);
+        PickerService pickerService = new PickerService();
         RegistrationHandlerService registrationHandlerService = new RegistrationHandlerService(redisService, configuration);
         AuthnRequestValidationService authnRequestValidationService = new AuthnRequestValidationService(redisService);
         AuthnResponseGeneratorService authnResponseGeneratorService = new AuthnResponseGeneratorService(tokenHandlerService, redisService);
@@ -67,16 +69,16 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
         RegistrationRequestService registrationRequestService = new RegistrationRequestService(redisService, configuration);
 
         environment.jersey().register(new StubOidcBrokerResource(configuration, tokenRequestService, authnRequestGeneratorService, authResponseService, redisService));
-        environment.jersey().register(new AuthorizationRequestClientResource( authnRequestGeneratorService, redisService));
+        environment.jersey().register(new AuthorizationRequestClientResource( authnRequestGeneratorService));
         environment.jersey().register(new JsonProcessingExceptionMapper(true));
         environment.jersey().register(new RegistrationRequestResource(registrationRequestService, redisService, configuration));
-        environment.jersey().register(new PickerPageResource(configuration, redisService));
-        environment.jersey().register(new AuthorizationResponseClientResource(tokenRequestService, authResponseService, redisService, authnResponseGeneratorService));
+        environment.jersey().register(new PickerPageResource(configuration, redisService, pickerService));
+        environment.jersey().register(new AuthorizationResponseClientResource(tokenRequestService, authResponseService, redisService, authnResponseGeneratorService, configuration, pickerService));
         environment.jersey().register(new IdpClientResource(redisService, configuration));
         environment.jersey().register(new TokenResource(tokenHandlerService, configuration));
         environment.jersey().register(new UserInfoResource(tokenHandlerService, redisService, authResponseService, tokenRequestService));
         environment.jersey().register(new AuthorizationResponseProviderResource(authnResponseGeneratorService));
-        environment.jersey().register(new AuthorizationRequestProviderResource(authnRequestValidationService, configuration, redisService));
+        environment.jersey().register(new AuthorizationRequestProviderResource(authnRequestValidationService, configuration, redisService, pickerService));
         environment.jersey().register(new RegistrationHandlerResource(registrationHandlerService, configuration));
     }
 }

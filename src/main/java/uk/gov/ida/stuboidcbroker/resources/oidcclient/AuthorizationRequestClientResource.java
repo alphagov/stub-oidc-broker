@@ -1,11 +1,9 @@
 package uk.gov.ida.stuboidcbroker.resources.oidcclient;
 
 import com.nimbusds.oauth2.sdk.ResponseType;
-import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
 import uk.gov.ida.stuboidcbroker.services.oidcclient.AuthnRequestGeneratorService;
-import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
@@ -22,13 +20,10 @@ import java.util.List;
 public class AuthorizationRequestClientResource {
 
     private final AuthnRequestGeneratorService authnRequestGeneratorService;
-    private final RedisService redisService;
 
     public AuthorizationRequestClientResource(
-            AuthnRequestGeneratorService authnRequestGeneratorService,
-            RedisService redisService) {
+            AuthnRequestGeneratorService authnRequestGeneratorService) {
         this.authnRequestGeneratorService = authnRequestGeneratorService;
-        this.redisService = redisService;
     }
 
     @POST
@@ -39,31 +34,18 @@ public class AuthorizationRequestClientResource {
         List<String> orgList = Arrays.asList(domain.split(","));
         String brokerDomain = orgList.get(0);
         String brokerName = orgList.get(1);
-        storeBrokerNameAndDomain(transactionID, brokerName, brokerDomain);
+        authnRequestGeneratorService.storeBrokerNameAndDomain(transactionID, brokerName, brokerDomain);
         URI authorisationURI = UriBuilder.fromUri(brokerDomain).path(Urls.StubBrokerOPProvider.AUTHORISATION_ENDPOINT_FORM_URI).build();
+
         return Response
                 .status(302)
                 .location(authnRequestGeneratorService.generateAuthenticationRequest(
                         authorisationURI,
-                        getClientID(brokerName),
+                        authnRequestGeneratorService.getClientIDByBrokerName(brokerName),
                         redirectUri,
                         new ResponseType(ResponseType.Value.CODE, OIDCResponseTypeValue.ID_TOKEN, ResponseType.Value.TOKEN),
                         transactionID)
                         .toURI())
                 .build();
-    }
-
-    private void storeBrokerNameAndDomain(String transactionID, String brokerName, String brokerDomain) {
-        redisService.set(transactionID + "-brokername", brokerName);
-        redisService.set(transactionID + "-brokerdomain", brokerDomain);
-    }
-
-    private ClientID getClientID(String brokerName) {
-        String client_id = redisService.get(brokerName);
-        if (client_id != null) {
-            return new ClientID(client_id);
-        } else {
-            throw new RuntimeException("No client ID exists");
-        }
     }
 }

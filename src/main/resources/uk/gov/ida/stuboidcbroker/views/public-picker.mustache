@@ -64,6 +64,9 @@
             </div>
 
             <h1 class="h1 mb-3 font-weight-heavy" style="display:none;">Validating your identity</h1>
+            {{#errorExists}}
+            <h1 class="h1 mb-3 font-weight-heavy">{{error}}: {{errorDescription}}</h1>
+            {{/errorExists}}
 
             <form class="mt-5" method="post" action="/formPost/idpAuthenticationRequest">
                 <input type="hidden" name="transactionID" value="{{transactionID}}"/>

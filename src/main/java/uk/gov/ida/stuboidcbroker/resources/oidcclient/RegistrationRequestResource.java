@@ -1,6 +1,5 @@
 package uk.gov.ida.stuboidcbroker.resources.oidcclient;
 
-import com.nimbusds.jose.JOSEException;
 import io.dropwizard.views.View;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.domain.Organisation;
@@ -17,7 +16,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpResponse;
 import java.util.Arrays;

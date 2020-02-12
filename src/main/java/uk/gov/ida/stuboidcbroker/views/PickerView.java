@@ -16,6 +16,8 @@ public class PickerView extends View {
     private String scheme;
     private String directoryUri;
     private String redirectURI;
+    private String error;
+    private String errorDescription;
 
     public PickerView(List<Organisation> idps, List<Organisation> brokers,
                       String transactionID, String branding,
@@ -29,6 +31,16 @@ public class PickerView extends View {
         this.scheme = scheme;
         this.directoryUri = directoryUri;
         this.redirectURI = redirectURI;
+    }
+
+    public PickerView(List<Organisation> idps, List<Organisation> brokers,
+                      String transactionID, String branding,
+                      String scheme, String directoryUri,
+                      String redirectURI, String error,
+                      String errorDescription) {
+        this(idps, brokers, transactionID, branding, scheme, directoryUri, redirectURI);
+        this.error = error;
+        this.errorDescription = errorDescription;
     }
 
     public String getTransactionID() {
@@ -46,6 +58,18 @@ public class PickerView extends View {
     public int getIndex() {
         ++index;
         return index;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public String getErrorDescription() {
+        return errorDescription;
+    }
+
+    public boolean errorExists() {
+        return error != null;
     }
 
     public String getRedirectURI() {

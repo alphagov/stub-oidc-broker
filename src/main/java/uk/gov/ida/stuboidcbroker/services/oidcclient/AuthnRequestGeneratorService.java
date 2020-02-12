@@ -45,4 +45,20 @@ public class AuthnRequestGeneratorService {
 
         return authenticationRequest;
     }
+
+
+    public void storeBrokerNameAndDomain(String transactionID, String brokerName, String brokerDomain) {
+        redisService.set(transactionID + "-brokername", brokerName);
+        redisService.set(transactionID + "-brokerdomain", brokerDomain);
+    }
+
+
+    public ClientID getClientIDByBrokerName(String brokerName) {
+        String client_id = redisService.get(brokerName);
+        if (client_id != null) {
+            return new ClientID(client_id);
+        } else {
+            throw new RuntimeException("No client ID exists");
+        }
+    }
 }

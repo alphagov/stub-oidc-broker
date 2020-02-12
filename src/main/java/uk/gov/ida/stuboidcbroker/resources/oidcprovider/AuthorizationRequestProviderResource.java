@@ -1,17 +1,14 @@
 package uk.gov.ida.stuboidcbroker.resources.oidcprovider;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import io.dropwizard.views.View;
-import net.minidev.json.JSONArray;
-import net.minidev.json.JSONObject;
-import net.minidev.json.parser.JSONParser;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.domain.Organisation;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
 import uk.gov.ida.stuboidcbroker.services.oidcprovider.AuthnRequestValidationService;
+import uk.gov.ida.stuboidcbroker.services.shared.PickerService;
 import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 import uk.gov.ida.stuboidcbroker.views.BrokerErrorResponseView;
 import uk.gov.ida.stuboidcbroker.views.PickerView;
@@ -23,11 +20,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
-import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -38,11 +31,17 @@ public class AuthorizationRequestProviderResource {
     private final AuthnRequestValidationService validationService;
     private final StubOidcBrokerConfiguration configuration;
     private final RedisService redisService;
+    private final PickerService pickerService;
 
-    public AuthorizationRequestProviderResource(AuthnRequestValidationService validationService, StubOidcBrokerConfiguration configuration, RedisService redisService) {
+    public AuthorizationRequestProviderResource(
+            AuthnRequestValidationService validationService,
+            StubOidcBrokerConfiguration configuration,
+            RedisService redisService,
+            PickerService pickerService) {
         this.validationService = validationService;
         this.configuration = configuration;
         this.redisService = redisService;
+        this.pickerService = pickerService;
     }
 
     //TODO: The spec states there should be a post method for this endpoint as well
@@ -91,7 +90,7 @@ public class AuthorizationRequestProviderResource {
     public View authorize(
             @Context UriInfo uriInfo,
             @QueryParam("transaction-id") String transactionID,
-            @QueryParam("response-uri") String spURI) {
+            @QueryParam("response-uri") String rpURI) {
 
         URI requestURI = uriInfo.getRequestUri();
         AuthenticationRequest authenticationRequest;
@@ -111,12 +110,11 @@ public class AuthorizationRequestProviderResource {
                     error.getRedirectionURI(),
                     transactionID);
             return brokerErrorResponseView;
-        }).orElseGet(() -> generatePickerPageView(spURI, transactionID));
+        }).orElseGet(() -> generatePickerPageView(authenticationRequest.getRedirectionURI(), transactionID));
     }
 
-    private PickerView generatePickerPageView(String spURI, String transactionID) {
-        URI serviceProviderURI = UriBuilder.fromUri(spURI).build();
-        storeRpResponseURI(transactionID, serviceProviderURI.toString());
+    private PickerView generatePickerPageView(URI rpURI, String transactionID) {
+        storeRpResponseURI(transactionID + "response-uri", rpURI.toString());
         String scheme = configuration.getScheme();
 
         URI idpRequestURI = UriBuilder.fromUri(configuration.getDirectoryURI())
@@ -126,10 +124,8 @@ public class AuthorizationRequestProviderResource {
                 .path(Urls.Directory.REGISTERED_BROKERS + scheme)
                 .build();
 
-        HttpResponse<String> idpsResponse = getOrganisations(idpRequestURI);
-        HttpResponse<String> brokersResponse = getOrganisations(brokerRequestURI);
-        List<Organisation> idps = getOrganisationsFromResponse(idpsResponse);;
-        List<Organisation> brokers = getOrganisationsFromResponse(brokersResponse);
+        List<Organisation> idps = pickerService.getOrganisationsFromDirectory(idpRequestURI);
+        List<Organisation> brokers = pickerService.getOrganisationsFromDirectory(brokerRequestURI);
 
         List<Organisation> registeredBrokers = brokers
                 .stream()
@@ -140,52 +136,8 @@ public class AuthorizationRequestProviderResource {
                 .path(Urls.StubBrokerClient.REDIRECT_FOR_SERVICE_PROVIDER_URI)
                 .build().toString();
 
-        return new PickerView(idps, registeredBrokers,
-                transactionID, configuration.getBranding(),
-                configuration.getScheme(), configuration.getDirectoryURI(),
-                redirectUri);
-    }
-
-    private List<Organisation> getOrganisationsFromResponse(HttpResponse<String> responseBody) {
-        JSONParser parser = new JSONParser(JSONParser.MODE_JSON_SIMPLE);
-        JSONArray jsonarray;
-        try {
-            jsonarray = (JSONArray) parser.parse(responseBody.body());
-        } catch (net.minidev.json.parser.ParseException e) {
-            throw new RuntimeException(e);
-        }
-
-        List<Organisation> orgList = jsonarray
-                .stream()
-                .map(this::createOrganisationObject)
-                .collect(Collectors.toList());
-
-        return orgList;
-    }
-
-    private Organisation createOrganisationObject(Object obj) {
-        JSONObject jsonObj = (JSONObject) obj;
-        ObjectMapper objectMapper = new ObjectMapper();
-        Organisation org;
-        try {
-            org = objectMapper.readValue(jsonObj.toJSONString(), Organisation.class);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return org;
-    }
-
-    private HttpResponse<String> getOrganisations(URI uri) {
-        HttpRequest request = HttpRequest.newBuilder()
-                .GET()
-                .uri(uri)
-                .build();
-
-        try {
-            return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        return new PickerView(idps, registeredBrokers, transactionID, configuration.getBranding(),
+                scheme, configuration.getDirectoryURI(), redirectUri);
     }
 
     private void storeRpResponseURI(String transactionID, String rpResponsePath) {
