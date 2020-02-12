@@ -3,7 +3,6 @@ package uk.gov.ida.stuboidcbroker.resources.oidcclient;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
-import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
 import uk.gov.ida.stuboidcbroker.services.oidcclient.AuthnRequestGeneratorService;
 import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
@@ -22,15 +21,12 @@ import java.util.List;
 @Path("/formPost")
 public class AuthorizationRequestClientResource {
 
-    private final StubOidcBrokerConfiguration configuration;
     private final AuthnRequestGeneratorService authnRequestGeneratorService;
     private final RedisService redisService;
 
     public AuthorizationRequestClientResource(
-            StubOidcBrokerConfiguration configuration,
             AuthnRequestGeneratorService authnRequestGeneratorService,
             RedisService redisService) {
-        this.configuration = configuration;
         this.authnRequestGeneratorService = authnRequestGeneratorService;
         this.redisService = redisService;
     }

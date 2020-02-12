@@ -19,9 +19,15 @@ public class AuthnResponseGeneratorService {
         this.redisService = redisService;
     }
 
-    public AuthenticationSuccessResponse handleAuthenticationRequestResponse(String transactionID) throws ParseException {
+    public AuthenticationSuccessResponse handleAuthenticationRequestResponse(String transactionID) {
         String serialisedRequest = redisService.get(transactionID);
-        AuthenticationRequest authenticationRequest = AuthenticationRequest.parse(serialisedRequest);
+
+        AuthenticationRequest authenticationRequest;
+        try {
+            authenticationRequest = AuthenticationRequest.parse(serialisedRequest);
+        } catch (ParseException e) {
+            throw new RuntimeException("Unable to parse authentication request", e);
+        }
         AuthorizationCode authorizationCode = new AuthorizationCode();
         AccessToken accessToken = new BearerAccessToken();
         AccessToken returnedAccessToken = null;

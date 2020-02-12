@@ -59,7 +59,7 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
     private void registerResources(Environment environment, StubOidcBrokerConfiguration configuration, RedisService redisService) {
         TokenHandlerService tokenHandlerService = new TokenHandlerService(redisService, configuration);
         RegistrationHandlerService registrationHandlerService = new RegistrationHandlerService(redisService, configuration);
-        AuthnRequestValidationService authnRequestValidationService = new AuthnRequestValidationService(tokenHandlerService, redisService);
+        AuthnRequestValidationService authnRequestValidationService = new AuthnRequestValidationService(redisService);
         AuthnResponseGeneratorService authnResponseGeneratorService = new AuthnResponseGeneratorService(tokenHandlerService, redisService);
         TokenRequestService tokenRequestService = new TokenRequestService(configuration, redisService);
         AuthnRequestGeneratorService authnRequestGeneratorService = new AuthnRequestGeneratorService(redisService);
@@ -67,7 +67,7 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
         RegistrationRequestService registrationRequestService = new RegistrationRequestService(redisService, configuration);
 
         environment.jersey().register(new StubOidcBrokerResource(configuration, tokenRequestService, authnRequestGeneratorService, authResponseService, redisService));
-        environment.jersey().register(new AuthorizationRequestClientResource(configuration, authnRequestGeneratorService, redisService));
+        environment.jersey().register(new AuthorizationRequestClientResource( authnRequestGeneratorService, redisService));
         environment.jersey().register(new JsonProcessingExceptionMapper(true));
         environment.jersey().register(new RegistrationRequestResource(registrationRequestService, redisService, configuration));
         environment.jersey().register(new PickerPageResource(configuration, redisService));

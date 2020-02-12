@@ -40,7 +40,9 @@ public class IdpClientResource {
     @POST
     @Path("/idpAuthenticationRequest")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response sendIdpAuthenticationRequest(@FormParam("idpDomain") String domain, @FormParam("transactionID") String transactionID) {
+    public Response sendIdpAuthenticationRequest(
+            @FormParam("idpDomain") String domain,
+            @FormParam("transactionID") String transactionID) {
         List<String> orgList = Arrays.asList(domain.split(","));
         String idpDomain = orgList.get(0);
         String idpName = orgList.get(1);

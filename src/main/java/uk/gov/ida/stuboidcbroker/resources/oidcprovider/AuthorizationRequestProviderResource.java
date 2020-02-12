@@ -48,7 +48,10 @@ public class AuthorizationRequestProviderResource {
     //TODO: The spec states there should be a post method for this endpoint as well
     @GET
     @Path("/authorize")
-    public Object authorize(@Context UriInfo uriInfo, @QueryParam("transaction-id") String transactionID) {
+    public Object authorize(
+            @Context UriInfo uriInfo,
+            @QueryParam("transaction-id") String transactionID) {
+
         URI uri = uriInfo.getRequestUri();
         AuthenticationRequest authenticationRequest;
 
@@ -85,7 +88,11 @@ public class AuthorizationRequestProviderResource {
     //This is the same as the above but this supplies us a picker page. There might be a nicer way of doing this where we are not duplicating code
     @GET
     @Path("/authorize-sp")
-    public View authorize(@Context UriInfo uriInfo, @QueryParam("transaction-id") String transactionID, @QueryParam("response-uri") String spURI) {
+    public View authorize(
+            @Context UriInfo uriInfo,
+            @QueryParam("transaction-id") String transactionID,
+            @QueryParam("response-uri") String spURI) {
+
         URI requestURI = uriInfo.getRequestUri();
         AuthenticationRequest authenticationRequest;
         try {
@@ -109,36 +116,37 @@ public class AuthorizationRequestProviderResource {
 
     private PickerView generatePickerPageView(String spURI, String transactionID) {
         URI serviceProviderURI = UriBuilder.fromUri(spURI).build();
-
         storeRpResponseURI(transactionID, serviceProviderURI.toString());
-
         String scheme = configuration.getScheme();
-        URI idpRequestURI = UriBuilder.fromUri(configuration.getDirectoryURI()).path(Urls.Directory.REGISTERED_IDPS + scheme)
+
+        URI idpRequestURI = UriBuilder.fromUri(configuration.getDirectoryURI())
+                .path(Urls.Directory.REGISTERED_IDPS + scheme)
                 .build();
-        URI brokerRequestURI = UriBuilder.fromUri(configuration.getDirectoryURI()).path(Urls.Directory.REGISTERED_BROKERS + scheme).build();
+        URI brokerRequestURI = UriBuilder.fromUri(configuration.getDirectoryURI())
+                .path(Urls.Directory.REGISTERED_BROKERS + scheme)
+                .build();
 
         HttpResponse<String> idpsResponse = getOrganisations(idpRequestURI);
         HttpResponse<String> brokersResponse = getOrganisations(brokerRequestURI);
-        List<Organisation> idps;
-        List<Organisation> brokers;
+        List<Organisation> idps = getOrganisationsFromResponse(idpsResponse);;
+        List<Organisation> brokers = getOrganisationsFromResponse(brokersResponse);
 
-        try {
-            idps = getOrganisationsFromResponse(idpsResponse);
-            brokers = getOrganisationsFromResponse(brokersResponse);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        List<Organisation> registeredBrokers = brokers.stream()
+        List<Organisation> registeredBrokers = brokers
+                .stream()
                 .filter(org -> redisService.get(org.getName()) != null)
                 .collect(Collectors.toList());
 
-        String redirectUri = UriBuilder.fromUri(configuration.getStubBrokerURI()).path(Urls.StubBrokerClient.REDIRECT_FOR_SERVICE_PROVIDER_URI).build().toString();
+        String redirectUri = UriBuilder.fromUri(configuration.getStubBrokerURI())
+                .path(Urls.StubBrokerClient.REDIRECT_FOR_SERVICE_PROVIDER_URI)
+                .build().toString();
 
-        return new PickerView(idps, registeredBrokers, transactionID, configuration.getBranding(), configuration.getScheme(), configuration.getDirectoryURI(), redirectUri);
+        return new PickerView(idps, registeredBrokers,
+                transactionID, configuration.getBranding(),
+                configuration.getScheme(), configuration.getDirectoryURI(),
+                redirectUri);
     }
 
-    private List<Organisation> getOrganisationsFromResponse(HttpResponse<String> responseBody) throws IOException {
+    private List<Organisation> getOrganisationsFromResponse(HttpResponse<String> responseBody) {
         JSONParser parser = new JSONParser(JSONParser.MODE_JSON_SIMPLE);
         JSONArray jsonarray;
         try {
@@ -147,7 +155,10 @@ public class AuthorizationRequestProviderResource {
             throw new RuntimeException(e);
         }
 
-        List<Organisation> orgList = jsonarray.stream().map(this::createOrganisationObject).collect(Collectors.toList());
+        List<Organisation> orgList = jsonarray
+                .stream()
+                .map(this::createOrganisationObject)
+                .collect(Collectors.toList());
 
         return orgList;
     }

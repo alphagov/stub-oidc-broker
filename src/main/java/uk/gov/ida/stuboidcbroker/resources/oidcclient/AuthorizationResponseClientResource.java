@@ -72,7 +72,7 @@ public class AuthorizationResponseClientResource {
     @POST
     @Path("/validateAuthenticationResponseForServiceProvider")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public View validateAuthenticationResponseForService(String postBody) throws ParseException {
+    public View validateAuthenticationResponseForService(String postBody) {
         Map<String, String> authenticationParams = splitQuery(postBody);
         String transactionID = authenticationParams.get("transactionID");
         redisService.set(transactionID + "response-from-broker", postBody);

@@ -24,7 +24,7 @@ public class AuthorizationResponseProviderResource {
     @GET
     @Path("/response")
     @Produces(MediaType.TEXT_HTML)
-    public View authorizeResponseHandler(@QueryParam("transaction-id") String transactionID) throws ParseException {
+    public View authorizeResponseHandler(@QueryParam("transaction-id") String transactionID) {
         AuthenticationSuccessResponse successResponse = generatorService.handleAuthenticationRequestResponse(transactionID);
         return new BrokerResponseView(
                 successResponse.getState(),

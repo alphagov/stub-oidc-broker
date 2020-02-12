@@ -38,11 +38,45 @@ public class RegistrationHandlerService {
         this.configuration = configuration;
     }
 
-    public String processHTTPRequest(SignedJWT signedJWT) throws ParseException {
-        boolean passedValidation;
-        SignedJWT softwareStatement = SignedJWT.parse(signedJWT.getJWTClaimsSet().getClaim("software_statement").toString());
+    public String parseRegistrationRequest(String requestBody) {
+        JSONObject parsedRegistrationReq;
+        SignedJWT signedJWT;
+        try {
+            parsedRegistrationReq = com.nimbusds.oauth2.sdk.util.JSONObjectUtils.parse(requestBody);
+            String signedJwt = parsedRegistrationReq.get("signed-jwt").toString();
+            signedJWT = SignedJWT.parse(signedJwt);
+        } catch (com.nimbusds.oauth2.sdk.ParseException| ParseException e) {
+            throw new RuntimeException(e);
+        }
+        String registrationResponse = processRegistrationReq(signedJWT);
+
+        return registrationResponse;
+    }
+
+    public HttpResponse<String> sendHttpRegistrationRequest(URI uri, String clientToken) {
+
+        JSONObject json = new JSONObject();
+        json.put("client_token", clientToken);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(json.toJSONString()))
+                .uri(uri)
+                .build();
 
         try {
+            return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String processRegistrationReq(SignedJWT signedJWT) {
+        boolean passedValidation;
+        SignedJWT softwareStatement;
+
+        try {
+            softwareStatement = SignedJWT.parse(signedJWT.getJWTClaimsSet().getClaim("software_statement").toString());
             passedValidation = validateRegistrationRequest(signedJWT, softwareStatement);
         } catch (ParseException e) {
             throw new RuntimeException(e);
@@ -126,27 +160,14 @@ public class RegistrationHandlerService {
         return isVerified;
     }
 
-    private HttpResponse<String> sendHttpRequest(URI uri) {
-        HttpRequest request = HttpRequest.newBuilder()
-                .GET()
-                .uri(uri)
-                .build();
-
-        try {
-            return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException | InterruptedException e) {
-
-            throw new RuntimeException(e);
-        }
-    }
-
-    private JSONObject generateClientInformationResponse(SignedJWT signedJWT, SignedJWT softwareStatement) throws ParseException {
+    private JSONObject generateClientInformationResponse(SignedJWT signedJWT, SignedJWT softwareStatement) {
         ClientMetadata clientMetadata;
-         String url = softwareStatement.getJWTClaimsSet().getClaim("software_jwks_endpoint").toString();
+        String url;
         try {
+            url = softwareStatement.getJWTClaimsSet().getClaim("software_jwks_endpoint").toString();
             JSONObject responseJson = signedJWT.getJWTClaimsSet().toJSONObject();
             responseJson.remove("software_statement");
-             clientMetadata = ClientMetadata.parse(responseJson);
+            clientMetadata = ClientMetadata.parse(responseJson);
         } catch (com.nimbusds.oauth2.sdk.ParseException| ParseException e) {
             throw new RuntimeException(e);
         }
@@ -160,5 +181,19 @@ public class RegistrationHandlerService {
     private void persistClientID(ClientID clientID, String url) {
         String clientIdString = clientID.toString();
         redisService.set(clientIdString, url);
+    }
+
+    private HttpResponse<String> sendHttpRequest(URI uri) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(uri)
+                .build();
+
+        try {
+            return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -1,8 +1,6 @@
 package uk.gov.ida.stuboidcbroker.resources.oidcprovider;
 
-import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.JSONObjectUtils;
-import net.minidev.json.JSONObject;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
 import uk.gov.ida.stuboidcbroker.services.oidcprovider.RegistrationHandlerService;
@@ -15,12 +13,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.text.ParseException;
 
 @Path("/")
 public class RegistrationHandlerResource {
@@ -37,41 +31,35 @@ public class RegistrationHandlerResource {
     @POST
     @Path("/register")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response register(String requestBody, @HeaderParam("Authorization") @NotNull String authorizationHeader) throws ParseException, com.nimbusds.oauth2.sdk.ParseException {
+    public Response register(
+            String requestBody,
+            @HeaderParam("Authorization") @NotNull String authorizationHeader) {
 
-        HttpResponse<String> directoryResponse = sendHttpRequest(UriBuilder.fromUri(configuration.getDirectoryURI()).path(Urls.Directory.VERIFY_CLIENT_TOKEN).build(), authorizationHeader);
-
-        String orgId = JSONObjectUtils.parse(directoryResponse.body()).getAsString("organisation_id");
-
-        if (orgId == null) {
+        if (!isClientAuthenticated(authorizationHeader)) {
             return Response.status(Response.Status.FORBIDDEN).entity("Org ID not found in Directory. Probably because the client token sent in the registration request is invalid").build();
         }
 
-        // Maybe validate against the orgId in the SSA
+        String registrationResponse = registrationHandlerService.parseRegistrationRequest(requestBody);
 
-        JSONObject jwtObject = JSONObjectUtils.parse(requestBody);
-        String signedJwt = jwtObject.get("signed-jwt").toString();
-        SignedJWT signedJWT = SignedJWT.parse(signedJwt);
-        String response = registrationHandlerService.processHTTPRequest(signedJWT);
-
-        return Response.ok(response).build();
+        return Response.ok(registrationResponse).build();
     }
 
-    private HttpResponse<String> sendHttpRequest(URI uri, String clientToken) {
-
-        JSONObject json = new JSONObject();
-        json.put("client_token", clientToken);
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(json.toJSONString()))
-                .uri(uri)
+    private boolean isClientAuthenticated(String authorizationHeader) {
+        URI directoryURI = UriBuilder.fromUri(configuration.getDirectoryURI())
+                .path(Urls.Directory.VERIFY_CLIENT_TOKEN)
                 .build();
+        HttpResponse<String> directoryResponse = registrationHandlerService.sendHttpRegistrationRequest(directoryURI, authorizationHeader);
 
+        String orgId;
         try {
-            return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
+            orgId = JSONObjectUtils.parse(directoryResponse.body()).getAsString("organisation_id");
+        } catch (com.nimbusds.oauth2.sdk.ParseException e) {
+            throw new RuntimeException("Unable to parse client token response from the Directory to retrieve orgId" ,e);
         }
+
+        if (orgId == null) {
+            return false;
+        }
+        return true;
     }
 }

@@ -7,8 +7,6 @@ import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.domain.Organisation;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
@@ -33,9 +31,6 @@ public class PickerPageResource {
     private final StubOidcBrokerConfiguration configuration;
     private final RedisService redisService;
 
-    private static final Logger LOG = LoggerFactory.getLogger(PickerPageResource.class);
-
-
     public PickerPageResource(StubOidcBrokerConfiguration configuration, RedisService redisService) {
         this.configuration = configuration;
         this.redisService = redisService;
@@ -43,7 +38,7 @@ public class PickerPageResource {
 
     @GET
     @Path("/picker")
-    public View pickerPage(@QueryParam("response-uri") String rpURI) throws IOException {
+    public View pickerPage(@QueryParam("response-uri") String rpURI) {
 
         String transactionId = new ClientID().toString();
 
@@ -59,9 +54,9 @@ public class PickerPageResource {
 
         HttpResponse<String> idpsResponse = getOrganisations(idpRequestURI);
         HttpResponse<String> brokersResponse = getOrganisations(brokerRequestURI);
-
         List<Organisation> idps = getOrganisationsFromResponse(idpsResponse);
         List<Organisation> brokers = getOrganisationsFromResponse(brokersResponse);
+
         List<Organisation> registeredBrokers = brokers.stream()
                 .filter(org -> redisService.get(org.getName()) != null)
                 .collect(Collectors.toList());
@@ -73,7 +68,7 @@ public class PickerPageResource {
         return new PickerView(idps, registeredBrokers, transactionId, configuration.getBranding(), configuration.getScheme(), configuration.getDirectoryURI(), redirectUri);
     }
 
-    private List<Organisation> getOrganisationsFromResponse(HttpResponse<String> responseBody) throws IOException {
+    private List<Organisation> getOrganisationsFromResponse(HttpResponse<String> responseBody) {
         JSONParser parser = new JSONParser(JSONParser.MODE_JSON_SIMPLE);
         JSONArray jsonarray;
         try {
@@ -82,15 +77,24 @@ public class PickerPageResource {
             throw new RuntimeException(e);
         }
 
-        List<Organisation> orgList = new ArrayList<>();
+        List<Organisation> orgList = jsonarray
+                .stream()
+                .map(this::createOrganisationObject)
+                .collect(Collectors.toList());
 
-        for (Object obj : jsonarray) {
-            JSONObject jsonObj = (JSONObject) obj;
-            ObjectMapper objectMapper = new ObjectMapper();
-            Organisation org = objectMapper.readValue(jsonObj.toJSONString(), Organisation.class);
-            orgList.add(org);
-        }
         return orgList;
+    }
+
+    private Organisation createOrganisationObject(Object obj) {
+        JSONObject jsonObj = (JSONObject) obj;
+        ObjectMapper objectMapper = new ObjectMapper();
+        Organisation org;
+        try {
+            org = objectMapper.readValue(jsonObj.toJSONString(), Organisation.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return org;
     }
 
     private HttpResponse<String> getOrganisations(URI uri) {

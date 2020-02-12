@@ -62,15 +62,20 @@ public class TokenResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/token")
     public Response getProviderTokens(
-            MultivaluedMap<String, String> formParams) throws ParseException, JOSEException, InvalidClientException {
+            MultivaluedMap<String, String> formParams) throws JOSEException, InvalidClientException {
         LOG.info("Token end point");
 
         if (formParams.get("client_assertion") == null) {
             return Response.status(Response.Status.FORBIDDEN).build();
         }
-            PrivateKeyJWT privateKeyJWT = PrivateKeyJWT.parse(formParams);
+        PrivateKeyJWT privateKeyJWT;
+        try {
+            privateKeyJWT = PrivateKeyJWT.parse(formParams);
+        } catch (ParseException e) {
+            throw new RuntimeException("Unable to generate PrivateKeyJWT", e);
+        }
 
-            ClientCredentialsSelector<ClientMetadata> clientCredentialsSelector = new ClientCredentialsSelector<>() {
+        ClientCredentialsSelector<ClientMetadata> clientCredentialsSelector = new ClientCredentialsSelector<>() {
                 @Override
                 public List<Secret> selectClientSecrets(ClientID claimedClientID, ClientAuthenticationMethod authMethod, Context<ClientMetadata> context) {
                     return null;

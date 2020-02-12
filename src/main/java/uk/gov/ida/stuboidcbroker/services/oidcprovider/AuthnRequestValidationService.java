@@ -11,11 +11,9 @@ import java.util.Optional;
 
 public class AuthnRequestValidationService {
 
-    private final TokenHandlerService tokenHandlerService;
     private final RedisService redisService;
 
-    public AuthnRequestValidationService(TokenHandlerService tokenHandlerService, RedisService redisService) {
-        this.tokenHandlerService = tokenHandlerService;
+    public AuthnRequestValidationService(RedisService redisService) {
         this.redisService = redisService;
     }
 
