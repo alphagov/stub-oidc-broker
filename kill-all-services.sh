@@ -19,7 +19,8 @@ pushd ../stub-trustframework-rp> /dev/null
 popd > /dev/null
 
 pushd ../trust-framework-service-provider-prototype> /dev/null
-./kill-tfsp.sh
+./kill-tfsp-1.sh
+./kill-tfsp-2.sh
 popd > /dev/null
 
 pushd ../trust-framework-idp> /dev/null

@@ -12,7 +12,8 @@ start_service broker3 stub-oidc-broker
 start_service rp1 stub-trustframework-rp
 start_service rp2 stub-trustframework-rp
 
-start_service tfsp trust-framework-service-provider-prototype
+start_service tfsp-1 trust-framework-service-provider-prototype
+start_service tfsp-2 trust-framework-service-provider-prototype
 
 start_service directory trust-framework-directory-prototype
 start_service registration tpp-registration-prototype
