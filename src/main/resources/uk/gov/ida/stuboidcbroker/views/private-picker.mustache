@@ -32,26 +32,10 @@
     <h1 class="h1 mb-3 font-weight-heavy">{{error}}: {{errorDescription}}</h1>
     {{/errorExists}}
 
-    <form class="mt-5" method="post" action="/formPost/idpAuthenticationRequest">
-        <input type="hidden" name="transactionID" value="{{transactionID}}"/>
-
-        {{#idps}}
-        <button class="btn btn-lg btn-danger btn-block" name="idpDomain" value="{{domain}},{{name}}" type="submit">
-            {{#isSchemeOne}}
-            Continue with {{name}} ID
-            {{/isSchemeOne}}
-            {{^isSchemeOne}}
-            Continue with {{name}} Check
-            {{/isSchemeOne}}
-        </button>
-        {{/idps}}
-    </form>
-
     <form method="post" action="/formPost/serviceAuthenticationRequest">
         <input type="hidden" name="transactionID" value="{{transactionID}}"/>
         <input type="hidden" name="redirectURI" value="{{redirectURI}}"/>
         <div class="border mt-5 mb-5"></div>
-        <p class="mt-5 mb-5">or use an existing identity</p>
         {{#brokers}}
             {{#startNewRow}}
                 <div class="row">

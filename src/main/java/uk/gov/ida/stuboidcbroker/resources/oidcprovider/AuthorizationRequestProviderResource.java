@@ -87,17 +87,16 @@ public class AuthorizationRequestProviderResource {
     //This is the same as the above but this supplies us a picker page. There might be a nicer way of doing this where we are not duplicating code
     @GET
     @Path("/authorize-sp")
-    public View authorize(
+    public View authorizeServiceProvider(
             @Context UriInfo uriInfo,
-            @QueryParam("transaction-id") String transactionID,
-            @QueryParam("response-uri") String rpURI) {
+            @QueryParam("transaction-id") String transactionID) {
 
         URI requestURI = uriInfo.getRequestUri();
         AuthenticationRequest authenticationRequest;
         try {
             authenticationRequest = AuthenticationRequest.parse(requestURI);
         } catch (ParseException e) {
-            throw new RuntimeException("Unable to parse URI: " + requestURI.toString() + " to authentication request", e);
+            throw new RuntimeException("Unable to parse URI: " + requestURI.toString() + " for authentication request", e);
         }
         Optional<AuthenticationErrorResponse> errorResponse = validationService.handleAuthenticationRequest(authenticationRequest, transactionID);
 
@@ -114,7 +113,7 @@ public class AuthorizationRequestProviderResource {
     }
 
     private PickerView generatePickerPageView(URI rpURI, String transactionID) {
-        storeRpResponseURI(transactionID + "response-uri", rpURI.toString());
+        storeRpResponseURI(transactionID, rpURI.toString());
         String scheme = configuration.getScheme();
 
         URI idpRequestURI = UriBuilder.fromUri(configuration.getDirectoryURI())

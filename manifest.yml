@@ -17,7 +17,7 @@ applications:
       ORG_ID: Broker1
       IS_LOCAL: false
       SCHEME: 1
-      BRANDING: private
+      BRANDING: public
     services:
       - redis-service
   - name: stub-oidc-broker-2
@@ -37,6 +37,24 @@ applications:
       ORG_ID: Broker2
       IS_LOCAL: false
       SCHEME: 2
-      BRANDING: public
+      BRANDING: private
+  - name: stub-oidc-broker-3
+    path: build/distributions/stub-oidc-broker.zip
+    memory: 1G
+    buildpacks:
+      - java_buildpack
+    command: (cd stub-oidc-broker && ls -l &&  bin/stub-oidc-broker server ./stub-oidc-broker.yml)
+    env:
+      JAVA_HOME: "../.java-buildpack/open_jdk_jre"
+      JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 11.+ } }'
+      STUB_BROKER_URI: https://stub-oidc-broker-3.cloudapps.digital
+      DIRECTORY_URI: https://directory-prototype.cloudapps.digital
+      MIDDLEWARE_URI: http://52.51.37.224:80
+      IDP_URI: https://trust-framework-idp-1.cloudapps.digital
+      APPLICATION_PORT: 8080
+      ORG_ID: Broker3
+      IS_LOCAL: false
+      SCHEME: 3
+      BRANDING: private
     services:
       - redis-service

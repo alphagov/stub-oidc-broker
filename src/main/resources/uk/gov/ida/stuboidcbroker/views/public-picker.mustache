@@ -56,37 +56,16 @@
 <div class="govuk-width-container ">
     <main class="govuk-main-wrapper text-center" id="main-content" role="main">
         <div class="form-signin text-center">
-            <div class="container" style="max-width: 660px;">
-              <div class="row justify-content-md-center">
-                <img class="pr-4 mr-5 border-right" src="{{directoryUri}}/organisation/broker/scheme/{{scheme}}/image.svg" width="35%" alt="Register onto the Directory" onerror="this.onerror=null;this.src='/assets/images/idp0.svg';" />
-                <img src="/assets/images/trustmark.svg" width="35%" alt="Trustmark" />
-              </div>
-            </div>
 
             <h1 class="h1 mb-3 font-weight-heavy" style="display:none;">Validating your identity</h1>
             {{#errorExists}}
             <h1 class="h1 mb-3 font-weight-heavy">{{error}}: {{errorDescription}}</h1>
             {{/errorExists}}
 
-            <form class="mt-5" method="post" action="/formPost/idpAuthenticationRequest">
-                <input type="hidden" name="transactionID" value="{{transactionID}}"/>
-                {{#idps}}
-                    <button class="govuk-button" name="idpDomain" value="{{domain}},{{name}}" type="submit">
-                        {{#isSchemeOne}}
-                            Continue with {{name}} ID
-                        {{/isSchemeOne}}
-                        {{^isSchemeOne}}
-                            Continue with {{name}} ID Check
-                        {{/isSchemeOne}}
-                    </button>
-                {{/idps}}
-            </form>
-
             <form method="post" action="/formPost/serviceAuthenticationRequest">
                 <input type="hidden" name="transactionID" value="{{transactionID}}"/>
                 <input type="hidden" name="redirectURI" value="{{redirectURI}}"/>
                 <div class="border mt-5 mb-5"></div>
-                <p class="mt-5 mb-5">or use an existing identity</p>
                 {{#brokers}}
                 {{#startNewRow}}
                 <div class="row mt-3">

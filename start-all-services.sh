@@ -7,6 +7,7 @@ check_if_dependencies_are_installed
 
 start_service broker1 stub-oidc-broker
 start_service broker2 stub-oidc-broker
+start_service broker3 stub-oidc-broker
 
 start_service rp1 stub-trustframework-rp
 start_service rp2 stub-trustframework-rp
