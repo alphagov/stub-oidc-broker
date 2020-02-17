@@ -136,8 +136,8 @@ public class AuthorizationRequestProviderResource {
                 .build().toString();
 
         String rpCreateIdentityUri = UriBuilder
-            .fromUri(rpURI.getScheme() + "://" + rpURI.getAuthority())
-            .path(Urls.StubRpPathsAssumptions.RP_CREATE_IDENTITY_PATH)
+            .fromUri(rpURI)
+            .replacePath(Urls.StubRpPathsAssumptions.RP_CREATE_IDENTITY_PATH)
             .build()
             .toString();
 
