@@ -56,7 +56,7 @@ public class PickerPageResource {
                 .build().toString();
 
         String rpCreateIdentityUri = UriBuilder
-            .fromUri(rpResponseURI.getAuthority())
+            .fromUri(rpResponseURI.getScheme() + "://" + rpResponseURI.getAuthority())
             .path(Urls.StubRpPathsAssumptions.RP_CREATE_IDENTITY_PATH)
             .build()
             .toString();
