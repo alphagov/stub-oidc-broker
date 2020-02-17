@@ -135,8 +135,13 @@ public class AuthorizationRequestProviderResource {
                 .path(Urls.StubBrokerClient.REDIRECT_FOR_SERVICE_PROVIDER_URI)
                 .build().toString();
 
+        // build a fresh path from the RP hostname for the RP create identity endpoint
+        String rpCreateIdentityUri = UriBuilder.fromUri(rpURI.getHost())
+            .path(Urls.StubRpPathsAssumptions.RP_CREATE_IDENTITY_PATH)
+            .build().toString();
+
         return new PickerView(idps, registeredBrokers, transactionID, configuration.getBranding(),
-                scheme, configuration.getDirectoryURI(), redirectUri);
+                scheme, configuration.getDirectoryURI(), redirectUri, rpCreateIdentityUri);
     }
 
     private void storeRpResponseURI(String transactionID, String rpResponsePath) {

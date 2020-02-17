@@ -6,3 +6,6 @@ bin/
 .DS_Store
 /tmp
 logs/
+.classpath
+.project
+.settings/

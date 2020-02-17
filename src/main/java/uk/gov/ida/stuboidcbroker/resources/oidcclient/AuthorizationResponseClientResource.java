@@ -113,11 +113,16 @@ public class AuthorizationResponseClientResource {
                     .path(Urls.StubBrokerClient.REDIRECT_FOR_SERVICE_PROVIDER_URI )
                     .build().toString();
 
+            // build a fresh path from the RP hostname for the RP create identity endpoint
+            String rpCreateIdentityUri = "#"; // TODO: where is the RP uri now?
+
             return new PickerView(idps, registeredBrokers,
                     authenticationParams.get("transactionID"), configuration.getBranding(),
                     configuration.getScheme(), configuration.getDirectoryURI(),
                     redirectUri, authenticationParams.get("error"),
-                    authenticationParams.get("error_description"));
+                    authenticationParams.get("error_description"),
+                    rpCreateIdentityUri // TODO: not correct yet
+                );
         }
 
         String transactionID = authenticationParams.get("transactionID");

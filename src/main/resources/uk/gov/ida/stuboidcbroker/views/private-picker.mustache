@@ -32,6 +32,8 @@
     <h1 class="h1 mb-3 font-weight-heavy">{{error}}: {{errorDescription}}</h1>
     {{/errorExists}}
 
+    <p class="mt-5 mb-3"><a href="{{rpCreateIdentityUri}}" class="text-danger">I'd like to create an account instead...</a></p>
+
     <form method="post" action="/formPost/serviceAuthenticationRequest">
         <input type="hidden" name="transactionID" value="{{transactionID}}"/>
         <input type="hidden" name="redirectURI" value="{{redirectURI}}"/>

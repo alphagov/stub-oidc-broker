@@ -11,6 +11,10 @@ public interface Urls {
         String IDP_RESPONSE = "/formPost/idpAuthenticationResponse";
     }
 
+    interface StubRpPathsAssumptions {
+        String RP_CREATE_IDENTITY_PATH = "/createIdentity";
+    }
+
     interface StubBrokerOPProvider {
         String AUTHORISATION_ENDPOINT_URI = "/authorize";
         String USERINFO_URI = "/userinfo";
