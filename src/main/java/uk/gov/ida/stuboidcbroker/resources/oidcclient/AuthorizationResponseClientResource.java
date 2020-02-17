@@ -2,6 +2,7 @@ package uk.gov.ida.stuboidcbroker.resources.oidcclient;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.dropwizard.views.View;
@@ -94,6 +95,7 @@ public class AuthorizationResponseClientResource {
     public View validateAuthenticationResponseForService(String postBody) {
 
         Map<String, String> authenticationParams = splitQuery(postBody);
+        String transactionID = authenticationParams.get("transactionID");
 
         if (authenticationParams.containsKey("error")) {
             String scheme = configuration.getScheme();
@@ -113,19 +115,23 @@ public class AuthorizationResponseClientResource {
                     .path(Urls.StubBrokerClient.REDIRECT_FOR_SERVICE_PROVIDER_URI )
                     .build().toString();
 
-            // build a fresh path from the RP hostname for the RP create identity endpoint
-            String rpCreateIdentityUri = "#"; // TODO: where is the RP uri now?
+            AuthenticationErrorResponse authenticationErrorResponse = generatorService.handleAuthenticationErrorResponse(transactionID, authenticationParams.get("error"));
+
+            String rpCreateIdentityUri = UriBuilder
+                    .fromUri(authenticationErrorResponse.getRedirectionURI())
+                    .replacePath(Urls.StubRpPathsAssumptions.RP_CREATE_IDENTITY_PATH)
+                    .build()
+                    .toString();
 
             return new PickerView(idps, registeredBrokers,
-                    authenticationParams.get("transactionID"), configuration.getBranding(),
+                    transactionID, configuration.getBranding(),
                     configuration.getScheme(), configuration.getDirectoryURI(),
                     redirectUri, authenticationParams.get("error"),
                     authenticationParams.get("error_description"),
-                    rpCreateIdentityUri // TODO: not correct yet
+                    rpCreateIdentityUri
                 );
         }
 
-        String transactionID = authenticationParams.get("transactionID");
         redisService.set(transactionID + "response-from-broker", postBody);
         AuthenticationSuccessResponse successResponse = generatorService.handleAuthenticationRequestResponse(transactionID);
 
