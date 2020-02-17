@@ -29,7 +29,11 @@ public class AuthorizationRequestClientResource {
     @POST
     @Path("/serviceAuthenticationRequest")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response formPostAuthenticationRequest(@FormParam("brokerDomain") String domain, @FormParam("transactionID") String transactionID, @FormParam("redirectURI") String redirectURI) {
+    public Response formPostAuthenticationRequest
+            (@FormParam("brokerDomain") String domain,
+             @FormParam("transactionID") String transactionID,
+             @FormParam("redirectURI") String redirectURI) {
+
         URI redirectUri = URI.create(redirectURI);
         List<String> orgList = Arrays.asList(domain.split(","));
         String brokerDomain = orgList.get(0);

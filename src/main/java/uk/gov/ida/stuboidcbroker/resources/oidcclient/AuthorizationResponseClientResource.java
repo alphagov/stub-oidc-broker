@@ -64,6 +64,7 @@ public class AuthorizationResponseClientResource {
     @Path("/validateAuthenticationResponse")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public View validateAuthenticationResponse(String postBody) {
+
         Map<String, String> authenticationParams = splitQuery(postBody);
         String transactionID = authenticationParams.get("transactionID");
         String rpDomain = redisService.get(transactionID  + "response-uri");
@@ -91,6 +92,7 @@ public class AuthorizationResponseClientResource {
     @Path("/validateAuthenticationResponseForServiceProvider")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public View validateAuthenticationResponseForService(String postBody) {
+
         Map<String, String> authenticationParams = splitQuery(postBody);
 
         if (authenticationParams.containsKey("error")) {

@@ -63,8 +63,8 @@ public class TokenResource {
     @Path("/token")
     public Response getProviderTokens(
             MultivaluedMap<String, String> formParams) throws JOSEException, InvalidClientException {
-        LOG.info("Token end point");
 
+        LOG.info("Token end point");
         if (formParams.get("client_assertion") == null) {
             return Response.status(Response.Status.FORBIDDEN).build();
         }

@@ -42,7 +42,10 @@ public class UserInfoResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/userinfo")
-    public Response getUserInfo(@HeaderParam("Authorization") @NotNull String authorizationHeader, @HeaderParam("transactionID") String transactionID) {
+    public Response getUserInfo(
+            @HeaderParam("Authorization") @NotNull String authorizationHeader,
+            @HeaderParam("transactionID") String transactionID) {
+
         try {
             LOG.info("Received request to get User Info");
             //This will need to be used to get the user info but we're not using it for now

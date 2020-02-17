@@ -25,10 +25,6 @@ public interface Urls {
         String VERIFY_CLIENT_TOKEN = "/verify-client-token";
     }
 
-    interface Middleware {
-        String REGISTRATION_URI = "/register";
-    }
-
     interface IDP {
         String AUTHENTICATION_URI = "/authentication";
         String CREDENTIAL_URI = "/issue/jwt/credential";
