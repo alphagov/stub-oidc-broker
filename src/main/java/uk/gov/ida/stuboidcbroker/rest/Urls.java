@@ -12,7 +12,7 @@ public interface Urls {
     }
 
     interface StubRpPathsAssumptions {
-        String RP_CREATE_IDENTITY_PATH = "/createIdentity";
+        String RP_CREATE_IDENTITY_PATH = "/failed-to-sign-in";
     }
 
     interface StubBrokerOPProvider {

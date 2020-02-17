@@ -55,9 +55,11 @@ public class PickerPageResource {
                 .path(Urls.StubBrokerClient.REDIRECT_FOR_SERVICE_URI)
                 .build().toString();
 
-        String rpCreateIdentityUri = UriBuilder.fromUri(rpResponseURI.getHost())
+        String rpCreateIdentityUri = UriBuilder
+            .fromUri(rpResponseURI.getAuthority())
             .path(Urls.StubRpPathsAssumptions.RP_CREATE_IDENTITY_PATH)
-            .build().toString();
+            .build()
+            .toString();
 
         return new PickerView(idps, registeredBrokers,
                 transactionId, configuration.getBranding(),
