@@ -2,7 +2,6 @@ package uk.gov.ida.stuboidcbroker.resources.oidcclient;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.id.ClientID;
-import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.dropwizard.views.View;
@@ -115,20 +114,12 @@ public class AuthorizationResponseClientResource {
                     .path(Urls.StubBrokerClient.REDIRECT_FOR_SERVICE_PROVIDER_URI )
                     .build().toString();
 
-            AuthenticationErrorResponse authenticationErrorResponse = generatorService.handleAuthenticationErrorResponse(transactionID, authenticationParams.get("error"));
-
-            String rpCreateIdentityUri = UriBuilder
-                    .fromUri(authenticationErrorResponse.getRedirectionURI())
-                    .replacePath(Urls.StubRpPathsAssumptions.RP_CREATE_IDENTITY_PATH)
-                    .build()
-                    .toString();
 
             return new PickerView(idps, registeredBrokers,
                     transactionID, configuration.getBranding(),
                     configuration.getScheme(), configuration.getDirectoryURI(),
                     redirectUri, authenticationParams.get("error"),
-                    authenticationParams.get("error_description"),
-                    rpCreateIdentityUri
+                    authenticationParams.get("error_description")
                 );
         }
 

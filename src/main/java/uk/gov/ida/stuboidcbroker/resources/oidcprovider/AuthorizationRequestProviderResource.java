@@ -131,18 +131,13 @@ public class AuthorizationRequestProviderResource {
                 .filter(org -> redisService.get(org.getName()) != null)
                 .collect(Collectors.toList());
 
-        String redirectUri = UriBuilder.fromUri(configuration.getStubBrokerURI())
+            String redirectUri = UriBuilder.fromUri(configuration.getStubBrokerURI())
                 .path(Urls.StubBrokerClient.REDIRECT_FOR_SERVICE_PROVIDER_URI)
                 .build().toString();
 
-        String rpCreateIdentityUri = UriBuilder
-            .fromUri(rpURI)
-            .replacePath(Urls.StubRpPathsAssumptions.RP_CREATE_IDENTITY_PATH)
-            .build()
-            .toString();
 
         return new PickerView(idps, registeredBrokers, transactionID, configuration.getBranding(),
-                scheme, configuration.getDirectoryURI(), redirectUri, rpCreateIdentityUri);
+                scheme, configuration.getDirectoryURI(), redirectUri);
     }
 
     private void storeRpResponseURI(String transactionID, String rpResponsePath) {

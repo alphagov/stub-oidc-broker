@@ -14,7 +14,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -55,16 +54,11 @@ public class PickerPageResource {
                 .path(Urls.StubBrokerClient.REDIRECT_FOR_SERVICE_URI)
                 .build().toString();
 
-        String rpCreateIdentityUri = UriBuilder
-            .fromUri(rpResponseURI)
-            .replacePath(Urls.StubRpPathsAssumptions.RP_CREATE_IDENTITY_PATH)
-            .build()
-            .toString();
 
         return new PickerView(idps, registeredBrokers,
                 transactionId, configuration.getBranding(),
                 scheme, configuration.getDirectoryURI(),
-                redirectUri, rpCreateIdentityUri);
+                redirectUri);
     }
 
     private void storeRpResponseUri(String transactionID, String rpResponsePath) {

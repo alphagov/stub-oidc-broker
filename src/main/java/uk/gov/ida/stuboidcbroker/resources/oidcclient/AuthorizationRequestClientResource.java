@@ -29,8 +29,8 @@ public class AuthorizationRequestClientResource {
     @POST
     @Path("/serviceAuthenticationRequest")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response formPostAuthenticationRequest
-            (@FormParam("brokerDomain") String domain,
+    public Response formPostAuthenticationRequest(
+             @FormParam("brokerDomain") String domain,
              @FormParam("transactionID") String transactionID,
              @FormParam("redirectURI") String redirectURI) {
 

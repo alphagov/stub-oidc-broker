@@ -18,13 +18,11 @@ public class PickerView extends View {
     private String redirectURI;
     private String error;
     private String errorDescription;
-    private String rpCreateIdentityUri;
 
     public PickerView(List<Organisation> idps, List<Organisation> brokers,
                       String transactionID, String branding,
                       String scheme, String directoryUri,
-                      String redirectURI,
-                      String rpCreateIdentityUri) {
+                      String redirectURI) {
         super(branding + "-picker.mustache");
         this.idps = idps;
         this.brokers = brokers;
@@ -33,16 +31,14 @@ public class PickerView extends View {
         this.scheme = scheme;
         this.directoryUri = directoryUri;
         this.redirectURI = redirectURI;
-        this.rpCreateIdentityUri = rpCreateIdentityUri;
     }
 
     public PickerView(List<Organisation> idps, List<Organisation> brokers,
                       String transactionID, String branding,
                       String scheme, String directoryUri,
                       String redirectURI, String error,
-                      String errorDescription,
-                      String rpCreateIdentityUri) {
-        this(idps, brokers, transactionID, branding, scheme, directoryUri, redirectURI, rpCreateIdentityUri);
+                      String errorDescription) {
+        this(idps, brokers, transactionID, branding, scheme, directoryUri, redirectURI);
         this.error = error;
         this.errorDescription = errorDescription;
     }
@@ -87,8 +83,6 @@ public class PickerView extends View {
     public String getDirectoryUri() {
         return directoryUri;
     }
-
-    public String getRpCreateIdentityUri() { return rpCreateIdentityUri; }
 
     public boolean isSchemeOne() {
         return scheme.equals("1");
