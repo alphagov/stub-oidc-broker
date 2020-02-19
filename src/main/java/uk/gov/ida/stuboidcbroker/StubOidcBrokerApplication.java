@@ -59,7 +59,7 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
 
     private void registerResources(Environment environment, StubOidcBrokerConfiguration configuration, RedisService redisService) {
         TokenHandlerService tokenHandlerService = new TokenHandlerService(redisService, configuration);
-        PickerService pickerService = new PickerService();
+        PickerService pickerService = new PickerService(configuration, redisService);
         RegistrationHandlerService registrationHandlerService = new RegistrationHandlerService(redisService, configuration);
         AuthnRequestValidationService authnRequestValidationService = new AuthnRequestValidationService(redisService);
         AuthnResponseGeneratorService authnResponseGeneratorService = new AuthnResponseGeneratorService(tokenHandlerService, redisService);
@@ -72,8 +72,8 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
         environment.jersey().register(new AuthorizationRequestClientResource( authnRequestGeneratorService));
         environment.jersey().register(new JsonProcessingExceptionMapper(true));
         environment.jersey().register(new RegistrationRequestResource(registrationRequestService, redisService, configuration));
-        environment.jersey().register(new PickerPageResource(configuration, redisService, pickerService));
-        environment.jersey().register(new AuthorizationResponseClientResource(tokenRequestService, authResponseService, redisService, authnResponseGeneratorService, configuration, pickerService));
+        environment.jersey().register(new PickerPageResource(redisService, pickerService));
+        environment.jersey().register(new AuthorizationResponseClientResource(tokenRequestService, authResponseService, redisService, authnResponseGeneratorService, pickerService));
         environment.jersey().register(new IdpClientResource(redisService, configuration));
         environment.jersey().register(new TokenResource(tokenHandlerService, configuration));
         environment.jersey().register(new UserInfoResource(tokenHandlerService, redisService, authResponseService, tokenRequestService));

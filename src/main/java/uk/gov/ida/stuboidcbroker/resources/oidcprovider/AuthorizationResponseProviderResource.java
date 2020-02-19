@@ -56,11 +56,9 @@ public class AuthorizationResponseProviderResource {
 
     @POST
     @Path("/signUp")
-    public View signUpUsingRP(
-            @FormParam("transactionID") String transactionID) {
+    public View signUpUsingRP(@FormParam("transactionID") String transactionID) {
 
         AuthenticationErrorResponse authenticationErrorResponse = generatorService.handleAuthenticationErrorResponse(transactionID, OIDCError.UNMET_AUTHENTICATION_REQUIREMENTS);
-
 
         return new BrokerErrorResponseView(
                 authenticationErrorResponse.getErrorObject().getCode(),
