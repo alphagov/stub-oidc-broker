@@ -6,6 +6,7 @@ import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
+import com.nimbusds.openid.connect.sdk.ClaimsRequest;
 import com.nimbusds.openid.connect.sdk.Nonce;
 import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 
@@ -37,6 +38,7 @@ public class AuthnRequestGeneratorService {
                 .endpointURI(requestUri)
                 .state(state)
                 .nonce(nonce)
+                .customParameter("claims", getRequestedClaims(transactionID))
                 .customParameter("transaction-id", transactionID)
                 .build();
 
@@ -60,5 +62,11 @@ public class AuthnRequestGeneratorService {
         } else {
             throw new RuntimeException("No client ID exists");
         }
+    }
+
+    private String getRequestedClaims(String transactionId){
+        String claims = redisService.get(transactionId + "claims");
+        // this is a hack, it should ideally cast/translate into ClaimsRequest object
+        return claims;
     }
 }

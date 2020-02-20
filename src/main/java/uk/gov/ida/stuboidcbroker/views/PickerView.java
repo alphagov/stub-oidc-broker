@@ -16,13 +16,14 @@ public class PickerView extends View {
     private String scheme;
     private String directoryUri;
     private String redirectURI;
+    private String claims;
     private String error;
     private String errorDescription;
 
     public PickerView(List<Organisation> idps, List<Organisation> brokers,
                       String transactionID, String branding,
                       String scheme, String directoryUri,
-                      String redirectURI) {
+                      String redirectURI, String claims) {
         super(branding + "-picker.mustache");
         this.idps = idps;
         this.brokers = brokers;
@@ -31,14 +32,15 @@ public class PickerView extends View {
         this.scheme = scheme;
         this.directoryUri = directoryUri;
         this.redirectURI = redirectURI;
+        this.claims = claims;
     }
 
     public PickerView(List<Organisation> idps, List<Organisation> brokers,
                       String transactionID, String branding,
                       String scheme, String directoryUri,
-                      String redirectURI, String error,
+                      String redirectURI, String claims, String error,
                       String errorDescription) {
-        this(idps, brokers, transactionID, branding, scheme, directoryUri, redirectURI);
+        this(idps, brokers, transactionID, branding, scheme, directoryUri, redirectURI, claims);
         this.error = error;
         this.errorDescription = errorDescription;
     }
@@ -103,5 +105,9 @@ public class PickerView extends View {
 
     public boolean startNewRow() {
         return index % 2 == 0;
+    }
+
+    public String getClaims() {
+        return claims;
     }
 }

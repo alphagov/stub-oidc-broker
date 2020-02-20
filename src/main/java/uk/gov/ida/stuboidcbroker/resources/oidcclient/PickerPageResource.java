@@ -54,10 +54,12 @@ public class PickerPageResource {
                 .path(Urls.StubBrokerClient.REDIRECT_FOR_SERVICE_URI)
                 .build().toString();
 
+        String claims = "";
+
         return new PickerView(idps, registeredBrokers,
                 transactionId, configuration.getBranding(),
                 scheme, configuration.getDirectoryURI(),
-                redirectUri);
+                redirectUri, claims);
     }
 
     private void storeRpResponseUri(String transactionID, String rpResponsePath) {

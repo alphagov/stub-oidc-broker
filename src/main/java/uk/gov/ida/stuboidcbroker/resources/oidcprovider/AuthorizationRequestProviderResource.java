@@ -3,6 +3,7 @@ package uk.gov.ida.stuboidcbroker.resources.oidcprovider;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
+import com.nimbusds.openid.connect.sdk.ClaimsRequest;
 import io.dropwizard.views.View;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.domain.Organisation;
@@ -21,9 +22,13 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
+import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static uk.gov.ida.stuboidcbroker.services.shared.QueryParameterHelper.splitQuery;
 
 @Path("/authorizeFormPost")
 public class AuthorizationRequestProviderResource {
@@ -71,9 +76,11 @@ public class AuthorizationRequestProviderResource {
                     errorResponse.get().getRedirectionURI(),
                     transactionID);
         }
+        Map<String, String> params = splitQuery(redisService.get(transactionID));
         URI idpUri = UriBuilder.fromUri(
                 configuration.getIdpURI())
                 .path(Urls.IDP.AUTHENTICATION_URI)
+                .queryParam("claims", Base64.getEncoder().encodeToString(params.get("claims").getBytes()))
                 .queryParam("transaction-id", transactionID)
                 .queryParam("redirect-path", Urls.StubBrokerClient.RESPONSE_FOR_BROKER)
                 .build();
@@ -109,11 +116,12 @@ public class AuthorizationRequestProviderResource {
                     error.getRedirectionURI(),
                     transactionID);
             return brokerErrorResponseView;
-        }).orElseGet(() -> generatePickerPageView(authenticationRequest.getRedirectionURI(), transactionID));
+        }).orElseGet(() -> generatePickerPageView(authenticationRequest.getRedirectionURI(), transactionID, authenticationRequest.getClaims()));
     }
 
-    private PickerView generatePickerPageView(URI rpURI, String transactionID) {
+    private PickerView generatePickerPageView(URI rpURI, String transactionID, ClaimsRequest claims) {
         storeRpResponseURI(transactionID, rpURI.toString());
+        storeRequestedClaims(transactionID, claims);
         String scheme = configuration.getScheme();
 
         URI idpRequestURI = UriBuilder.fromUri(configuration.getDirectoryURI())
@@ -136,11 +144,16 @@ public class AuthorizationRequestProviderResource {
                 .build().toString();
 
         return new PickerView(idps, registeredBrokers, transactionID, configuration.getBranding(),
-                scheme, configuration.getDirectoryURI(), redirectUri);
+                scheme, configuration.getDirectoryURI(), redirectUri, claims.toString());
     }
 
     private void storeRpResponseURI(String transactionID, String rpResponsePath) {
 
         redisService.set(transactionID + "service-provider", rpResponsePath);
+    }
+
+    private void storeRequestedClaims(String transactionID, ClaimsRequest claims) {
+
+        redisService.set(transactionID + "claims", claims.toString());
     }
 }

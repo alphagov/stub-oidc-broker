@@ -111,10 +111,12 @@ public class AuthorizationResponseClientResource {
                     .path(Urls.StubBrokerClient.REDIRECT_FOR_SERVICE_PROVIDER_URI )
                     .build().toString();
 
+            String claims = redisService.get(authenticationParams.get("transactionID") + "claims");
+
             return new PickerView(idps, registeredBrokers,
                     authenticationParams.get("transactionID"), configuration.getBranding(),
                     configuration.getScheme(), configuration.getDirectoryURI(),
-                    redirectUri, authenticationParams.get("error"),
+                    redirectUri, claims, authenticationParams.get("error"),
                     authenticationParams.get("error_description"));
         }
 
