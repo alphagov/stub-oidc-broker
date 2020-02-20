@@ -43,6 +43,7 @@ public class IdpClientResource {
     public Response sendIdpAuthenticationRequest(
             @FormParam("idpDomain") String domain,
             @FormParam("transactionID") String transactionID) {
+
         List<String> orgList = Arrays.asList(domain.split(","));
         String idpDomain = orgList.get(0);
         String idpName = orgList.get(1);
@@ -69,6 +70,7 @@ public class IdpClientResource {
     @Path("/idpAuthenticationResponse")
     @Produces(MediaType.TEXT_HTML)
     public View handAuthenticationResponse(@QueryParam("transaction-id") String transactionID) {
+
         String rpUri = redisService.get(transactionID + "response-uri");
         String verifiableCredential = getVerifiableCredential(new BearerAccessToken());
 

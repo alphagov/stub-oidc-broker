@@ -11,6 +11,10 @@ public interface Urls {
         String IDP_RESPONSE = "/formPost/idpAuthenticationResponse";
     }
 
+    interface StubRpPathsAssumptions {
+        String RP_CREATE_IDENTITY_PATH = "/failed-to-sign-in";
+    }
+
     interface StubBrokerOPProvider {
         String AUTHORISATION_ENDPOINT_URI = "/authorize";
         String USERINFO_URI = "/userinfo";
@@ -23,10 +27,6 @@ public interface Urls {
         String REGISTERED_IDPS = "/organisation/idp/";
         String REGISTERED_BROKERS = "/organisation/broker/";
         String VERIFY_CLIENT_TOKEN = "/verify-client-token";
-    }
-
-    interface Middleware {
-        String REGISTRATION_URI = "/register";
     }
 
     interface IDP {

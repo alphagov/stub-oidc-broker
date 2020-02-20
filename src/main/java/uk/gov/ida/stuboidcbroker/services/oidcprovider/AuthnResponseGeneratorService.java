@@ -2,13 +2,13 @@ package uk.gov.ida.stuboidcbroker.services.oidcprovider;
 
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
+import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
-import com.nimbusds.openid.connect.sdk.OIDCError;
 import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 
 public class AuthnResponseGeneratorService {
@@ -51,7 +51,7 @@ public class AuthnResponseGeneratorService {
         );
     }
 
-    public AuthenticationErrorResponse handleAuthenticationErrorResponse(String transactionID, String errorCode) {
+    public AuthenticationErrorResponse handleAuthenticationErrorResponse(String transactionID, ErrorObject errorCode) {
         //TODO - Map errorcode to OIDCError object
 
         String serialisedRequest = redisService.get(transactionID);
@@ -65,7 +65,7 @@ public class AuthnResponseGeneratorService {
 
         return new AuthenticationErrorResponse(
                 authenticationRequest.getRedirectionURI(),
-                OIDCError.LOGIN_REQUIRED,
+                errorCode,
                 authenticationRequest.getState(),
                 null);
     }

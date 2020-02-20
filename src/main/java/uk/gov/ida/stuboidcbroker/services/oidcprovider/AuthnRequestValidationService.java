@@ -23,9 +23,9 @@ public class AuthnRequestValidationService {
         Optional<ErrorObject> errorObject = validateAuthenticationRequest(authenticationRequest);
 
         return errorObject
-                .map(e -> Optional.of(new AuthenticationErrorResponse(
+                .map(error -> Optional.of(new AuthenticationErrorResponse(
                         authenticationRequest.getRedirectionURI(),
-                        errorObject.get(),
+                        error,
                         null,
                         ResponseMode.FRAGMENT)))
                 .orElseGet(() -> {

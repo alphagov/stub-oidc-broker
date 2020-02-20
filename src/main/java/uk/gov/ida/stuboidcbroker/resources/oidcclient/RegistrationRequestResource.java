@@ -37,6 +37,7 @@ public class RegistrationRequestResource {
     @GET
     @Path("/")
     public View registrationPage() {
+
         String scheme = configuration.getScheme();
         URI brokerRequestURI = UriBuilder.fromUri(configuration.getDirectoryURI()).path(Urls.Directory.REGISTERED_BROKERS + scheme)
                 .build();
@@ -55,6 +56,7 @@ public class RegistrationRequestResource {
             @FormParam("privateKey") String privateKey,
             @FormParam("brokerDomain") String brokerDomain,
             @FormParam("clientToken") String clientToken) {
+
         // get ssa for this broker from directory
         // get private key for this broker directory
         List<String> orgList = Arrays.asList(brokerDomain.split(","));

@@ -2,12 +2,15 @@ package uk.gov.ida.stuboidcbroker.resources.oidcprovider;
 
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
+import com.nimbusds.openid.connect.sdk.OIDCError;
 import io.dropwizard.views.View;
 import uk.gov.ida.stuboidcbroker.services.oidcprovider.AuthnResponseGeneratorService;
 import uk.gov.ida.stuboidcbroker.views.BrokerErrorResponseView;
 import uk.gov.ida.stuboidcbroker.views.BrokerResponseView;
 
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -30,7 +33,7 @@ public class AuthorizationResponseProviderResource {
             @QueryParam("error-code")String errorCode) {
 
         if (errorCode != null) {
-            AuthenticationErrorResponse authenticationErrorResponse = generatorService.handleAuthenticationErrorResponse(transactionID, errorCode);
+            AuthenticationErrorResponse authenticationErrorResponse = generatorService.handleAuthenticationErrorResponse(transactionID, OIDCError.LOGIN_REQUIRED);
 
             return new BrokerErrorResponseView(
                     authenticationErrorResponse.getErrorObject().getCode(),
@@ -48,6 +51,21 @@ public class AuthorizationResponseProviderResource {
                 successResponse.getIDToken(),
                 successResponse.getRedirectionURI(),
                 successResponse.getAccessToken(),
+                transactionID);
+    }
+
+    @POST
+    @Path("/signUp")
+    public View signUpUsingRP(@FormParam("transactionID") String transactionID) {
+
+        AuthenticationErrorResponse authenticationErrorResponse = generatorService.handleAuthenticationErrorResponse(transactionID, OIDCError.UNMET_AUTHENTICATION_REQUIREMENTS);
+
+        return new BrokerErrorResponseView(
+                authenticationErrorResponse.getErrorObject().getCode(),
+                authenticationErrorResponse.getErrorObject().getDescription(),
+                authenticationErrorResponse.getErrorObject().getHTTPStatusCode(),
+                authenticationErrorResponse.getState(),
+                authenticationErrorResponse.getRedirectionURI(),
                 transactionID);
     }
 }
