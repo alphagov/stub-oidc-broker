@@ -79,7 +79,7 @@ public class StubOidcBrokerResource {
 
         return Response
                 .status(302)
-                .location(authnRequestGeneratorService.generateAuthenticationRequest(
+                .location(authnRequestGeneratorService.generateIdentityAuthenticationRequest(
                         requestURI,
                         getClientID(brokerDomain),
                         redirectURI,

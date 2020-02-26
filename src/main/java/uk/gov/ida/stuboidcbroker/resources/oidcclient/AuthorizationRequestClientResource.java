@@ -43,7 +43,7 @@ public class AuthorizationRequestClientResource {
 
         return Response
                 .status(302)
-                .location(authnRequestGeneratorService.generateAuthenticationRequest(
+                .location(authnRequestGeneratorService.generateIdentityAuthenticationRequest(
                         authorisationURI,
                         authnRequestGeneratorService.getClientIDByBrokerName(brokerName),
                         redirectUri,

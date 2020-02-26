@@ -48,7 +48,7 @@ public class AuthorizationRequestProviderResource {
     //TODO: The spec states there should be a post method for this endpoint as well
     @GET
     @Path("/authorize")
-    public Object authorize(
+    public Object authorizeAsIDP(
             @Context UriInfo uriInfo,
             @QueryParam("transaction-id") String transactionID) {
 
