@@ -94,9 +94,9 @@ public class AuthnRequestGeneratorService {
 
     public static String[] IDENTITY_CLAIMS = new String[] {
         "name",
-        "family-name",
-        "given-name",
-        "middle-name",
+        "family_name",
+        "given_name",
+        "middle_name",
         "gender",
         "birthday"
     };

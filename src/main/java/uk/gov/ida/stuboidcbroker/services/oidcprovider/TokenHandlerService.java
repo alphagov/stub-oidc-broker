@@ -18,9 +18,12 @@ import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
+import com.nimbusds.openid.connect.sdk.ClaimsRequest;
 import com.nimbusds.openid.connect.sdk.claims.AccessTokenHash;
 import com.nimbusds.openid.connect.sdk.claims.CodeHash;
+import com.nimbusds.openid.connect.sdk.claims.Gender;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
+import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import net.minidev.json.JSONObject;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
@@ -35,6 +38,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Set;
 
 public class TokenHandlerService {
 
@@ -47,12 +51,14 @@ public class TokenHandlerService {
         this.configuration = configuration;
     }
 
+    public static final String SAMPLE_USER_SUBJECT_001 = "sample_user_id_001";
+
     public JWT generateAndGetIdToken(AuthorizationCode authCode, AuthenticationRequest authRequest, AccessToken accessToken) {
         CodeHash cHash = CodeHash.compute(authCode, JWSAlgorithm.RS256);
         AccessTokenHash aHash = AccessTokenHash.compute(accessToken, JWSAlgorithm.RS256);
         IDTokenClaimsSet idTokenClaimsSet = new IDTokenClaimsSet(
                 new Issuer(ISSUER),
-                new Subject(),
+                new Subject(SAMPLE_USER_SUBJECT_001),
                 Collections.singletonList(new Audience(authRequest.getClientID())),
                 new Date(),
                 new Date());
@@ -79,9 +85,41 @@ public class TokenHandlerService {
         }
 
         storeTokens(idToken, accessToken, authCode);
+        UserInfo info = generateUserInfo(authRequest);
+        storeUserInfo(accessToken, info);
 
         return idToken;
     }
+
+    public UserInfo generateUserInfo(AuthenticationRequest request) {
+        Set<String> claimNames = request.getClaims().getUserInfoClaimNames(false);
+        Subject subject = new Subject(SAMPLE_USER_SUBJECT_001);
+        UserInfo info = new UserInfo(subject);
+        for (String claimName : claimNames) {
+            switch (claimName) {
+                case "name":
+                    info.setName("Winnie the Pooh");
+                    break;
+                case "given_name":
+                    info.setGivenName("Winnie");
+                    break;
+                case "middle_name":
+                    info.setMiddleName("The");
+                    break;
+                case "family_name":
+                    info.setFamilyName("Pooh");
+                    break;
+                case "birthday":
+                    info.setBirthdate("1926-01-01");
+                    break;
+                case "gender":
+                    info.setGender(Gender.MALE);
+                    break;
+            }
+        }
+        return info;
+    }
+
 
     public OIDCTokens getTokens(AuthorizationCode authCode) {
 
@@ -114,6 +152,18 @@ public class TokenHandlerService {
             throw new RuntimeException(e);
         }
         return responseBody.body();
+    }
+
+    private void storeUserInfo(AccessToken accessToken, UserInfo info) {
+        redisService.set(accessToken.getValue(), info.toJSONObject().toJSONString());
+    }
+
+    public UserInfo getUserInfo(AccessToken accessToken) {
+        try {
+            return UserInfo.parse(redisService.get(accessToken.getValue()));
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void storeTokens(JWT idToken, AccessToken accessToken, AuthorizationCode authCode) {

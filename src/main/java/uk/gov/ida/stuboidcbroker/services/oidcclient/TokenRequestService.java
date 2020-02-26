@@ -13,7 +13,9 @@ import com.nimbusds.oauth2.sdk.auth.PrivateKeyJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import com.nimbusds.openid.connect.sdk.ClaimsRequest;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
 import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import com.nimbusds.openid.connect.sdk.UserInfoResponse;
@@ -43,6 +45,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import static uk.gov.ida.stuboidcbroker.services.oidcprovider.TokenHandlerService.SAMPLE_USER_SUBJECT_001;
 
 public class TokenRequestService {
 
@@ -132,7 +138,8 @@ public class TokenRequestService {
         }
     }
 
-    public String getVerifiableCredential(BearerAccessToken bearerAccessToken, String brokerDomain) {
+
+    public String getVerifiableCredentialFromIDP(BearerAccessToken bearerAccessToken, String brokerDomain) {
         URI userInfoURI = UriBuilder.fromUri(brokerDomain)
                 .path(Urls.StubBrokerClient.USER_INFO).build();
 

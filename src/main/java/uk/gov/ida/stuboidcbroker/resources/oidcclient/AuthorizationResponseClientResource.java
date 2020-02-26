@@ -120,7 +120,7 @@ public class AuthorizationResponseClientResource {
 //      UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());
 //      String userInfoToJson = userInfo.toJSONObject().toJSONString();
 
-        return tokenRequestService.getVerifiableCredential(tokens.getBearerAccessToken(), brokerDomain);
+        return tokenRequestService.getVerifiableCredentialFromIDP(tokens.getBearerAccessToken(), brokerDomain);
     }
 
     private String getBrokerName(String transactionID) {

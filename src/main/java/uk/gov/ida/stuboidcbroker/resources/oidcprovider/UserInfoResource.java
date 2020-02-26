@@ -4,6 +4,7 @@ import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
+import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +40,8 @@ public class UserInfoResource {
         this.tokenRequestService = tokenRequestService;
     }
 
+    public static boolean RESPOND_WITH_VERIFIABLE_CREDENTIAL = false;
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/userinfo")
@@ -53,24 +56,53 @@ public class UserInfoResource {
 
             String responseBody = redisService.get(transactionID + "response-from-broker");
 
-            String verifiableCredential;
+            boolean passThrough = responseBody != null;
 
-            if (responseBody == null) {
-                verifiableCredential = tokenHandlerService.getVerifiableCredential(accessToken);
+            // choose between VC or Claims + AggregatedClaims
+            if (RESPOND_WITH_VERIFIABLE_CREDENTIAL) {
+                String verifiableCredential = getVerifiableCredentialFor(passThrough, responseBody, accessToken, transactionID);
+                return Response.ok(verifiableCredential).build();
 
             } else {
-                String brokerName = getBrokerName(transactionID);
-                String brokerDomain = getBrokerDomain(transactionID);
+                if (passThrough) {
+                    // we are the broker, fetch the claims from the IDP and aggregate them
+                    //fetchAndAggregateUserInfo();
+                    // pass through - we're a broker
+                    String brokerName = getBrokerName(transactionID);
+                    String brokerDomain = getBrokerDomain(transactionID);
 
-                Map<String, String> authenticationParams = splitQuery(responseBody);
-                AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(authenticationParams, getClientID(brokerName));
+                    Map<String, String> authenticationParams = splitQuery(responseBody);
+                    AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(authenticationParams, getClientID(brokerName));
+                    String result = retrieveTokenAndUserInfo(authorizationCode, brokerName, brokerDomain);
+                    return Response.ok(result).build();
 
-                verifiableCredential = retrieveTokenAndUserInfo(authorizationCode, brokerName, brokerDomain);
+                } else {
+                    // we are the IDP, respond with the claims -- in a JWT?
+                    UserInfo info = tokenHandlerService.getUserInfo(accessToken);
+                    // TODO: create a JWT
+                    return Response.ok(info.toJSONObject().toJSONString()).build();
+                }
             }
 
-            return Response.ok(verifiableCredential).build();
         } catch (ParseException e) {
             throw new RuntimeException("Unable to parse authorization header: " + authorizationHeader + " to access token", e);
+        }
+    }
+
+    private String getVerifiableCredentialFor(boolean passThrough, String responseBody, AccessToken accessToken, String transactionID) {
+        if (!passThrough) {
+            // fetch user info - we're an IDP
+            return tokenHandlerService.getVerifiableCredential(accessToken);
+
+        } else {
+            // pass through - we're a broker
+            String brokerName = getBrokerName(transactionID);
+            String brokerDomain = getBrokerDomain(transactionID);
+
+            Map<String, String> authenticationParams = splitQuery(responseBody);
+            AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(authenticationParams, getClientID(brokerName));
+
+            return retrieveTokenAndUserInfo(authorizationCode, brokerName, brokerDomain);
         }
     }
 
@@ -97,6 +129,6 @@ public class UserInfoResource {
 //      UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());
 //      String userInfoToJson = userInfo.toJSONObject().toJSONString();
 
-        return tokenRequestService.getVerifiableCredential(tokens.getBearerAccessToken(), brokerDomain);
+        return tokenRequestService.getVerifiableCredentialFromIDP(tokens.getBearerAccessToken(), brokerDomain);
     }
 }
