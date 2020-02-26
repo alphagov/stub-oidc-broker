@@ -86,7 +86,17 @@ public class TokenHandlerService {
 
         storeTokens(idToken, accessToken, authCode);
         UserInfo info = generateUserInfo(authRequest);
-        storeUserInfo(accessToken, info);
+        try {
+            JWTClaimsSet userInfoJWT = info.toJWTClaimsSet();
+            JWSSigner signer = new RSASSASigner(signingKey);
+            SignedJWT userInfoSignedJWT = new SignedJWT(jwsHeader, jwtClaimsSet);
+            userInfoSignedJWT.sign(signer);
+
+            storeUserInfo(accessToken, userInfoSignedJWT);
+
+        } catch (ParseException | JOSEException e) {
+            throw new RuntimeException("Unable to generate userInfo JWT", e);
+        }
 
         return idToken;
     }
@@ -154,16 +164,12 @@ public class TokenHandlerService {
         return responseBody.body();
     }
 
-    private void storeUserInfo(AccessToken accessToken, UserInfo info) {
-        redisService.set(accessToken.getValue(), info.toJSONObject().toJSONString());
+    private void storeUserInfo(AccessToken accessToken, SignedJWT info) {
+        redisService.set(accessToken.getValue(), info.serialize());
     }
 
-    public UserInfo getUserInfo(AccessToken accessToken) {
-        try {
-            return UserInfo.parse(redisService.get(accessToken.getValue()));
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
+    public String getUserInfoAsSignedJWT(AccessToken accessToken) {
+        return redisService.get(accessToken.getValue());
     }
 
     private void storeTokens(JWT idToken, AccessToken accessToken, AuthorizationCode authCode) {

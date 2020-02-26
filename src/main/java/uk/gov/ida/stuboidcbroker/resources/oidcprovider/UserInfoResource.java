@@ -1,11 +1,13 @@
 package uk.gov.ida.stuboidcbroker.resources.oidcprovider;
 
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
+import net.minidev.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.ida.stuboidcbroker.services.oidcclient.AuthnResponseValidationService;
@@ -78,9 +80,10 @@ public class UserInfoResource {
 
                 } else {
                     // we are the IDP, respond with the claims -- in a JWT?
-                    UserInfo info = tokenHandlerService.getUserInfo(accessToken);
-                    // TODO: create a JWT
-                    return Response.ok(info.toJSONObject().toJSONString()).build();
+                    String userInfoSignedJWT = tokenHandlerService.getUserInfoAsSignedJWT(accessToken);
+                    JSONObject userInfoJWSAsJSON = new JSONObject();
+                    userInfoJWSAsJSON.put("jws", userInfoSignedJWT);
+                    return Response.ok(userInfoJWSAsJSON.toJSONString()).build();
                 }
             }
 
