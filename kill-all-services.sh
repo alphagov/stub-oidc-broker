@@ -26,6 +26,7 @@ popd > /dev/null
 pushd ../trust-framework-idp> /dev/null
 ./kill-idp1.sh
 ./kill-idp2.sh
+./kill-atp1.sh
 popd > /dev/null
 
 pushd ../trust-framework-directory-prototype> /dev/null
