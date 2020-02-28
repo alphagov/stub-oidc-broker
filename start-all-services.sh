@@ -20,3 +20,5 @@ start_service registration tpp-registration-prototype
 
 start_service idp1 trust-framework-idp
 start_service idp2 trust-framework-idp
+
+start_service atp1 trust-framework-idp
