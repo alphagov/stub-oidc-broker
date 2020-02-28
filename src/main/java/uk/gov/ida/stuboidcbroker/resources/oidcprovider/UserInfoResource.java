@@ -126,7 +126,7 @@ public class UserInfoResource {
             // fetch the user info from the IDP as a JWT
             SignedJWT infoJWT = retrieveUserInfoJWS(authorizationCode, brokerName, brokerDomain);
 
-            JWTClaimsSet identityClaimsSet = null;
+            JWTClaimsSet identityClaimsSet;
             try {
                 identityClaimsSet = infoJWT.getJWTClaimsSet();
             } catch (java.text.ParseException e) {
@@ -136,7 +136,7 @@ public class UserInfoResource {
             // pull out the subject name, and the names of the claims in the JWT
             String sub  = identityClaimsSet.getSubject();
             Set<String> claimNames = new HashSet<>();
-            for (Object claimName : identityClaimsSet.getClaims().values()) {
+            for (Object claimName : identityClaimsSet.getClaims().keySet()) {
                 claimNames.add(claimName.toString()); // pretty sure these are strings anyway
             }
 
