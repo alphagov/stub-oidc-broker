@@ -3,6 +3,9 @@ package uk.gov.ida.stuboidcbroker.services.oidcclient;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.util.JSONObjectUtils;
+import com.nimbusds.jwt.JWT;
+import com.nimbusds.jwt.JWTParser;
+import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
@@ -22,10 +25,13 @@ import com.nimbusds.openid.connect.sdk.UserInfoResponse;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import net.minidev.json.JSONObject;
+import net.minidev.json.JSONUtil;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
 import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
@@ -51,6 +57,8 @@ import java.util.UUID;
 import static uk.gov.ida.stuboidcbroker.services.oidcprovider.TokenHandlerService.SAMPLE_USER_SUBJECT_001;
 
 public class TokenRequestService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(TokenRequestService.class);
 
     private final RedisService redisService;
     private final StubOidcBrokerConfiguration configuration;
@@ -101,16 +109,33 @@ public class TokenRequestService {
         }
     }
 
+    public SignedJWT getUserInfoAsJWS(BearerAccessToken bearerAccessToken, String idpDomain) {
+        URI userInfoURI = UriBuilder.fromUri(idpDomain).path(Urls.StubBrokerOPProvider.USERINFO_URI).build();
+        UserInfoRequest userInfoRequest = new UserInfoRequest(
+            userInfoURI,
+            bearerAccessToken);
+
+        HTTPResponse httpResponse = sendHTTPRequest(userInfoRequest.toHTTPRequest());
+
+        try {
+            JSONObject wrapped = httpResponse.getContentAsJSONObject();
+            return SignedJWT.parse(wrapped.getAsString("jws"));
+        } catch (Exception e) {
+            LOG.error(e.getMessage());
+            throw new RuntimeException("Unable to parse HTTP Response to UserInfoRequest", e);
+        }
+    }
+
     public UserInfo getUserInfo(BearerAccessToken bearerAccessToken, String idpDomain) {
         URI userInfoURI = UriBuilder.fromUri(idpDomain).path(Urls.StubBrokerOPProvider.USERINFO_URI).build();
         UserInfoRequest userInfoRequest = new UserInfoRequest(
                 userInfoURI,
                 bearerAccessToken);
 
-        HTTPResponse httpResonse = sendHTTPRequest(userInfoRequest.toHTTPRequest());
+        HTTPResponse httpResponse = sendHTTPRequest(userInfoRequest.toHTTPRequest());
 
         try {
-            UserInfoResponse userInfoResponse = UserInfoResponse.parse(httpResonse);
+            UserInfoResponse userInfoResponse = UserInfoResponse.parse(httpResponse);
             return userInfoResponse.toSuccessResponse().getUserInfo();
         } catch (ParseException e) {
             throw new RuntimeException("Unable to parse HTTP Response to UserInfoResponse", e);

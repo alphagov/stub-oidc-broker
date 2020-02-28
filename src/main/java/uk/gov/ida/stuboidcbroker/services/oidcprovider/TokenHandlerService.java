@@ -89,7 +89,7 @@ public class TokenHandlerService {
         try {
             JWTClaimsSet userInfoJWT = info.toJWTClaimsSet();
             JWSSigner signer = new RSASSASigner(signingKey);
-            SignedJWT userInfoSignedJWT = new SignedJWT(jwsHeader, jwtClaimsSet);
+            SignedJWT userInfoSignedJWT = new SignedJWT(jwsHeader, userInfoJWT);
             userInfoSignedJWT.sign(signer);
 
             storeUserInfo(accessToken, userInfoSignedJWT);

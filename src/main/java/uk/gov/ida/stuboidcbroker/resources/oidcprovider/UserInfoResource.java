@@ -1,10 +1,21 @@
 package uk.gov.ida.stuboidcbroker.resources.oidcprovider;
 
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
+import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
+import com.nimbusds.openid.connect.sdk.claims.AggregatedClaims;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import net.minidev.json.JSONObject;
@@ -22,12 +33,16 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import static uk.gov.ida.stuboidcbroker.services.shared.QueryParameterHelper.splitQuery;
 
 @Path("/")
 public class UserInfoResource {
+
+    public enum ExperimentalResponseFormats { VerifiableCredential, RegularClaims, AggregatedClaims }
 
     private static final Logger LOG = LoggerFactory.getLogger(UserInfoResource.class);
     private final TokenHandlerService tokenHandlerService;
@@ -42,7 +57,7 @@ public class UserInfoResource {
         this.tokenRequestService = tokenRequestService;
     }
 
-    public static boolean RESPOND_WITH_VERIFIABLE_CREDENTIAL = false;
+    public static final ExperimentalResponseFormats RESPONSE_FORMAT = ExperimentalResponseFormats.AggregatedClaims;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -60,36 +75,116 @@ public class UserInfoResource {
 
             boolean passThrough = responseBody != null;
 
-            // choose between VC or Claims + AggregatedClaims
-            if (RESPOND_WITH_VERIFIABLE_CREDENTIAL) {
-                String verifiableCredential = getVerifiableCredentialFor(passThrough, responseBody, accessToken, transactionID);
-                return Response.ok(verifiableCredential).build();
+            switch (RESPONSE_FORMAT) {
+                case VerifiableCredential:
+                    String verifiableCredential = getVerifiableCredentialFor(passThrough, responseBody, accessToken, transactionID);
+                    return Response.ok(verifiableCredential).build();
 
-            } else {
-                if (passThrough) {
-                    // we are the broker, fetch the claims from the IDP and aggregate them
-                    //fetchAndAggregateUserInfo();
-                    // pass through - we're a broker
-                    String brokerName = getBrokerName(transactionID);
-                    String brokerDomain = getBrokerDomain(transactionID);
+                case RegularClaims:
+                    String regularClaims = getRegularClaimsFor(passThrough, responseBody, accessToken, transactionID);
+                    return Response.ok(regularClaims).build();
 
-                    Map<String, String> authenticationParams = splitQuery(responseBody);
-                    AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(authenticationParams, getClientID(brokerName));
-                    String result = retrieveTokenAndUserInfo(authorizationCode, brokerName, brokerDomain);
-                    return Response.ok(result).build();
+                case AggregatedClaims:
+                    String aggregatedClaims = aggregateClaimsFor(passThrough, responseBody, accessToken, transactionID);
+                    return Response.ok(aggregatedClaims).build();
 
-                } else {
-                    // we are the IDP, respond with the claims -- in a JWT?
-                    String userInfoSignedJWT = tokenHandlerService.getUserInfoAsSignedJWT(accessToken);
-                    JSONObject userInfoJWSAsJSON = new JSONObject();
-                    userInfoJWSAsJSON.put("jws", userInfoSignedJWT);
-                    return Response.ok(userInfoJWSAsJSON.toJSONString()).build();
-                }
+                default:
+                    throw new IllegalStateException("Unrecognised response format: " + RESPONSE_FORMAT.name());
             }
 
         } catch (ParseException e) {
             throw new RuntimeException("Unable to parse authorization header: " + authorizationHeader + " to access token", e);
         }
+    }
+
+    private String getRegularClaimsFor(boolean passThrough, String responseBody, AccessToken accessToken, String transactionID) {
+        if (passThrough) {
+            // pass through - we're a broker
+            String brokerName = getBrokerName(transactionID);
+            String brokerDomain = getBrokerDomain(transactionID);
+
+            Map<String, String> authenticationParams = splitQuery(responseBody);
+            AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(authenticationParams, getClientID(brokerName));
+            return retrieveTokenAndUserInfoAsVerifiableCredential(authorizationCode, brokerName, brokerDomain);
+
+        } else {
+            // we are the IDP, respond with the claims -- in a JWT?
+            return generateClaimsAsSignedJwt(accessToken);
+        }
+    }
+
+    private String aggregateClaimsFor(boolean passThrough, String responseBody, AccessToken accessToken, String transactionID) {
+        if (passThrough) {
+            // we're a broker - we need to accept regular claims from the IDP and aggregate them
+
+            String brokerName = getBrokerName(transactionID);
+            String brokerDomain = getBrokerDomain(transactionID);
+
+            Map<String, String> authenticationParams = splitQuery(responseBody);
+            AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(authenticationParams, getClientID(brokerName));
+
+            // fetch the user info from the IDP as a JWT
+            SignedJWT infoJWT = retrieveUserInfoJWS(authorizationCode, brokerName, brokerDomain);
+
+            JWTClaimsSet identityClaimsSet = null;
+            try {
+                identityClaimsSet = infoJWT.getJWTClaimsSet();
+            } catch (java.text.ParseException e) {
+                throw new RuntimeException(e);
+            }
+
+            // pull out the subject name, and the names of the claims in the JWT
+            String sub  = identityClaimsSet.getSubject();
+            Set<String> claimNames = new HashSet<>();
+            for (Object claimName : identityClaimsSet.getClaims().values()) {
+                claimNames.add(claimName.toString()); // pretty sure these are strings anyway
+            }
+
+            // create a new UserInfo to aggregate the claims received so far
+            // TODO: add our own broker-y junk to this UserInfo
+            UserInfo aggregatingUserInfo = new UserInfo(new Subject(sub));
+            AggregatedClaims claims = new AggregatedClaims(claimNames, infoJWT);
+            aggregatingUserInfo.addAggregatedClaims(claims);
+
+            // sign the aggregated UserInfo
+            SignedJWT aggregatedUserInfoSignedJWT;
+            try {
+                RSAKey signingKey = createSigningKey();
+                JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(signingKey.getKeyID()).build();
+                JWTClaimsSet aggregatedUserInfoJWT = aggregatingUserInfo.toJWTClaimsSet();
+                JWSSigner signer = new RSASSASigner(signingKey);
+                aggregatedUserInfoSignedJWT = new SignedJWT(jwsHeader, aggregatedUserInfoJWT);
+                aggregatedUserInfoSignedJWT.sign(signer);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            // wrap the aggregated, signed, UserInfo in JSON
+            JSONObject userInfoJWSAsJSON = new JSONObject();
+            userInfoJWSAsJSON.put("jws", aggregatedUserInfoSignedJWT.serialize());
+            return userInfoJWSAsJSON.toJSONString();
+
+        } else {
+            // we are the IDP, always respond with regular claims
+            return generateClaimsAsSignedJwt(accessToken);
+            //return generateClaimsAsSignedJwt(accessToken);
+
+        }
+    }
+
+    private RSAKey createSigningKey() {
+        try {
+            return new RSAKeyGenerator(2048).keyID("123").generate();
+        } catch (JOSEException e) {
+            throw new RuntimeException("Unable to create RSA key");
+        }
+    }
+
+    private String generateClaimsAsSignedJwt(AccessToken accessToken) {
+        String userInfoSignedJWT = tokenHandlerService.getUserInfoAsSignedJWT(accessToken);
+        JSONObject userInfoJWSAsJSON = new JSONObject();
+        userInfoJWSAsJSON.put("jws", userInfoSignedJWT);
+        return userInfoJWSAsJSON.toJSONString();
     }
 
     private String getVerifiableCredentialFor(boolean passThrough, String responseBody, AccessToken accessToken, String transactionID) {
@@ -105,7 +200,7 @@ public class UserInfoResource {
             Map<String, String> authenticationParams = splitQuery(responseBody);
             AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(authenticationParams, getClientID(brokerName));
 
-            return retrieveTokenAndUserInfo(authorizationCode, brokerName, brokerDomain);
+            return retrieveTokenAndUserInfoAsVerifiableCredential(authorizationCode, brokerName, brokerDomain);
         }
     }
 
@@ -125,13 +220,18 @@ public class UserInfoResource {
         return redisService.get(transactionID + "-brokerdomain");
     }
 
-    private String retrieveTokenAndUserInfo(AuthorizationCode authCode, String brokerName, String brokerDomain) {
-
+    private UserInfo retrieveUserInfo(AuthorizationCode authCode, String brokerName, String brokerDomain) {
         OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), brokerDomain);
+        return tokenRequestService.getUserInfo(tokens.getBearerAccessToken(), brokerDomain);
+    }
 
-//      UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());
-//      String userInfoToJson = userInfo.toJSONObject().toJSONString();
+    private SignedJWT retrieveUserInfoJWS(AuthorizationCode authCode, String brokerName, String brokerDomain) {
+        OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), brokerDomain);
+        return tokenRequestService.getUserInfoAsJWS(tokens.getBearerAccessToken(), brokerDomain);
+    }
 
+    private String retrieveTokenAndUserInfoAsVerifiableCredential(AuthorizationCode authCode, String brokerName, String brokerDomain) {
+        OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), brokerDomain);
         return tokenRequestService.getVerifiableCredentialFromIDP(tokens.getBearerAccessToken(), brokerDomain);
     }
 }
