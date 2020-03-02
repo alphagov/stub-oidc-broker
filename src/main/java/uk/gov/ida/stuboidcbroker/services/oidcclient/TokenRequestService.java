@@ -208,41 +208,6 @@ public class TokenRequestService {
         }
     }
 
-    public SignedJWT getAttributesFromATP(String firstName, String familyName, String dateOfBirth, BearerAccessToken accessToken) {
-        URI atpURI = UriBuilder.fromUri(configuration.getAtpURI()).path("atp/ho/positive-verification-notice").build();
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("first_name", firstName);
-        jsonObject.put("family_name", familyName);
-        jsonObject.put("date_of_birth", dateOfBirth);
-
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .POST(HttpRequest.BodyPublishers.ofString(jsonObject.toJSONString()))
-                .header("Content-Type", "application/json")
-                .headers("Authorization", accessToken.getValue())
-                .uri(atpURI)
-                .build();
-
-        HttpResponse<String> responseBody;
-
-        try {
-            responseBody = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException| InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
-        return convertResponseToJWT(responseBody.body());
-    }
-
-    private SignedJWT convertResponseToJWT(String responseBody) {
-        try {
-            JSONObject responseFromATP = JSONObjectUtils.parse(responseBody);
-            return SignedJWT.parse(responseFromATP.get("JWT").toString());
-        } catch (java.text.ParseException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     //For testing purposes
     private PrivateKey getPrivateKey() {
         Security.addProvider(new BouncyCastleProvider());
