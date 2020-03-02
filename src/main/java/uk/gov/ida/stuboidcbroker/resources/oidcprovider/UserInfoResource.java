@@ -7,7 +7,6 @@ import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
-import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
@@ -15,6 +14,8 @@ import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
+import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
+import com.nimbusds.openid.connect.sdk.ClaimsRequest;
 import com.nimbusds.openid.connect.sdk.claims.AggregatedClaims;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
@@ -116,6 +117,16 @@ public class UserInfoResource {
     private String aggregateClaimsFor(boolean passThrough, String responseBody, AccessToken accessToken, String transactionID) {
         if (passThrough) {
             // we're a broker - we need to accept regular claims from the IDP and aggregate them
+            String serialisedRequest = redisService.get(transactionID);
+
+            AuthenticationRequest authenticationRequest;
+            try {
+                authenticationRequest = AuthenticationRequest.parse(serialisedRequest);
+            } catch (ParseException e) {
+                throw new RuntimeException("Unable to parse authentication request", e);
+            }
+            ClaimsRequest claimRequest = authenticationRequest.getClaims();
+            Set<String> userInfoClaimNames = claimRequest.getUserInfoClaimNames(false);
 
             String brokerName = getBrokerName(transactionID);
             String brokerDomain = getBrokerDomain(transactionID);
@@ -125,26 +136,42 @@ public class UserInfoResource {
 
             // fetch the user info from the IDP as a JWT
             SignedJWT infoJWT = retrieveUserInfoJWS(authorizationCode, brokerName, brokerDomain);
+            SignedJWT atpJWT = retrieveAttributesJWT("bob", "fdsf", "10/10/1000");
 
+            JWTClaimsSet attributeClaimSet;
             JWTClaimsSet identityClaimsSet;
             try {
                 identityClaimsSet = infoJWT.getJWTClaimsSet();
+                attributeClaimSet = atpJWT.getJWTClaimsSet();
             } catch (java.text.ParseException e) {
                 throw new RuntimeException(e);
             }
 
             // pull out the subject name, and the names of the claims in the JWT
             String sub  = identityClaimsSet.getSubject();
-            Set<String> claimNames = new HashSet<>();
+            Set<String> identityClaimName = new HashSet<>();
             for (Object claimName : identityClaimsSet.getClaims().keySet()) {
-                claimNames.add(claimName.toString()); // pretty sure these are strings anyway
+                if (userInfoClaimNames.contains(claimName)) {
+                    identityClaimName.add(claimName.toString());
+                }
+            }
+
+            Set<String> attributeClaimName = new HashSet<>();
+            for (Object claimName : attributeClaimSet.getClaims().keySet()) {
+                if (userInfoClaimNames.contains(claimName)){
+                    attributeClaimName.add(claimName.toString());
+                }
             }
 
             // create a new UserInfo to aggregate the claims received so far
             // TODO: add our own broker-y junk to this UserInfo
             UserInfo aggregatingUserInfo = new UserInfo(new Subject(sub));
-            AggregatedClaims claims = new AggregatedClaims(claimNames, infoJWT);
-            aggregatingUserInfo.addAggregatedClaims(claims);
+            AggregatedClaims identityClaims = new AggregatedClaims(identityClaimName, infoJWT);
+            if (!attributeClaimName.isEmpty()){
+                AggregatedClaims attributeClaims = new AggregatedClaims(attributeClaimName, atpJWT);
+                aggregatingUserInfo.addAggregatedClaims(attributeClaims);
+            }
+            aggregatingUserInfo.addAggregatedClaims(identityClaims);
 
             // sign the aggregated UserInfo
             SignedJWT aggregatedUserInfoSignedJWT;
@@ -228,6 +255,10 @@ public class UserInfoResource {
     private SignedJWT retrieveUserInfoJWS(AuthorizationCode authCode, String brokerName, String brokerDomain) {
         OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), brokerDomain);
         return tokenRequestService.getUserInfoAsJWS(tokens.getBearerAccessToken(), brokerDomain);
+    }
+
+    private SignedJWT retrieveAttributesJWT(String firstName, String familyName, String dateOfBirth) {
+        return tokenRequestService.getAttributesFromATP(firstName, familyName, dateOfBirth);
     }
 
     private String retrieveTokenAndUserInfoAsVerifiableCredential(AuthorizationCode authCode, String brokerName, String brokerDomain) {

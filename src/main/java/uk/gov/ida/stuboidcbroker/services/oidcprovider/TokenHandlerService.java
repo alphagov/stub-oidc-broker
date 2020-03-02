@@ -18,7 +18,6 @@ import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
-import com.nimbusds.openid.connect.sdk.ClaimsRequest;
 import com.nimbusds.openid.connect.sdk.claims.AccessTokenHash;
 import com.nimbusds.openid.connect.sdk.claims.CodeHash;
 import com.nimbusds.openid.connect.sdk.claims.Gender;
@@ -119,7 +118,7 @@ public class TokenHandlerService {
                 case "family_name":
                     info.setFamilyName("Pooh");
                     break;
-                case "birthday":
+                case "birthdate":
                     info.setBirthdate("1926-01-01");
                     break;
                 case "gender":

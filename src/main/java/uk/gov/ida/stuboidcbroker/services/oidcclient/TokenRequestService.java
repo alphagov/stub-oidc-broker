@@ -3,8 +3,6 @@ package uk.gov.ida.stuboidcbroker.services.oidcclient;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.util.JSONObjectUtils;
-import com.nimbusds.jwt.JWT;
-import com.nimbusds.jwt.JWTParser;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
@@ -16,16 +14,13 @@ import com.nimbusds.oauth2.sdk.auth.PrivateKeyJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.id.ClientID;
-import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import com.nimbusds.openid.connect.sdk.ClaimsRequest;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
 import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import com.nimbusds.openid.connect.sdk.UserInfoResponse;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import net.minidev.json.JSONObject;
-import net.minidev.json.JSONUtil;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
@@ -51,10 +46,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
-import static uk.gov.ida.stuboidcbroker.services.oidcprovider.TokenHandlerService.SAMPLE_USER_SUBJECT_001;
 
 public class TokenRequestService {
 
@@ -163,7 +154,6 @@ public class TokenRequestService {
         }
     }
 
-
     public String getVerifiableCredentialFromIDP(BearerAccessToken bearerAccessToken, String brokerDomain) {
         URI userInfoURI = UriBuilder.fromUri(brokerDomain)
                 .path(Urls.StubBrokerClient.USER_INFO).build();
@@ -181,6 +171,40 @@ public class TokenRequestService {
             throw new RuntimeException(e);
         }
         return responseBody.body();
+    }
+
+    public SignedJWT getAttributesFromATP(String firstName, String familyName, String dateOfBirth) {
+        URI atpURI = UriBuilder.fromUri(configuration.getAtpURI()).path("atp/ho/positive-verification-notice").build();
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("first_name", firstName);
+        jsonObject.put("family_name", familyName);
+        jsonObject.put("date_of_birth", dateOfBirth);
+
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .POST(HttpRequest.BodyPublishers.ofString(jsonObject.toJSONString()))
+                .header("Content-Type", "application/json")
+                .uri(atpURI)
+                .build();
+
+        HttpResponse<String> responseBody;
+
+        try {
+            responseBody = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException| InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        return convertResponseToJWT(responseBody.body());
+    }
+
+    private SignedJWT convertResponseToJWT(String responseBody) {
+        try {
+            JSONObject responseFromATP = JSONObjectUtils.parse(responseBody);
+            return SignedJWT.parse(responseFromATP.get("JWT").toString());
+        } catch (java.text.ParseException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     //For testing purposes

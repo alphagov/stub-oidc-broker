@@ -1,7 +1,5 @@
 package uk.gov.ida.stuboidcbroker.services.oidcclient;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Maps;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.ResponseMode;
 import com.nimbusds.oauth2.sdk.ResponseType;
@@ -11,17 +9,11 @@ import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.ClaimsRequest;
 import com.nimbusds.openid.connect.sdk.Nonce;
-import com.nimbusds.openid.connect.sdk.claims.ClaimRequirement;
-import org.checkerframework.checker.nullness.compatqual.NullableDecl;
 import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 
 import java.net.URI;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
-
-import static uk.gov.ida.stuboidcbroker.services.shared.QueryParameterHelper.splitQuery;
 
 public class AuthnRequestGeneratorService {
 
@@ -98,7 +90,7 @@ public class AuthnRequestGeneratorService {
         "given_name",
         "middle_name",
         "gender",
-        "birthday"
+        "birthdate"
     };
 
     private String getRequestedClaims(String transactionId){
