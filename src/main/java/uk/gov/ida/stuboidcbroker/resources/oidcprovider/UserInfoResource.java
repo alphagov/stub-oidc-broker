@@ -36,6 +36,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import static uk.gov.ida.stuboidcbroker.services.shared.QueryParameterHelper.splitQuery;
@@ -135,50 +136,15 @@ public class UserInfoResource {
             AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(authenticationParams, getClientID(brokerName));
 
             // fetch the user info from the IDP as a JWT
-            SignedJWT infoJWT = retrieveUserInfoJWS(authorizationCode, brokerName, brokerDomain);
-            SignedJWT atpJWT = retrieveAttributesJWT("bob", "fdsf", "10/10/1000");
-
-            JWTClaimsSet attributeClaimSet;
-            JWTClaimsSet identityClaimsSet;
-            try {
-                identityClaimsSet = infoJWT.getJWTClaimsSet();
-                attributeClaimSet = atpJWT.getJWTClaimsSet();
-            } catch (java.text.ParseException e) {
-                throw new RuntimeException(e);
-            }
-
-            // pull out the subject name, and the names of the claims in the JWT
-            String sub  = identityClaimsSet.getSubject();
-            Set<String> identityClaimName = new HashSet<>();
-            for (Object claimName : identityClaimsSet.getClaims().keySet()) {
-                if (userInfoClaimNames.contains(claimName)) {
-                    identityClaimName.add(claimName.toString());
-                }
-            }
-
-            Set<String> attributeClaimName = new HashSet<>();
-            for (Object claimName : attributeClaimSet.getClaims().keySet()) {
-                if (userInfoClaimNames.contains(claimName)){
-                    attributeClaimName.add(claimName.toString());
-                }
-            }
-
-            // create a new UserInfo to aggregate the claims received so far
-            // TODO: add our own broker-y junk to this UserInfo
-            UserInfo aggregatingUserInfo = new UserInfo(new Subject(sub));
-            AggregatedClaims identityClaims = new AggregatedClaims(identityClaimName, infoJWT);
-            if (!attributeClaimName.isEmpty()){
-                AggregatedClaims attributeClaims = new AggregatedClaims(attributeClaimName, atpJWT);
-                aggregatingUserInfo.addAggregatedClaims(attributeClaims);
-            }
-            aggregatingUserInfo.addAggregatedClaims(identityClaims);
+            SignedJWT idpJWT = retrieveUserInfoFromIDP(authorizationCode, brokerName, brokerDomain);
+            UserInfo aggregatedUserInfo = createAggregatedClaims(idpJWT, userInfoClaimNames);
 
             // sign the aggregated UserInfo
             SignedJWT aggregatedUserInfoSignedJWT;
             try {
                 RSAKey signingKey = createSigningKey();
                 JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(signingKey.getKeyID()).build();
-                JWTClaimsSet aggregatedUserInfoJWT = aggregatingUserInfo.toJWTClaimsSet();
+                JWTClaimsSet aggregatedUserInfoJWT = aggregatedUserInfo.toJWTClaimsSet();
                 JWSSigner signer = new RSASSASigner(signingKey);
                 aggregatedUserInfoSignedJWT = new SignedJWT(jwsHeader, aggregatedUserInfoJWT);
                 aggregatedUserInfoSignedJWT.sign(signer);
@@ -195,8 +161,51 @@ public class UserInfoResource {
             // we are the IDP, always respond with regular claims
             return generateClaimsAsSignedJwt(accessToken);
             //return generateClaimsAsSignedJwt(accessToken);
-
         }
+    }
+
+    private UserInfo createAggregatedClaims(SignedJWT idpJWT, Set<String> userInfoClaimNames) {
+        JWTClaimsSet identityClaimsSet;
+        try {
+            identityClaimsSet = idpJWT.getJWTClaimsSet();
+        } catch (java.text.ParseException e) {
+            throw new RuntimeException(e);
+        }
+        String sub  = identityClaimsSet.getSubject();
+        Set<String> identityClaimName = new HashSet<>();
+        for (Object claimName : identityClaimsSet.getClaims().keySet()) {
+            if (userInfoClaimNames.contains(claimName)) {
+                identityClaimName.add(claimName.toString());
+            }
+        }
+
+        UserInfo aggregatingUserInfo = new UserInfo(new Subject(sub));
+        AggregatedClaims identityClaims = new AggregatedClaims(identityClaimName, idpJWT);
+        aggregatingUserInfo.addAggregatedClaims(identityClaims);
+
+        //Check if we have the required attributes to call the atp and if it was requested from the RP
+        Optional<SignedJWT> atpJWT = checkAndRetrieveAttributes(identityClaimsSet, userInfoClaimNames);
+
+        atpJWT.ifPresent(jwt -> {
+            Set<String> attributeClaimName = new HashSet<>();
+            attributeClaimName.add("ho_positive_verification_notice");
+            AggregatedClaims attributeClaims = new AggregatedClaims(attributeClaimName, jwt);
+            aggregatingUserInfo.addAggregatedClaims(attributeClaims);
+        });
+        return aggregatingUserInfo;
+    }
+
+    private Optional<SignedJWT> checkAndRetrieveAttributes(JWTClaimsSet identityClaimsSet, Set<String> userInfoClaimNames) {
+        Map<String, Object> idpClaims = identityClaimsSet.getClaims();
+
+        if (idpClaims.containsKey("given_name") && idpClaims.containsKey("family_name") && idpClaims.containsKey("birthdate") && userInfoClaimNames.contains("ho_positive_verification_notice")) {
+            String firstName = idpClaims.get("given_name").toString();
+            String familyName = idpClaims.get("family_name").toString();
+            String dateOfBirth = idpClaims.get("birthdate").toString();
+            SignedJWT signedJWT = retrieveAttributesJWT(firstName, familyName, dateOfBirth);
+            return Optional.of(signedJWT);
+        }
+        return Optional.empty();
     }
 
     private RSAKey createSigningKey() {
@@ -252,7 +261,7 @@ public class UserInfoResource {
         return tokenRequestService.getUserInfo(tokens.getBearerAccessToken(), brokerDomain);
     }
 
-    private SignedJWT retrieveUserInfoJWS(AuthorizationCode authCode, String brokerName, String brokerDomain) {
+    private SignedJWT retrieveUserInfoFromIDP(AuthorizationCode authCode, String brokerName, String brokerDomain) {
         OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), brokerDomain);
         return tokenRequestService.getUserInfoAsJWS(tokens.getBearerAccessToken(), brokerDomain);
     }
