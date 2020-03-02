@@ -178,7 +178,7 @@ public class TokenHandlerService {
         redisService.set(authCode.getValue(), oidcTokens.toJSONObject().toJSONString());
     }
 
-    private RSAKey createSigningKey() {
+    public RSAKey createSigningKey() {
         try {
             return new RSAKeyGenerator(2048).keyID("123").generate();
         } catch (JOSEException e) {

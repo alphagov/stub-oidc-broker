@@ -173,7 +173,42 @@ public class TokenRequestService {
         return responseBody.body();
     }
 
-    public SignedJWT getAttributesFromATP(String firstName, String familyName, String dateOfBirth) {
+    public BearerAccessToken getAccessTokenFromATP() {
+        URI atpTokenURI = UriBuilder.fromUri(configuration.getAtpURI()).path("oauth2/token").build();
+        PrivateKeyJWT privateKeyJWT;
+        try {
+             privateKeyJWT = new PrivateKeyJWT(new ClientID(configuration.getOrgID()), atpTokenURI, JWSAlgorithm.RS256, (RSAPrivateKey) getPrivateKey(), null, null);
+        } catch (JOSEException e) {
+            throw new RuntimeException(e);
+        }
+
+        TokenRequest tokenRequest = new TokenRequest(
+                atpTokenURI,
+                privateKeyJWT,
+                new AuthorizationCodeGrant(new AuthorizationCode("fssdxkjgd"), atpTokenURI),
+                null);
+
+        HTTPRequest httpRequest = tokenRequest.toHTTPRequest();
+        HTTPResponse httpResponse = sendHTTPRequest(httpRequest);
+
+        try {
+            TokenResponse tokenResponse = OIDCTokenResponseParser.parse(httpResponse);
+
+            if (!tokenResponse.indicatesSuccess()) {
+                ErrorObject errorObject = tokenResponse.toErrorResponse().getErrorObject();
+                throw new RuntimeException(
+                        " ;ErrorCode:" + errorObject.getCode() +
+                                " ;Error description:" + errorObject.getDescription() +
+                                " ;HTTP Status Code:" + errorObject.getHTTPStatusCode());
+            }
+            OIDCTokens oidcTokens = tokenResponse.toSuccessResponse().getTokens().toOIDCTokens();
+            return oidcTokens.getBearerAccessToken();
+        } catch (ParseException e) {
+            throw new RuntimeException("Unable to parse HTTP Response to Token Response", e);
+        }
+    }
+
+    public SignedJWT getAttributesFromATP(String firstName, String familyName, String dateOfBirth, BearerAccessToken accessToken) {
         URI atpURI = UriBuilder.fromUri(configuration.getAtpURI()).path("atp/ho/positive-verification-notice").build();
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("first_name", firstName);
@@ -184,6 +219,7 @@ public class TokenRequestService {
         HttpRequest request = HttpRequest.newBuilder()
                 .POST(HttpRequest.BodyPublishers.ofString(jsonObject.toJSONString()))
                 .header("Content-Type", "application/json")
+                .headers("Authorization", accessToken.getValue())
                 .uri(atpURI)
                 .build();
 

@@ -1,22 +1,18 @@
 package uk.gov.ida.stuboidcbroker.resources.oidcprovider;
 
-import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.id.ClientID;
-import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.ClaimsRequest;
-import com.nimbusds.openid.connect.sdk.claims.AggregatedClaims;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import net.minidev.json.JSONObject;
@@ -25,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import uk.gov.ida.stuboidcbroker.services.oidcclient.AuthnResponseValidationService;
 import uk.gov.ida.stuboidcbroker.services.oidcclient.TokenRequestService;
 import uk.gov.ida.stuboidcbroker.services.oidcprovider.TokenHandlerService;
+import uk.gov.ida.stuboidcbroker.services.oidcprovider.UserInfoService;
 import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 
 import javax.validation.constraints.NotNull;
@@ -34,9 +31,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import static uk.gov.ida.stuboidcbroker.services.shared.QueryParameterHelper.splitQuery;
@@ -51,12 +46,19 @@ public class UserInfoResource {
     private final RedisService redisService;
     private final AuthnResponseValidationService authnResponseValidationService;
     private final TokenRequestService tokenRequestService;
+    private final UserInfoService userInfoService;
 
-    public UserInfoResource(TokenHandlerService tokenHandlerService, RedisService redisService, AuthnResponseValidationService authnResponseValidationService, TokenRequestService tokenRequestService) {
+    public UserInfoResource(
+            TokenHandlerService tokenHandlerService,
+            RedisService redisService,
+            AuthnResponseValidationService authnResponseValidationService,
+            TokenRequestService tokenRequestService,
+            UserInfoService userInfoService) {
         this.tokenHandlerService = tokenHandlerService;
         this.redisService = redisService;
         this.authnResponseValidationService = authnResponseValidationService;
         this.tokenRequestService = tokenRequestService;
+        this.userInfoService = userInfoService;
     }
 
     public static final ExperimentalResponseFormats RESPONSE_FORMAT = ExperimentalResponseFormats.AggregatedClaims;
@@ -137,12 +139,12 @@ public class UserInfoResource {
 
             // fetch the user info from the IDP as a JWT
             SignedJWT idpJWT = retrieveUserInfoFromIDP(authorizationCode, brokerName, brokerDomain);
-            UserInfo aggregatedUserInfo = createAggregatedClaims(idpJWT, userInfoClaimNames);
+            UserInfo aggregatedUserInfo = userInfoService.createAggregatedClaimsUserInfo(idpJWT, userInfoClaimNames);
 
             // sign the aggregated UserInfo
             SignedJWT aggregatedUserInfoSignedJWT;
             try {
-                RSAKey signingKey = createSigningKey();
+                RSAKey signingKey = tokenHandlerService.createSigningKey();
                 JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(signingKey.getKeyID()).build();
                 JWTClaimsSet aggregatedUserInfoJWT = aggregatedUserInfo.toJWTClaimsSet();
                 JWSSigner signer = new RSASSASigner(signingKey);
@@ -161,58 +163,6 @@ public class UserInfoResource {
             // we are the IDP, always respond with regular claims
             return generateClaimsAsSignedJwt(accessToken);
             //return generateClaimsAsSignedJwt(accessToken);
-        }
-    }
-
-    private UserInfo createAggregatedClaims(SignedJWT idpJWT, Set<String> userInfoClaimNames) {
-        JWTClaimsSet identityClaimsSet;
-        try {
-            identityClaimsSet = idpJWT.getJWTClaimsSet();
-        } catch (java.text.ParseException e) {
-            throw new RuntimeException(e);
-        }
-        String sub  = identityClaimsSet.getSubject();
-        Set<String> identityClaimName = new HashSet<>();
-        for (Object claimName : identityClaimsSet.getClaims().keySet()) {
-            if (userInfoClaimNames.contains(claimName)) {
-                identityClaimName.add(claimName.toString());
-            }
-        }
-
-        UserInfo aggregatingUserInfo = new UserInfo(new Subject(sub));
-        AggregatedClaims identityClaims = new AggregatedClaims(identityClaimName, idpJWT);
-        aggregatingUserInfo.addAggregatedClaims(identityClaims);
-
-        //Check if we have the required attributes to call the atp and if it was requested from the RP
-        Optional<SignedJWT> atpJWT = checkAndRetrieveAttributes(identityClaimsSet, userInfoClaimNames);
-
-        atpJWT.ifPresent(jwt -> {
-            Set<String> attributeClaimName = new HashSet<>();
-            attributeClaimName.add("ho_positive_verification_notice");
-            AggregatedClaims attributeClaims = new AggregatedClaims(attributeClaimName, jwt);
-            aggregatingUserInfo.addAggregatedClaims(attributeClaims);
-        });
-        return aggregatingUserInfo;
-    }
-
-    private Optional<SignedJWT> checkAndRetrieveAttributes(JWTClaimsSet identityClaimsSet, Set<String> userInfoClaimNames) {
-        Map<String, Object> idpClaims = identityClaimsSet.getClaims();
-
-        if (idpClaims.containsKey("given_name") && idpClaims.containsKey("family_name") && idpClaims.containsKey("birthdate") && userInfoClaimNames.contains("ho_positive_verification_notice")) {
-            String firstName = idpClaims.get("given_name").toString();
-            String familyName = idpClaims.get("family_name").toString();
-            String dateOfBirth = idpClaims.get("birthdate").toString();
-            SignedJWT signedJWT = retrieveAttributesJWT(firstName, familyName, dateOfBirth);
-            return Optional.of(signedJWT);
-        }
-        return Optional.empty();
-    }
-
-    private RSAKey createSigningKey() {
-        try {
-            return new RSAKeyGenerator(2048).keyID("123").generate();
-        } catch (JOSEException e) {
-            throw new RuntimeException("Unable to create RSA key");
         }
     }
 
@@ -264,10 +214,6 @@ public class UserInfoResource {
     private SignedJWT retrieveUserInfoFromIDP(AuthorizationCode authCode, String brokerName, String brokerDomain) {
         OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), brokerDomain);
         return tokenRequestService.getUserInfoAsJWS(tokens.getBearerAccessToken(), brokerDomain);
-    }
-
-    private SignedJWT retrieveAttributesJWT(String firstName, String familyName, String dateOfBirth) {
-        return tokenRequestService.getAttributesFromATP(firstName, familyName, dateOfBirth);
     }
 
     private String retrieveTokenAndUserInfoAsVerifiableCredential(AuthorizationCode authCode, String brokerName, String brokerDomain) {

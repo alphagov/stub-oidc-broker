@@ -1,16 +1,13 @@
 package uk.gov.ida.stuboidcbroker.resources.oidcclient;
 
-import com.nimbusds.oauth2.sdk.AuthorizationCode;
-import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
-import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.dropwizard.views.View;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.ida.stuboidcbroker.services.oidcclient.AuthnResponseValidationService;
-import uk.gov.ida.stuboidcbroker.services.oidcclient.TokenRequestService;
 import uk.gov.ida.stuboidcbroker.services.oidcprovider.AuthnResponseGeneratorService;
+import uk.gov.ida.stuboidcbroker.services.oidcprovider.UserInfoService;
 import uk.gov.ida.stuboidcbroker.services.shared.PickerService;
 import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 import uk.gov.ida.stuboidcbroker.views.BrokerResponseView;
@@ -33,23 +30,23 @@ public class AuthorizationResponseClientResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(AuthorizationResponseClientResource.class);
 
-    private final TokenRequestService tokenRequestService;
     private final AuthnResponseValidationService authnResponseValidationService;
     private final RedisService redisService;
     private final AuthnResponseGeneratorService generatorService;
     private final PickerService pickerService;
+    private final UserInfoService userInfoService;
 
     public AuthorizationResponseClientResource(
-            TokenRequestService tokenRequestService,
             AuthnResponseValidationService authnResponseValidationService,
             RedisService redisService,
             AuthnResponseGeneratorService generatorService,
-            PickerService pickerService) {
-        this.tokenRequestService = tokenRequestService;
+            PickerService pickerService,
+            UserInfoService userInfoService) {
         this.authnResponseValidationService = authnResponseValidationService;
         this.redisService = redisService;
         this.generatorService = generatorService;
         this.pickerService = pickerService;
+        this.userInfoService = userInfoService;
     }
 
     @POST
@@ -76,7 +73,7 @@ public class AuthorizationResponseClientResource {
                         Integer.toString(HttpStatus.SC_BAD_REQUEST)))
                 .orElseGet(() -> new RPResponseView(
                         rpUri,
-                        getUserInfoForRPResponse(transactionID, authenticationParams),
+                        userInfoService.getUserInfoForRPResponse(transactionID, authenticationParams),
                         Integer.toString(HttpStatus.SC_OK)));
     }
 
@@ -103,39 +100,5 @@ public class AuthorizationResponseClientResource {
                 successResponse.getRedirectionURI(),
                 successResponse.getAccessToken(),
                 transactionID);
-    }
-
-    private String getUserInfoForRPResponse(String transactionID, Map<String, String> authenticationParams) {
-        String brokerName = getBrokerName(transactionID);
-        String brokerDomain = getBrokerDomain(transactionID);
-        AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(authenticationParams, getClientID(brokerName));
-        String userInfoInJson = retrieveTokenAndUserInfo(authorizationCode, brokerName, brokerDomain);
-
-        return userInfoInJson;
-    }
-
-    private String retrieveTokenAndUserInfo(AuthorizationCode authCode, String brokerName, String brokerDomain) {
-
-        OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), brokerDomain);
-//      UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());
-//      String userInfoToJson = userInfo.toJSONObject().toJSONString();
-
-        return tokenRequestService.getVerifiableCredentialFromIDP(tokens.getBearerAccessToken(), brokerDomain);
-    }
-
-    private String getBrokerName(String transactionID) {
-        return redisService.get(transactionID + "-brokername");
-    }
-
-    private String getBrokerDomain(String transactionID) {
-        return redisService.get(transactionID + "-brokerdomain");
-    }
-
-    private ClientID getClientID(String brokerName) {
-        String client_id = redisService.get(brokerName);
-        if (client_id != null) {
-            return new ClientID(client_id);
-        }
-        return new ClientID();
     }
 }

@@ -120,13 +120,12 @@ public class StubOidcBrokerResource {
 
         Optional<String> errors = authnResponseValidationService.checkResponseForErrors(authenticationParams);
 
-        if (errors.isPresent()) {
-            return Response.status(400).entity(errors.get()).build();
-        }
-
-
-        AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(authenticationParams, getClientID(brokerDomain));
-        return Response.ok(authorizationCode.getValue()).build();
+        return errors.map(error ->  Response.status(400).entity(error).build()).orElseGet(() ->
+                {
+                    AuthorizationCode authorizationCode = authnResponseValidationService
+                            .handleAuthenticationResponse(authenticationParams, getClientID(brokerDomain));
+            return Response.ok(authorizationCode.getValue()).build();
+        });
     }
 
     @GET
