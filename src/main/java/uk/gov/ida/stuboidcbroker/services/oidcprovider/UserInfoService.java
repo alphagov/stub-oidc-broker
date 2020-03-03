@@ -83,7 +83,7 @@ public class UserInfoService {
         return userInfoInJson;
     }
 
-    private String retrieveTokenAndUserInfo(AuthorizationCode authCode, String brokerName, String brokerDomain) {
+    public String retrieveTokenAndUserInfo(AuthorizationCode authCode, String brokerName, String brokerDomain) {
 
         OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), brokerDomain);
 //      UserInfo userInfo = tokenService.getUserInfo(tokens.getBearerAccessToken());

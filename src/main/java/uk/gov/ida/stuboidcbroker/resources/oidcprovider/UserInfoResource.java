@@ -4,7 +4,6 @@ import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
-import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
@@ -22,6 +21,7 @@ import uk.gov.ida.stuboidcbroker.services.oidcclient.AuthnResponseValidationServ
 import uk.gov.ida.stuboidcbroker.services.oidcclient.TokenRequestService;
 import uk.gov.ida.stuboidcbroker.services.oidcprovider.TokenHandlerService;
 import uk.gov.ida.stuboidcbroker.services.oidcprovider.UserInfoService;
+import uk.gov.ida.stuboidcbroker.services.shared.PKIService;
 import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 
 import javax.validation.constraints.NotNull;
@@ -31,6 +31,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.security.PrivateKey;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,18 +48,21 @@ public class UserInfoResource {
     private final AuthnResponseValidationService authnResponseValidationService;
     private final TokenRequestService tokenRequestService;
     private final UserInfoService userInfoService;
+    private final PKIService pkiService;
 
     public UserInfoResource(
             TokenHandlerService tokenHandlerService,
             RedisService redisService,
             AuthnResponseValidationService authnResponseValidationService,
             TokenRequestService tokenRequestService,
-            UserInfoService userInfoService) {
+            UserInfoService userInfoService,
+            PKIService pkiService) {
         this.tokenHandlerService = tokenHandlerService;
         this.redisService = redisService;
         this.authnResponseValidationService = authnResponseValidationService;
         this.tokenRequestService = tokenRequestService;
         this.userInfoService = userInfoService;
+        this.pkiService = pkiService;
     }
 
     public static final ExperimentalResponseFormats RESPONSE_FORMAT = ExperimentalResponseFormats.AggregatedClaims;
@@ -109,7 +113,7 @@ public class UserInfoResource {
 
             Map<String, String> authenticationParams = splitQuery(responseBody);
             AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(authenticationParams, getClientID(brokerName));
-            return retrieveTokenAndUserInfoAsVerifiableCredential(authorizationCode, brokerName, brokerDomain);
+            return userInfoService.retrieveTokenAndUserInfo(authorizationCode, brokerName, brokerDomain);
 
         } else {
             // we are the IDP, respond with the claims -- in a JWT?
@@ -139,15 +143,15 @@ public class UserInfoResource {
 
             // fetch the user info from the IDP as a JWT
             SignedJWT idpJWT = retrieveUserInfoFromIDP(authorizationCode, brokerName, brokerDomain);
+            PrivateKey privateKey = pkiService.getOrganisationPrivateKey();
             UserInfo aggregatedUserInfo = userInfoService.createAggregatedClaimsUserInfo(idpJWT, userInfoClaimNames);
 
             // sign the aggregated UserInfo
             SignedJWT aggregatedUserInfoSignedJWT;
             try {
-                RSAKey signingKey = tokenHandlerService.createSigningKey();
-                JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(signingKey.getKeyID()).build();
+                JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256).build();
                 JWTClaimsSet aggregatedUserInfoJWT = aggregatedUserInfo.toJWTClaimsSet();
-                JWSSigner signer = new RSASSASigner(signingKey);
+                JWSSigner signer = new RSASSASigner(privateKey);
                 aggregatedUserInfoSignedJWT = new SignedJWT(jwsHeader, aggregatedUserInfoJWT);
                 aggregatedUserInfoSignedJWT.sign(signer);
             } catch (Exception e) {
@@ -186,8 +190,18 @@ public class UserInfoResource {
             Map<String, String> authenticationParams = splitQuery(responseBody);
             AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(authenticationParams, getClientID(brokerName));
 
-            return retrieveTokenAndUserInfoAsVerifiableCredential(authorizationCode, brokerName, brokerDomain);
+            return userInfoService.retrieveTokenAndUserInfo(authorizationCode, brokerName, brokerDomain);
         }
+    }
+
+    private UserInfo retrieveUserInfo(AuthorizationCode authCode, String brokerName, String brokerDomain) {
+        OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), brokerDomain);
+        return tokenRequestService.getUserInfo(tokens.getBearerAccessToken(), brokerDomain);
+    }
+
+    private SignedJWT retrieveUserInfoFromIDP(AuthorizationCode authCode, String brokerName, String brokerDomain) {
+        OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), brokerDomain);
+        return tokenRequestService.getUserInfoAsJWS(tokens.getBearerAccessToken(), brokerDomain);
     }
 
     private String getBrokerName(String transactionID) {
@@ -204,20 +218,5 @@ public class UserInfoResource {
 
     private String getBrokerDomain(String transactionID) {
         return redisService.get(transactionID + "-brokerdomain");
-    }
-
-    private UserInfo retrieveUserInfo(AuthorizationCode authCode, String brokerName, String brokerDomain) {
-        OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), brokerDomain);
-        return tokenRequestService.getUserInfo(tokens.getBearerAccessToken(), brokerDomain);
-    }
-
-    private SignedJWT retrieveUserInfoFromIDP(AuthorizationCode authCode, String brokerName, String brokerDomain) {
-        OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), brokerDomain);
-        return tokenRequestService.getUserInfoAsJWS(tokens.getBearerAccessToken(), brokerDomain);
-    }
-
-    private String retrieveTokenAndUserInfoAsVerifiableCredential(AuthorizationCode authCode, String brokerName, String brokerDomain) {
-        OIDCTokens tokens = tokenRequestService.getTokens(authCode, getClientID(brokerName), brokerDomain);
-        return tokenRequestService.getVerifiableCredentialFromIDP(tokens.getBearerAccessToken(), brokerDomain);
     }
 }

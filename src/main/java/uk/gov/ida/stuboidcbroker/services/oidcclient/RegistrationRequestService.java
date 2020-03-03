@@ -13,25 +13,19 @@ import com.nimbusds.openid.connect.sdk.rp.ApplicationType;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.PEMKeyPair;
-import org.bouncycastle.openssl.PEMParser;
-import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.domain.Organisation;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
+import uk.gov.ida.stuboidcbroker.services.shared.PKIService;
 import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.security.KeyPair;
 import java.security.PrivateKey;
-import java.security.Security;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
@@ -45,27 +39,22 @@ public class RegistrationRequestService {
 
     private final RedisService redisService;
     private final StubOidcBrokerConfiguration configuration;
+    private final PKIService pkiService;
 
-    public RegistrationRequestService(RedisService redisService, StubOidcBrokerConfiguration configuration) {
+    public RegistrationRequestService(RedisService redisService, StubOidcBrokerConfiguration configuration, PKIService pkiService) {
         this.redisService = redisService;
         this.configuration = configuration;
+        this.pkiService = pkiService;
     }
 
     public String sendRegistrationRequest(String ssa, String privateKey, String brokerDomain, String brokerName, String clientToken) {
-
         SignedJWT signedJWT;
         try {
             signedJWT = SignedJWT.parse(ssa);
         } catch (ParseException e) {
             return "Unable to parse SSA:\n\n " + e;
         }
-        String httpResponse;
-        try {
-            httpResponse = sendHttpRegistrationRequest(signedJWT, privateKey, brokerDomain, clientToken);
-        } catch (IOException| JOSEException e) {
-            return "There was an error with the Private Key used in the Registration Request:\n\n " + e;
-        }
-
+        String httpResponse = sendHttpRegistrationRequest(signedJWT, privateKey, brokerDomain, clientToken);
         String processedHttpResponse = processHttpRegistrationResponse(httpResponse, brokerName);
 
         return processedHttpResponse;
@@ -101,6 +90,16 @@ public class RegistrationRequestService {
         }
     }
 
+    public String sendHttpRegistrationRequest(SignedJWT jwt, String privateKeyString, String brokerDomain, String clientToken) {
+        URI uri = UriBuilder.fromUri(brokerDomain).path(Urls.StubBrokerOPProvider.REGISTER_URI).build();
+        JWTClaimsSet registrationRequest = getRegistrationClaims(jwt.serialize(), brokerDomain);
+        PrivateKey privateKey = pkiService.convertStringToPrivateKey(privateKeyString);
+        SignedJWT signedClientMetadata = generateSignedJWT(registrationRequest, privateKey);
+
+        HttpResponse<String> httpResponse = sendHttpRequest(uri, signedClientMetadata.serialize(), brokerDomain, clientToken);
+
+        return httpResponse.body();
+    }
 
     private Organisation createOrganisationObject(Object obj) {
         JSONObject jsonObj = (JSONObject) obj;
@@ -112,16 +111,6 @@ public class RegistrationRequestService {
             throw new RuntimeException(e);
         }
         return org;
-    }
-
-    private String sendHttpRegistrationRequest(SignedJWT jwt, String privateKey, String brokerDomain, String clientToken) throws JOSEException, IOException {
-        URI uri = UriBuilder.fromUri(brokerDomain).path(Urls.StubBrokerOPProvider.REGISTER_URI).build();
-        JWTClaimsSet registrationRequest = getRegistrationClaims(jwt.serialize(), brokerDomain);
-        SignedJWT signedClientMetadata = createSignedClientMetadata(registrationRequest, privateKey);
-
-        HttpResponse<String> httpResponse = sendHttpRequest(uri, signedClientMetadata.serialize(), brokerDomain, clientToken);
-
-        return httpResponse.body();
     }
 
     private JWTClaimsSet getRegistrationClaims(String seralizedSoftwareStatement, String brokerDomain) {
@@ -145,24 +134,16 @@ public class RegistrationRequestService {
         return registrationClaims;
     }
 
-    private SignedJWT createSignedClientMetadata(JWTClaimsSet registrationRequestClaims, String privateKeyString) throws JOSEException, IOException {
-        Security.addProvider(new BouncyCastleProvider());
-
+    private SignedJWT generateSignedJWT(JWTClaimsSet registrationRequestClaims, PrivateKey privateKey) {
         JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.RS256).build();
-        privateKeyString = privateKeyString.replaceAll("\\n", "").replace("-----BEGIN RSA PRIVATE KEY-----", "").replace("-----END RSA PRIVATE KEY-----", "");
-        String someString = privateKeyString.replaceAll("\\s+", "");
-
-        String anotherString = "-----BEGIN RSA PRIVATE KEY-----\n" + someString + "\n-----END RSA PRIVATE KEY-----";
-
-        PEMParser pemParser = new PEMParser(new StringReader(anotherString));
-        JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
-        Object object = pemParser.readObject();
-        KeyPair kp = converter.getKeyPair((PEMKeyPair) object);
-        PrivateKey privateKey = kp.getPrivate();
 
         JWSSigner signer = new RSASSASigner(privateKey);
         SignedJWT signedJWT = new SignedJWT(header, registrationRequestClaims);
-        signedJWT.sign(signer);
+        try {
+            signedJWT.sign(signer);
+        } catch (JOSEException e) {
+            throw new RuntimeException(e);
+        }
 
         return signedJWT;
     }

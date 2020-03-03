@@ -5,8 +5,6 @@ import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -27,6 +25,7 @@ import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import net.minidev.json.JSONObject;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
+import uk.gov.ida.stuboidcbroker.services.shared.PKIService;
 import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 
 import javax.ws.rs.core.UriBuilder;
@@ -44,10 +43,12 @@ public class TokenHandlerService {
     private static final String ISSUER = "stub-oidc-op";
     private RedisService redisService;
     private final StubOidcBrokerConfiguration configuration;
+    private final PKIService pkiService;
 
-    public TokenHandlerService(RedisService redisService, StubOidcBrokerConfiguration configuration) {
+    public TokenHandlerService(RedisService redisService, StubOidcBrokerConfiguration configuration, PKIService pkiService) {
         this.redisService = redisService;
         this.configuration = configuration;
+        this.pkiService = pkiService;
     }
 
     public static final String SAMPLE_USER_SUBJECT_001 = "sample_user_id_001";
@@ -71,12 +72,11 @@ public class TokenHandlerService {
             throw new RuntimeException("Unable to parse IDTokenClaimsSet to JWTClaimsSet", e);
         }
 
-        RSAKey signingKey = createSigningKey();
-        JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(signingKey.getKeyID()).build();
+        JWSSigner signer = new RSASSASigner(pkiService.getOrganisationPrivateKey());
+        JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256).build();
         SignedJWT idToken;
 
         try {
-            JWSSigner signer = new RSASSASigner(signingKey);
             idToken = new SignedJWT(jwsHeader, jwtClaimsSet);
             idToken.sign(signer);
         } catch (JOSEException e) {
@@ -87,7 +87,6 @@ public class TokenHandlerService {
         UserInfo info = generateUserInfo(authRequest);
         try {
             JWTClaimsSet userInfoJWT = info.toJWTClaimsSet();
-            JWSSigner signer = new RSASSASigner(signingKey);
             SignedJWT userInfoSignedJWT = new SignedJWT(jwsHeader, userInfoJWT);
             userInfoSignedJWT.sign(signer);
 
@@ -129,7 +128,6 @@ public class TokenHandlerService {
         return info;
     }
 
-
     public OIDCTokens getTokens(AuthorizationCode authCode) {
 
         String tokens = redisService.get(authCode.getValue());
@@ -163,10 +161,6 @@ public class TokenHandlerService {
         return responseBody.body();
     }
 
-    private void storeUserInfo(AccessToken accessToken, SignedJWT info) {
-        redisService.set(accessToken.getValue(), info.serialize());
-    }
-
     public String getUserInfoAsSignedJWT(AccessToken accessToken) {
         return redisService.get(accessToken.getValue());
     }
@@ -178,15 +172,11 @@ public class TokenHandlerService {
         redisService.set(authCode.getValue(), oidcTokens.toJSONObject().toJSONString());
     }
 
-    public RSAKey createSigningKey() {
-        try {
-            return new RSAKeyGenerator(2048).keyID("123").generate();
-        } catch (JOSEException e) {
-            throw new RuntimeException("Unable to create RSA key");
-        }
-    }
-
     public String getCertificateUrl(String clientID) {
         return redisService.get(clientID);
+    }
+
+    private void storeUserInfo(AccessToken accessToken, SignedJWT info) {
+        redisService.set(accessToken.getValue(), info.serialize());
     }
 }
