@@ -145,10 +145,10 @@ public class UserInfoResource {
             SignedJWT idpJWT = retrieveUserInfoFromIDP(authorizationCode, brokerName, brokerDomain);
             UserInfo aggregatedUserInfo = userInfoService.createAggregatedUserInfo(idpJWT, userInfoClaimNames);
 
-            SignedJWT aggregatedUserInfoSignedJWT = createAndSignAggregatedJWT(aggregatedUserInfo);
+            SignedJWT aggregatedJWT = createAndSignAggregatedJWT(aggregatedUserInfo);
 
             JSONObject userInfoJWSAsJSON = new JSONObject();
-            userInfoJWSAsJSON.put("jws", aggregatedUserInfoSignedJWT.serialize());
+            userInfoJWSAsJSON.put("jws", aggregatedJWT.serialize());
             return userInfoJWSAsJSON.toJSONString();
 
         } else {

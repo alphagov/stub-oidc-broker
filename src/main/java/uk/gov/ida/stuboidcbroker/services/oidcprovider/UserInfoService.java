@@ -5,6 +5,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.id.Subject;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.claims.AggregatedClaims;
@@ -59,6 +60,7 @@ public class UserInfoService {
         }
 
         UserInfo aggregatingUserInfo = new UserInfo(new Subject(sub));
+        aggregatingUserInfo.setIssuer(new Issuer(configuration.getOrgID()));
         AggregatedClaims identityClaims = new AggregatedClaims(identityClaimName, idpJWT);
         aggregatingUserInfo.addAggregatedClaims(identityClaims);
 

@@ -85,6 +85,7 @@ public class TokenHandlerService {
 
         storeTokens(idToken, accessToken, authCode);
         UserInfo info = generateUserInfo(authRequest);
+        info.setIssuer(new Issuer(configuration.getOrgID()));
         try {
             JWTClaimsSet userInfoJWT = info.toJWTClaimsSet();
             SignedJWT userInfoSignedJWT = new SignedJWT(jwsHeader, userInfoJWT);
