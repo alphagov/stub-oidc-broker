@@ -143,22 +143,10 @@ public class UserInfoResource {
 
             // fetch the user info from the IDP as a JWT
             SignedJWT idpJWT = retrieveUserInfoFromIDP(authorizationCode, brokerName, brokerDomain);
-            PrivateKey privateKey = pkiService.getOrganisationPrivateKey();
-            UserInfo aggregatedUserInfo = userInfoService.createAggregatedClaimsUserInfo(idpJWT, userInfoClaimNames);
+            UserInfo aggregatedUserInfo = userInfoService.createAggregatedUserInfo(idpJWT, userInfoClaimNames);
 
-            // sign the aggregated UserInfo
-            SignedJWT aggregatedUserInfoSignedJWT;
-            try {
-                JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256).build();
-                JWTClaimsSet aggregatedUserInfoJWT = aggregatedUserInfo.toJWTClaimsSet();
-                JWSSigner signer = new RSASSASigner(privateKey);
-                aggregatedUserInfoSignedJWT = new SignedJWT(jwsHeader, aggregatedUserInfoJWT);
-                aggregatedUserInfoSignedJWT.sign(signer);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            SignedJWT aggregatedUserInfoSignedJWT = createAndSignAggregatedJWT(aggregatedUserInfo);
 
-            // wrap the aggregated, signed, UserInfo in JSON
             JSONObject userInfoJWSAsJSON = new JSONObject();
             userInfoJWSAsJSON.put("jws", aggregatedUserInfoSignedJWT.serialize());
             return userInfoJWSAsJSON.toJSONString();
@@ -166,8 +154,23 @@ public class UserInfoResource {
         } else {
             // we are the IDP, always respond with regular claims
             return generateClaimsAsSignedJwt(accessToken);
-            //return generateClaimsAsSignedJwt(accessToken);
         }
+    }
+
+    private SignedJWT createAndSignAggregatedJWT(UserInfo aggregatedUserInfo) {
+        PrivateKey privateKey = pkiService.getOrganisationPrivateKey();
+
+        SignedJWT aggregatedUserInfoSignedJWT;
+        try {
+            JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256).build();
+            JWTClaimsSet aggregatedUserInfoJWT = aggregatedUserInfo.toJWTClaimsSet();
+            JWSSigner signer = new RSASSASigner(privateKey);
+            aggregatedUserInfoSignedJWT = new SignedJWT(jwsHeader, aggregatedUserInfoJWT);
+            aggregatedUserInfoSignedJWT.sign(signer);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return aggregatedUserInfoSignedJWT;
     }
 
     private String generateClaimsAsSignedJwt(AccessToken accessToken) {

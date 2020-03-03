@@ -43,7 +43,7 @@ public class UserInfoService {
         this.redisService = redisService;
     }
 
-    public UserInfo createAggregatedClaimsUserInfo(SignedJWT idpJWT, Set<String> userInfoClaimNames) {
+    public UserInfo createAggregatedUserInfo(SignedJWT idpJWT, Set<String> userInfoClaimNames) {
         JWTClaimsSet identityClaimsSet;
         try {
             identityClaimsSet = idpJWT.getJWTClaimsSet();
