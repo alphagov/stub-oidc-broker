@@ -15,6 +15,7 @@ public class StubOidcBrokerConfiguration extends Configuration {
     private String branding;
     private String orgID;
     private String atpURI;
+    private String atp2URI;
 
     public String getStubBrokerURI() {
         return stubBrokerURI;
@@ -58,5 +59,9 @@ public class StubOidcBrokerConfiguration extends Configuration {
 
     public String getAtpURI() {
         return atpURI;
+    }
+
+    public String getAtp2URI() {
+        return atp2URI;
     }
 }

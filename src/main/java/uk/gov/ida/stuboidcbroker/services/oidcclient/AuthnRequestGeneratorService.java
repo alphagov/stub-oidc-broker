@@ -9,6 +9,7 @@ import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.ClaimsRequest;
 import com.nimbusds.openid.connect.sdk.Nonce;
+import com.nimbusds.openid.connect.sdk.claims.ClaimsSet;
 import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 
 import java.net.URI;
@@ -42,6 +43,35 @@ public class AuthnRequestGeneratorService {
                 .state(state)
                 .nonce(nonce)
                 .claims(getRequestedClaimsForIdentity(transactionID))
+                .customParameter("transaction-id", transactionID)
+                .build();
+
+        redisService.set("state::" + state.getValue(), nonce.getValue());
+        redisService.incr("nonce::" + nonce.getValue());
+
+        return authenticationRequest;
+    }
+
+    public AuthenticationRequest generateAttributeAuthenticationRequest(
+            URI requestUri,
+            ClientID clientID,
+            URI redirectUri,
+            ResponseType responseType,
+            String transactionID,
+            ClaimsRequest claimsRequest) {
+        Scope scope = new Scope("openid");
+
+        State state = new State();
+        Nonce nonce = new Nonce();
+
+        AuthenticationRequest authenticationRequest = new AuthenticationRequest.Builder(
+                responseType,
+                scope, clientID, redirectUri)
+                .responseMode(ResponseMode.FORM_POST)
+                .endpointURI(requestUri)
+                .state(state)
+                .nonce(nonce)
+                .claims(claimsRequest)
                 .customParameter("transaction-id", transactionID)
                 .build();
 

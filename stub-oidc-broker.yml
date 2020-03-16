@@ -16,6 +16,8 @@ middlewareURI: ${MIDDLEWARE_URI:-"http://localhost:3001"}
 
 atpURI: ${ATP_URI:-"http://localhost:3335"}
 
+atp2URI: ${ATP2_URI:-"http://localhost:3336"}
+
 idpURI: ${IDP_URI:-"http://localhost:3333"}
 
 local: ${IS_LOCAL:-true}

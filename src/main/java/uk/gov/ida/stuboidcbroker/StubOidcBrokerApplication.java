@@ -72,12 +72,12 @@ public class StubOidcBrokerApplication extends Application<StubOidcBrokerConfigu
         RegistrationRequestService registrationRequestService = new RegistrationRequestService(redisService, configuration, pkiService);
         UserInfoService userInfoService = new UserInfoService(configuration, tokenRequestService, authResponseService, redisService);
 
-        environment.jersey().register(new StubOidcBrokerResource(configuration, tokenRequestService, authnRequestGeneratorService, authResponseService, redisService));
+        environment.jersey().register(new StubOidcBrokerResource(configuration, tokenRequestService, authnRequestGeneratorService, authResponseService, redisService, authnResponseGeneratorService));
         environment.jersey().register(new AuthorizationRequestClientResource( authnRequestGeneratorService));
         environment.jersey().register(new JsonProcessingExceptionMapper(true));
         environment.jersey().register(new RegistrationRequestResource(registrationRequestService, redisService, configuration));
         environment.jersey().register(new PickerPageResource(redisService, pickerService));
-        environment.jersey().register(new AuthorizationResponseClientResource(authResponseService, redisService, authnResponseGeneratorService, pickerService, userInfoService));
+        environment.jersey().register(new AuthorizationResponseClientResource(configuration, authResponseService, redisService, authnResponseGeneratorService, pickerService, userInfoService, authnRequestGeneratorService));
         environment.jersey().register(new IdpClientResource(redisService, configuration));
         environment.jersey().register(new TokenResource(tokenHandlerService, configuration));
         environment.jersey().register(new UserInfoResource(tokenHandlerService, redisService, authResponseService, tokenRequestService, userInfoService, pkiService));

@@ -6,6 +6,7 @@ public interface Urls {
         String REDIRECT_FOR_SERVICE_PROVIDER_URI = "/formPost/validateAuthenticationResponseForServiceProvider";
         String REDIRECT_FOR_SERVICE_URI = "/formPost/validateAuthenticationResponse";
         String REDIRECT_URI = "/authenticationCallback";
+        String REDIRECT_URI_ATP = "/authenticationCallbackAtp";
         String USER_INFO = "/userinfo";
         String RESPONSE_FOR_BROKER = "/authorizeFormPost/response";
         String IDP_RESPONSE = "/formPost/idpAuthenticationResponse";

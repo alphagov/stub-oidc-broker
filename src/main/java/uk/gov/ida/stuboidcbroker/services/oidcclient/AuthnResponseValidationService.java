@@ -98,7 +98,7 @@ public class AuthnResponseValidationService {
         // Count is set to 1 after initial creation, so will be 2 after first lookup.
         // Anything else should be rejected here.
         if (nonceUsageCount != 2) {
-            throw new RuntimeException("Nonce has been used too many times");
+            throw new RuntimeException("Nonce has been used too many times: " + nonceUsageCount);
         }
     }
 

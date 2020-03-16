@@ -64,11 +64,20 @@ public class UserInfoService {
         AggregatedClaims identityClaims = new AggregatedClaims(identityClaimName, idpJWT);
         aggregatingUserInfo.addAggregatedClaims(identityClaims);
 
-        //Check if we have the required attributes to call the atp and if it was requested from the RP
-        if (ableToRetrieveAttributesFromATP(identityClaimsSet, userInfoClaimNames)) {
-            SignedJWT atpJWT = retrieveAttributesFromATP(identityClaimsSet);
+        //Check if we have the required attributes to call the API-based ATP and if it was requested from the RP
+        if (ableToRetrieveAttributesFromATPApi(identityClaimsSet, userInfoClaimNames)) {
+            SignedJWT atpJWT = retrieveAttributesFromATPApi(identityClaimsSet);
             Set<String> attributeClaimName = new HashSet<>();
             attributeClaimName.add("ho_positive_verification_notice");
+            AggregatedClaims attributeClaims = new AggregatedClaims(attributeClaimName, atpJWT);
+            aggregatingUserInfo.addAggregatedClaims(attributeClaims);
+        }
+
+        //Check if we should call the OIDC-based ATP (user-info)
+        if (userInfoClaimNames.contains("bank_account_number")) {
+            SignedJWT atpJWT = retrieveAttributesFromATPOIDC();
+            Set<String> attributeClaimName = new HashSet<>();
+            attributeClaimName.add("bank_account_number");
             AggregatedClaims attributeClaims = new AggregatedClaims(attributeClaimName, atpJWT);
             aggregatingUserInfo.addAggregatedClaims(attributeClaims);
         }
@@ -94,7 +103,7 @@ public class UserInfoService {
         return tokenRequestService.getVerifiableCredentialFromIDP(tokens.getBearerAccessToken(), brokerDomain);
     }
 
-    private boolean ableToRetrieveAttributesFromATP(JWTClaimsSet identityClaimsSet, Set<String> userInfoClaimNames) {
+    private boolean ableToRetrieveAttributesFromATPApi(JWTClaimsSet identityClaimsSet, Set<String> userInfoClaimNames) {
         Map<String, Object> idpClaims = identityClaimsSet.getClaims();
 
         if (idpClaims.containsKey("given_name")
@@ -106,18 +115,26 @@ public class UserInfoService {
         return false;
     }
 
-    private SignedJWT retrieveAttributesFromATP(JWTClaimsSet identityClaimsSet) {
+    private SignedJWT retrieveAttributesFromATPApi(JWTClaimsSet identityClaimsSet) {
             Map<String, Object> idpClaims = identityClaimsSet.getClaims();
             String firstName = idpClaims.get("given_name").toString();
             String familyName = idpClaims.get("family_name").toString();
             String dateOfBirth = idpClaims.get("birthdate").toString();
             BearerAccessToken accessTokenFromATP = tokenRequestService.getAccessTokenFromATP();
-            SignedJWT atpJWT = sentAttributeRequestToATP(firstName, familyName, dateOfBirth, accessTokenFromATP);
+            SignedJWT atpJWT = sentAttributeRequestToATPApi(firstName, familyName, dateOfBirth, accessTokenFromATP);
 
             return atpJWT;
     }
 
-    private SignedJWT sentAttributeRequestToATP(String firstName, String familyName, String dateOfBirth, BearerAccessToken accessToken) {
+    private SignedJWT retrieveAttributesFromATPOIDC() {
+
+        //BearerAccessToken accessTokenFromATP = tokenRequestService.getAccessTokenFromATP();
+        SignedJWT atpJWT = sentAttributeRequestToATPOIDC();
+
+        return atpJWT;
+    }
+
+    private SignedJWT sentAttributeRequestToATPApi(String firstName, String familyName, String dateOfBirth, BearerAccessToken accessToken) {
         URI atpURI = UriBuilder.fromUri(configuration.getAtpURI()).path("atp/ho/positive-verification-notice").build();
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("first_name", firstName);
@@ -128,6 +145,26 @@ public class UserInfoService {
                 .POST(HttpRequest.BodyPublishers.ofString(jsonObject.toJSONString()))
                 .header("Content-Type", "application/json")
                 .headers("Authorization", accessToken.getValue())
+                .uri(atpURI)
+                .build();
+
+        HttpResponse<String> responseBody;
+
+        try {
+            responseBody = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return convertResponseBodyToJWT(responseBody.body());
+    }
+
+    private SignedJWT sentAttributeRequestToATPOIDC() {
+        URI atpURI = UriBuilder.fromUri(configuration.getAtp2URI()).path("user_info").build();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .header("Content-Type", "application/json")
+                //.headers("Authorization", accessToken.getValue())
                 .uri(atpURI)
                 .build();
 

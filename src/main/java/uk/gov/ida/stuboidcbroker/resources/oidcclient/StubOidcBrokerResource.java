@@ -3,6 +3,7 @@ package uk.gov.ida.stuboidcbroker.resources.oidcclient;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
@@ -11,17 +12,14 @@ import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.rest.Urls;
 import uk.gov.ida.stuboidcbroker.services.oidcclient.AuthnRequestGeneratorService;
 import uk.gov.ida.stuboidcbroker.services.oidcclient.AuthnResponseValidationService;
+import uk.gov.ida.stuboidcbroker.services.oidcprovider.AuthnResponseGeneratorService;
 import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 import uk.gov.ida.stuboidcbroker.services.oidcclient.TokenRequestService;
 import uk.gov.ida.stuboidcbroker.views.AuthenticationCallbackViewHttp;
 import uk.gov.ida.stuboidcbroker.views.AuthenticationCallbackViewHttps;
+import uk.gov.ida.stuboidcbroker.views.BrokerResponseView;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -54,6 +52,7 @@ public class StubOidcBrokerResource {
     private final AuthnRequestGeneratorService authnRequestGeneratorService;
     private final AuthnResponseValidationService authnResponseValidationService;
     private final RedisService redisService;
+    private final AuthnResponseGeneratorService generatorService;
     private String brokerDomain;
 
     public StubOidcBrokerResource(
@@ -61,12 +60,14 @@ public class StubOidcBrokerResource {
             TokenRequestService tokenRequestService,
             AuthnRequestGeneratorService authnRequestGeneratorService,
             AuthnResponseValidationService authnResponseValidationService,
-            RedisService redisService) {
+            RedisService redisService,
+            AuthnResponseGeneratorService generatorService) {
         this.configuration = configuration;
         this.tokenRequestService = tokenRequestService;
         this.authnRequestGeneratorService = authnRequestGeneratorService;
         this.authnResponseValidationService = authnResponseValidationService;
         this.redisService = redisService;
+        this.generatorService = generatorService;
     }
 
     @POST
@@ -105,6 +106,22 @@ public class StubOidcBrokerResource {
         } else {
             return new AuthenticationCallbackViewHttps();
         }
+    }
+
+    @GET
+    @Path("/authenticationCallbackAtp")
+    public View authenticationCallback(
+            @QueryParam("transaction-id") String transactionID
+    ) {
+        AuthenticationSuccessResponse successResponse = generatorService.handleAuthenticationRequestResponse(transactionID);
+
+        return new BrokerResponseView(
+                successResponse.getState(),
+                successResponse.getAuthorizationCode(),
+                successResponse.getIDToken(),
+                successResponse.getRedirectionURI(),
+                successResponse.getAccessToken(),
+                transactionID);
     }
 
     @POST
