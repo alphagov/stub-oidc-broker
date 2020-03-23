@@ -1,9 +1,11 @@
 package uk.gov.ida.stuboidcbroker.resources.oidcprovider;
 
+import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
@@ -17,6 +19,7 @@ import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import net.minidev.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.services.oidcclient.AuthnResponseValidationService;
 import uk.gov.ida.stuboidcbroker.services.oidcclient.TokenRequestService;
 import uk.gov.ida.stuboidcbroker.services.oidcprovider.TokenHandlerService;
@@ -40,8 +43,6 @@ import static uk.gov.ida.stuboidcbroker.services.shared.QueryParameterHelper.spl
 @Path("/")
 public class UserInfoResource {
 
-    public enum ExperimentalResponseFormats { VerifiableCredential, RegularClaims, AggregatedClaims }
-
     private static final Logger LOG = LoggerFactory.getLogger(UserInfoResource.class);
     private final TokenHandlerService tokenHandlerService;
     private final RedisService redisService;
@@ -49,6 +50,7 @@ public class UserInfoResource {
     private final TokenRequestService tokenRequestService;
     private final UserInfoService userInfoService;
     private final PKIService pkiService;
+    private final StubOidcBrokerConfiguration configuration;
 
     public UserInfoResource(
             TokenHandlerService tokenHandlerService,
@@ -56,16 +58,16 @@ public class UserInfoResource {
             AuthnResponseValidationService authnResponseValidationService,
             TokenRequestService tokenRequestService,
             UserInfoService userInfoService,
-            PKIService pkiService) {
+            PKIService pkiService,
+            StubOidcBrokerConfiguration configuration) {
         this.tokenHandlerService = tokenHandlerService;
         this.redisService = redisService;
         this.authnResponseValidationService = authnResponseValidationService;
         this.tokenRequestService = tokenRequestService;
         this.userInfoService = userInfoService;
         this.pkiService = pkiService;
+        this.configuration = configuration;
     }
-
-    public static final ExperimentalResponseFormats RESPONSE_FORMAT = ExperimentalResponseFormats.AggregatedClaims;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -83,21 +85,24 @@ public class UserInfoResource {
 
             boolean passThrough = responseBody != null;
 
-            switch (RESPONSE_FORMAT) {
-                case VerifiableCredential:
-                    String verifiableCredential = getVerifiableCredentialFor(passThrough, responseBody, accessToken, transactionID);
-                    return Response.ok(verifiableCredential).build();
-
-                case RegularClaims:
+            switch (configuration.getClaimType()) {
+                case "VerifiableCredential":
+                    String verifiableCredentialString = getVerifiableCredentialFor(passThrough, responseBody, accessToken, transactionID);
+                    if (passThrough) {
+                        String aggregatedClaimsWithVC = aggregateClaimsForVC(verifiableCredentialString, transactionID);
+                        return Response.ok(aggregatedClaimsWithVC).build();
+                    }
+                    return Response.ok(verifiableCredentialString).build();
+                case "RegularClaims":
                     String regularClaims = getRegularClaimsFor(passThrough, responseBody, accessToken, transactionID);
                     return Response.ok(regularClaims).build();
 
-                case AggregatedClaims:
+                case "AggregatedClaims":
                     String aggregatedClaims = aggregateClaimsFor(passThrough, responseBody, accessToken, transactionID);
                     return Response.ok(aggregatedClaims).build();
 
                 default:
-                    throw new IllegalStateException("Unrecognised response format: " + RESPONSE_FORMAT.name());
+                    throw new IllegalStateException("Unrecognised response format: " + configuration.getClaimType());
             }
 
         } catch (ParseException e) {
@@ -121,6 +126,36 @@ public class UserInfoResource {
         }
     }
 
+    private String aggregateClaimsForVC(String verifiableCredentialString, String transactionID) {
+        SignedJWT verifiableCredentialJwt;
+        try {
+             String verifiableCredentialJson = JSONObjectUtils.parse(verifiableCredentialString).get("jws").toString();
+              verifiableCredentialJwt = SignedJWT.parse(verifiableCredentialJson);
+        } catch (java.text.ParseException e) {
+            throw new RuntimeException(e);
+        }
+
+
+        String serialisedRequest = redisService.get(transactionID);
+
+        AuthenticationRequest authenticationRequest;
+        try {
+            authenticationRequest = AuthenticationRequest.parse(serialisedRequest);
+        } catch (ParseException e) {
+            throw new RuntimeException("Unable to parse authentication request", e);
+        }
+
+        Set<String> userInfoClaimsNames = createUserInfoClaimsNames(authenticationRequest);
+
+        UserInfo aggregatedUserInfo = userInfoService.createAggregatedUserInfoUsingVerifiableCredential(verifiableCredentialJwt, userInfoClaimsNames);
+
+        SignedJWT aggregatedJWT = createAndSignAggregatedJWT(aggregatedUserInfo);
+
+        JSONObject userInfoJWSAsJSON = new JSONObject();
+        userInfoJWSAsJSON.put("jws", aggregatedJWT.serialize());
+        return userInfoJWSAsJSON.toJSONString();
+    }
+
     private String aggregateClaimsFor(boolean passThrough, String responseBody, AccessToken accessToken, String transactionID) {
         if (passThrough) {
             // we're a broker - we need to accept regular claims from the IDP and aggregate them
@@ -132,8 +167,7 @@ public class UserInfoResource {
             } catch (ParseException e) {
                 throw new RuntimeException("Unable to parse authentication request", e);
             }
-            ClaimsRequest claimRequest = authenticationRequest.getClaims();
-            Set<String> userInfoClaimNames = claimRequest.getUserInfoClaimNames(false);
+            Set<String> userInfoClaimNames = createUserInfoClaimsNames(authenticationRequest);
 
             String brokerName = getBrokerName(transactionID);
             String brokerDomain = getBrokerDomain(transactionID);
@@ -157,12 +191,22 @@ public class UserInfoResource {
         }
     }
 
+    private Set<String> createUserInfoClaimsNames(AuthenticationRequest authenticationRequest) {
+        ClaimsRequest claimRequest = authenticationRequest.getClaims();
+        Set<String> userInfoClaimNames = claimRequest.getUserInfoClaimNames(false);
+
+        return userInfoClaimNames;
+    }
+
     private SignedJWT createAndSignAggregatedJWT(UserInfo aggregatedUserInfo) {
         PrivateKey privateKey = pkiService.getOrganisationPrivateKey();
 
         SignedJWT aggregatedUserInfoSignedJWT;
         try {
-            JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256).build();
+            JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256)
+                    .type(JOSEObjectType.JWT)
+                    .keyID(configuration.getOrgID())
+                    .build();
             JWTClaimsSet aggregatedUserInfoJWT = aggregatedUserInfo.toJWTClaimsSet();
             JWSSigner signer = new RSASSASigner(privateKey);
             aggregatedUserInfoSignedJWT = new SignedJWT(jwsHeader, aggregatedUserInfoJWT);

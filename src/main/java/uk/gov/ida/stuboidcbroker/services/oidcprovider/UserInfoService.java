@@ -44,6 +44,43 @@ public class UserInfoService {
         this.redisService = redisService;
     }
 
+    public UserInfo createAggregatedUserInfoUsingVerifiableCredential(SignedJWT verifiableCredentialJwt, Set<String> userInfoClaimNames) {
+        JWTClaimsSet identityClaimsSet;
+        try {
+            identityClaimsSet = verifiableCredentialJwt.getJWTClaimsSet();
+        } catch (java.text.ParseException e) {
+            throw new RuntimeException(e);
+        }
+        String sub  = identityClaimsSet.getSubject();
+        Set<String> identityClaimName = new HashSet<>();
+        identityClaimName.add("verified_claims");
+
+        UserInfo aggregatingUserInfo = new UserInfo(new Subject(sub));
+        aggregatingUserInfo.setIssuer(new Issuer(configuration.getOrgID()));
+        AggregatedClaims identityClaims = new AggregatedClaims(identityClaimName, verifiableCredentialJwt);
+        aggregatingUserInfo.addAggregatedClaims(identityClaims);
+
+        //Check if we have the required attributes to call the API-based ATP and if it was requested from the RP
+        if (ableToRetrieveAttributesFromATPApi(identityClaimsSet, userInfoClaimNames)) {
+            SignedJWT atpJWT = retrieveAttributesFromATPApi(identityClaimsSet);
+            Set<String> attributeClaimName = new HashSet<>();
+            attributeClaimName.add("ho_positive_verification_notice");
+            AggregatedClaims attributeClaims = new AggregatedClaims(attributeClaimName, atpJWT);
+            aggregatingUserInfo.addAggregatedClaims(attributeClaims);
+        }
+
+        //Check if we should call the OIDC-based ATP (user-info)
+        if (userInfoClaimNames.contains("bank_account_number")) {
+            SignedJWT atpJWT = retrieveAttributesFromATPOIDC();
+            Set<String> attributeClaimName = new HashSet<>();
+            attributeClaimName.add("bank_account_number");
+            AggregatedClaims attributeClaims = new AggregatedClaims(attributeClaimName, atpJWT);
+            aggregatingUserInfo.addAggregatedClaims(attributeClaims);
+        }
+
+        return aggregatingUserInfo;
+    }
+
     public UserInfo createAggregatedUserInfo(SignedJWT idpJWT, Set<String> userInfoClaimNames) {
         JWTClaimsSet identityClaimsSet;
         try {

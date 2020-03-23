@@ -22,6 +22,9 @@ idpURI: ${IDP_URI:-"http://localhost:3333"}
 
 local: ${IS_LOCAL:-true}
 
+#Needs to be the same for all brokers - Can be AggregatedClaims, VerifiableCredential or RegularClaims
+claimType: "VerifiableCredential"
+
 softwareID: "Stub OIDC Broker Software"
 
 scheme: ${SCHEME:-"1"}

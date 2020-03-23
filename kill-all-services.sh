@@ -11,6 +11,7 @@ fi
 pushd ../stub-oidc-broker> /dev/null
 ./kill-broker1.sh
 ./kill-broker2.sh
+./kill-broker3.sh
 popd > /dev/null
 
 pushd ../stub-trustframework-rp> /dev/null
@@ -27,6 +28,7 @@ pushd ../trust-framework-idp> /dev/null
 ./kill-idp1.sh
 ./kill-idp2.sh
 ./kill-atp1.sh
+./kill-atp2.sh
 popd > /dev/null
 
 pushd ../trust-framework-directory-prototype> /dev/null
