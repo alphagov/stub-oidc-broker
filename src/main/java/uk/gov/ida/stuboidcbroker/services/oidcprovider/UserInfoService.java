@@ -4,6 +4,7 @@ import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
+import com.nimbusds.oauth2.sdk.id.Audience;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.id.Subject;
@@ -12,6 +13,7 @@ import com.nimbusds.openid.connect.sdk.claims.AggregatedClaims;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import net.minidev.json.JSONObject;
+import org.apache.commons.lang3.time.DateUtils;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
 import uk.gov.ida.stuboidcbroker.services.oidcclient.AuthnResponseValidationService;
 import uk.gov.ida.stuboidcbroker.services.oidcclient.TokenRequestService;
@@ -23,9 +25,11 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 public class UserInfoService {
 
@@ -44,7 +48,7 @@ public class UserInfoService {
         this.redisService = redisService;
     }
 
-    public UserInfo createAggregatedUserInfoUsingVerifiableCredential(SignedJWT verifiableCredentialJwt, Set<String> userInfoClaimNames) {
+    public UserInfo createAggregatedUserInfoUsingVerifiableCredential(SignedJWT verifiableCredentialJwt, Set<String> userInfoClaimNames, String clientID) {
         JWTClaimsSet identityClaimsSet;
         try {
             identityClaimsSet = verifiableCredentialJwt.getJWTClaimsSet();
@@ -57,6 +61,13 @@ public class UserInfoService {
 
         UserInfo aggregatingUserInfo = new UserInfo(new Subject(sub));
         aggregatingUserInfo.setIssuer(new Issuer(configuration.getOrgID()));
+        Date exp = new Date();
+        DateUtils.addMinutes(exp, 30);
+        aggregatingUserInfo.setClaim("aud", clientID);
+        aggregatingUserInfo.setClaim("iat", new Date().getTime()); //Because the OIDC lib is :S
+        aggregatingUserInfo.setClaim("nbf", new Date().getTime());
+        aggregatingUserInfo.setClaim("exp", exp.getTime());
+        aggregatingUserInfo.setClaim("jti", UUID.randomUUID().toString());
         AggregatedClaims identityClaims = new AggregatedClaims(identityClaimName, verifiableCredentialJwt);
         aggregatingUserInfo.addAggregatedClaims(identityClaims);
 
@@ -81,7 +92,7 @@ public class UserInfoService {
         return aggregatingUserInfo;
     }
 
-    public UserInfo createAggregatedUserInfo(SignedJWT idpJWT, Set<String> userInfoClaimNames) {
+    public UserInfo createAggregatedUserInfo(SignedJWT idpJWT, Set<String> userInfoClaimNames, String clientID) {
         JWTClaimsSet identityClaimsSet;
         try {
             identityClaimsSet = idpJWT.getJWTClaimsSet();
@@ -98,6 +109,13 @@ public class UserInfoService {
 
         UserInfo aggregatingUserInfo = new UserInfo(new Subject(sub));
         aggregatingUserInfo.setIssuer(new Issuer(configuration.getOrgID()));
+        Date exp = new Date();
+        DateUtils.addMinutes(exp, 30);
+        aggregatingUserInfo.setClaim("aud", clientID);
+        aggregatingUserInfo.setClaim("iat", new Date().getTime()); //Because the OIDC lib is :S
+        aggregatingUserInfo.setClaim("nbf", new Date().getTime());
+        aggregatingUserInfo.setClaim("exp", exp.getTime());
+        aggregatingUserInfo.setClaim("jti", UUID.randomUUID().toString());
         AggregatedClaims identityClaims = new AggregatedClaims(identityClaimName, idpJWT);
         aggregatingUserInfo.addAggregatedClaims(identityClaims);
 

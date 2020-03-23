@@ -146,8 +146,8 @@ public class UserInfoResource {
         }
 
         Set<String> userInfoClaimsNames = createUserInfoClaimsNames(authenticationRequest);
-
-        UserInfo aggregatedUserInfo = userInfoService.createAggregatedUserInfoUsingVerifiableCredential(verifiableCredentialJwt, userInfoClaimsNames);
+        String clientID = authenticationRequest.getClientID().toString();
+        UserInfo aggregatedUserInfo = userInfoService.createAggregatedUserInfoUsingVerifiableCredential(verifiableCredentialJwt, userInfoClaimsNames, clientID);
 
         SignedJWT aggregatedJWT = createAndSignAggregatedJWT(aggregatedUserInfo);
 
@@ -174,10 +174,11 @@ public class UserInfoResource {
 
             Map<String, String> authenticationParams = splitQuery(responseBody);
             AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(authenticationParams, getClientID(brokerName));
+            String clientID = authenticationRequest.getClientID().toString();
 
             // fetch the user info from the IDP as a JWT
             SignedJWT idpJWT = retrieveUserInfoFromIDP(authorizationCode, brokerName, brokerDomain);
-            UserInfo aggregatedUserInfo = userInfoService.createAggregatedUserInfo(idpJWT, userInfoClaimNames);
+            UserInfo aggregatedUserInfo = userInfoService. createAggregatedUserInfo(idpJWT, userInfoClaimNames, clientID);
 
             SignedJWT aggregatedJWT = createAndSignAggregatedJWT(aggregatedUserInfo);
 
