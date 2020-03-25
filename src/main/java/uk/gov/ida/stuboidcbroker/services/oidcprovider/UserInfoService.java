@@ -4,7 +4,6 @@ import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
-import com.nimbusds.oauth2.sdk.id.Audience;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.id.Subject;
@@ -25,8 +24,11 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -46,6 +48,39 @@ public class UserInfoService {
         this.tokenRequestService = tokenRequestService;
         this.authnResponseValidationService = authnResponseValidationService;
         this.redisService = redisService;
+    }
+
+
+    public JWTClaimsSet generateVerifiablePresentation(SignedJWT idpVerifiableCredentialJwt, Set<String> userInfoClaimsNames, String clientID) {
+        //Check if we should call the OIDC-based ATP (user-info)
+        List<String> serializedVCs = new ArrayList<>();
+        serializedVCs.add(idpVerifiableCredentialJwt.serialize());
+        if (userInfoClaimsNames.contains("bank_account_number")) {
+            SignedJWT atpJWT = sentAttributeRequestToATPOIDC(true);
+            serializedVCs.add(atpJWT.serialize());
+        }
+
+        JWTClaimsSet verifiablePresentationClaimSet = new JWTClaimsSet.Builder()
+                .claim("@context", Arrays.asList("https://www.w3.org/2018/credentials/v1"))
+                .claim("type", "VerifiablePresentation")
+                .claim("verifiableCredential", serializedVCs)
+                .build();
+
+        Date exp = new Date();
+        DateUtils.addMinutes(exp, 30);
+
+        JWTClaimsSet brokerClaimSet
+                = new JWTClaimsSet.Builder()
+                .issuer(configuration.getOrgID())
+                .jwtID(UUID.randomUUID().toString())
+                .audience(clientID)
+                .notBeforeTime(new Date())
+                .issueTime(new Date())
+                .expirationTime(exp)
+                .claim("nonce", "fsgfdgfdgfd")
+                .claim("vp", verifiablePresentationClaimSet.toJSONObject()).build();
+
+        return brokerClaimSet;
     }
 
     public UserInfo createAggregatedUserInfoUsingVerifiableCredential(SignedJWT verifiableCredentialJwt, Set<String> userInfoClaimNames, String clientID) {
@@ -73,7 +108,7 @@ public class UserInfoService {
 
         //Check if we have the required attributes to call the API-based ATP and if it was requested from the RP
         if (ableToRetrieveAttributesFromATPApi(identityClaimsSet, userInfoClaimNames)) {
-            SignedJWT atpJWT = retrieveAttributesFromATPApi(identityClaimsSet);
+            SignedJWT atpJWT = retrieveAttributesFromATPApi(identityClaimsSet, false);
             Set<String> attributeClaimName = new HashSet<>();
             attributeClaimName.add("ho_positive_verification_notice");
             AggregatedClaims attributeClaims = new AggregatedClaims(attributeClaimName, atpJWT);
@@ -82,7 +117,7 @@ public class UserInfoService {
 
         //Check if we should call the OIDC-based ATP (user-info)
         if (userInfoClaimNames.contains("bank_account_number")) {
-            SignedJWT atpJWT = retrieveAttributesFromATPOIDC();
+            SignedJWT atpJWT = sentAttributeRequestToATPOIDC(false);
             Set<String> attributeClaimName = new HashSet<>();
             attributeClaimName.add("bank_account_number");
             AggregatedClaims attributeClaims = new AggregatedClaims(attributeClaimName, atpJWT);
@@ -121,7 +156,7 @@ public class UserInfoService {
 
         //Check if we have the required attributes to call the API-based ATP and if it was requested from the RP
         if (ableToRetrieveAttributesFromATPApi(identityClaimsSet, userInfoClaimNames)) {
-            SignedJWT atpJWT = retrieveAttributesFromATPApi(identityClaimsSet);
+            SignedJWT atpJWT = retrieveAttributesFromATPApi(identityClaimsSet, false);
             Set<String> attributeClaimName = new HashSet<>();
             attributeClaimName.add("ho_positive_verification_notice");
             AggregatedClaims attributeClaims = new AggregatedClaims(attributeClaimName, atpJWT);
@@ -130,7 +165,7 @@ public class UserInfoService {
 
         //Check if we should call the OIDC-based ATP (user-info)
         if (userInfoClaimNames.contains("bank_account_number")) {
-            SignedJWT atpJWT = retrieveAttributesFromATPOIDC();
+            SignedJWT atpJWT = sentAttributeRequestToATPOIDC(false);
             Set<String> attributeClaimName = new HashSet<>();
             attributeClaimName.add("bank_account_number");
             AggregatedClaims attributeClaims = new AggregatedClaims(attributeClaimName, atpJWT);
@@ -170,27 +205,25 @@ public class UserInfoService {
         return false;
     }
 
-    private SignedJWT retrieveAttributesFromATPApi(JWTClaimsSet identityClaimsSet) {
+    private SignedJWT retrieveAttributesFromATPApi(JWTClaimsSet identityClaimsSet, boolean askedForVerifiableCredential) {
             Map<String, Object> idpClaims = identityClaimsSet.getClaims();
             String firstName = idpClaims.get("given_name").toString();
             String familyName = idpClaims.get("family_name").toString();
             String dateOfBirth = idpClaims.get("birthdate").toString();
             BearerAccessToken accessTokenFromATP = tokenRequestService.getAccessTokenFromATP();
-            SignedJWT atpJWT = sentAttributeRequestToATPApi(firstName, familyName, dateOfBirth, accessTokenFromATP);
+            SignedJWT atpJWT = sentAttributeRequestToATPApi(firstName, familyName, dateOfBirth, accessTokenFromATP, askedForVerifiableCredential);
 
             return atpJWT;
     }
 
-    private SignedJWT retrieveAttributesFromATPOIDC() {
-
-        //BearerAccessToken accessTokenFromATP = tokenRequestService.getAccessTokenFromATP();
-        SignedJWT atpJWT = sentAttributeRequestToATPOIDC();
-
-        return atpJWT;
-    }
-
-    private SignedJWT sentAttributeRequestToATPApi(String firstName, String familyName, String dateOfBirth, BearerAccessToken accessToken) {
-        URI atpURI = UriBuilder.fromUri(configuration.getAtpURI()).path("atp/ho/positive-verification-notice").build();
+    private SignedJWT sentAttributeRequestToATPApi(String firstName, String familyName, String dateOfBirth,
+                                                   BearerAccessToken accessToken, boolean askedForVerifiableCredential) {
+        URI atpURI;
+        if (askedForVerifiableCredential) {
+            atpURI = UriBuilder.fromUri(configuration.getAtpURI()).path("atp/ho/positive-verification-notice-vc").build();
+        } else {
+            atpURI = UriBuilder.fromUri(configuration.getAtpURI()).path("atp/ho/positive-verification-notice").build();
+        }
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("first_name", firstName);
         jsonObject.put("family_name", familyName);
@@ -213,8 +246,13 @@ public class UserInfoService {
         return convertResponseBodyToJWT(responseBody.body());
     }
 
-    private SignedJWT sentAttributeRequestToATPOIDC() {
-        URI atpURI = UriBuilder.fromUri(configuration.getAtp2URI()).path("user_info").build();
+    private SignedJWT sentAttributeRequestToATPOIDC(boolean askedForVerifiableCredential) {
+        URI atpURI;
+        if (askedForVerifiableCredential) {
+            atpURI = UriBuilder.fromUri(configuration.getAtp2URI()).path("user_info/vc").build();
+        } else {
+            atpURI = UriBuilder.fromUri(configuration.getAtp2URI()).path("user_info").build();
+        }
 
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()

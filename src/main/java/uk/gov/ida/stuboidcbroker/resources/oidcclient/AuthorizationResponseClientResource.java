@@ -1,14 +1,11 @@
 package uk.gov.ida.stuboidcbroker.resources.oidcclient;
 
-import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
 import com.nimbusds.openid.connect.sdk.ClaimsRequest;
 import com.nimbusds.openid.connect.sdk.OIDCResponseTypeValue;
-import com.nimbusds.openid.connect.sdk.claims.ClaimRequirement;
 import io.dropwizard.views.View;
-import net.minidev.json.JSONObject;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +29,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.text.ParseException;
-import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
 

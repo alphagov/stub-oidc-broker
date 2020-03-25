@@ -9,7 +9,6 @@ import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.ClaimsRequest;
 import com.nimbusds.openid.connect.sdk.Nonce;
-import com.nimbusds.openid.connect.sdk.claims.ClaimsSet;
 import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
 
 import java.net.URI;

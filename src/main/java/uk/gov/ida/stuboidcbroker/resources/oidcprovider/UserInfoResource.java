@@ -89,10 +89,21 @@ public class UserInfoResource {
                 case "VerifiableCredential":
                     String verifiableCredentialString = getVerifiableCredentialFor(passThrough, responseBody, accessToken, transactionID);
                     if (passThrough) {
-                        String aggregatedClaimsWithVC = aggregateClaimsForVC(verifiableCredentialString, transactionID);
+                        SignedJWT verifiableCredentialJwt = createSignedJWTFromVC(verifiableCredentialString);
+                        AuthenticationRequest authRequestFromTransactionID = getAuthRequestFromTransactionID(transactionID);
+                        String aggregatedClaimsWithVC = aggregateClaimsForVC(verifiableCredentialJwt, authRequestFromTransactionID);
                         return Response.ok(aggregatedClaimsWithVC).build();
                     }
                     return Response.ok(verifiableCredentialString).build();
+                case "VerifiablePresentation":
+                    String verifiableCredential = getVerifiableCredentialFor(passThrough, responseBody, accessToken, transactionID);
+                    if (passThrough) {
+                        SignedJWT verifiableCredentialJwt = createSignedJWTFromVC(verifiableCredential);
+                        AuthenticationRequest authRequestFromTransactionID = getAuthRequestFromTransactionID(transactionID);
+                        String verifiablePresentationString = createVerifiablePresentation(verifiableCredentialJwt, authRequestFromTransactionID);
+                        return Response.ok(verifiablePresentationString).build();
+                    }
+                    return Response.ok(verifiableCredential).build();
                 case "RegularClaims":
                     String regularClaims = getRegularClaimsFor(passThrough, responseBody, accessToken, transactionID);
                     return Response.ok(regularClaims).build();
@@ -107,6 +118,17 @@ public class UserInfoResource {
 
         } catch (ParseException e) {
             throw new RuntimeException("Unable to parse authorization header: " + authorizationHeader + " to access token", e);
+        }
+    }
+
+    private AuthenticationRequest getAuthRequestFromTransactionID(String transactionID) {
+        String serialisedRequest = redisService.get(transactionID);
+
+        AuthenticationRequest authenticationRequest;
+        try {
+            return AuthenticationRequest.parse(serialisedRequest);
+        } catch (ParseException e) {
+            throw new RuntimeException("Unable to parse authentication request", e);
         }
     }
 
@@ -126,30 +148,41 @@ public class UserInfoResource {
         }
     }
 
-    private String aggregateClaimsForVC(String verifiableCredentialString, String transactionID) {
+    private SignedJWT createSignedJWTFromVC(String verifiableCredentialString) {
         SignedJWT verifiableCredentialJwt;
         try {
-             String verifiableCredentialJson = JSONObjectUtils.parse(verifiableCredentialString).get("jws").toString();
-              verifiableCredentialJwt = SignedJWT.parse(verifiableCredentialJson);
+            String verifiableCredentialJson = JSONObjectUtils.parse(verifiableCredentialString).get("jws").toString();
+            return SignedJWT.parse(verifiableCredentialJson);
         } catch (java.text.ParseException e) {
             throw new RuntimeException(e);
         }
+    }
 
+    private String createVerifiablePresentation(SignedJWT verifiableCredentialJwt, AuthenticationRequest authenticationRequest) {
+        Set<String> userInfoClaimsNames = createUserInfoClaimsNames(authenticationRequest);
+        String clientID = authenticationRequest.getClientID().toString();
 
-        String serialisedRequest = redisService.get(transactionID);
+        JWTClaimsSet jwtClaimsSet = userInfoService.generateVerifiablePresentation(verifiableCredentialJwt, userInfoClaimsNames, clientID);
 
-        AuthenticationRequest authenticationRequest;
-        try {
-            authenticationRequest = AuthenticationRequest.parse(serialisedRequest);
-        } catch (ParseException e) {
-            throw new RuntimeException("Unable to parse authentication request", e);
-        }
+        SignedJWT signedJWT = generateAndSignJWT(jwtClaimsSet);
 
+        JSONObject jsonResponse = new JSONObject();
+        jsonResponse.put("jws", signedJWT.serialize());
+
+        return jsonResponse.toJSONString();
+    }
+
+    private String aggregateClaimsForVC(SignedJWT verifiableCredentialJwt, AuthenticationRequest authenticationRequest) {
         Set<String> userInfoClaimsNames = createUserInfoClaimsNames(authenticationRequest);
         String clientID = authenticationRequest.getClientID().toString();
         UserInfo aggregatedUserInfo = userInfoService.createAggregatedUserInfoUsingVerifiableCredential(verifiableCredentialJwt, userInfoClaimsNames, clientID);
 
-        SignedJWT aggregatedJWT = createAndSignAggregatedJWT(aggregatedUserInfo);
+        SignedJWT aggregatedJWT;
+        try {
+            aggregatedJWT = generateAndSignJWT(aggregatedUserInfo.toJWTClaimsSet());
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
 
         JSONObject userInfoJWSAsJSON = new JSONObject();
         userInfoJWSAsJSON.put("jws", aggregatedJWT.serialize());
@@ -180,7 +213,12 @@ public class UserInfoResource {
             SignedJWT idpJWT = retrieveUserInfoFromIDP(authorizationCode, brokerName, brokerDomain);
             UserInfo aggregatedUserInfo = userInfoService. createAggregatedUserInfo(idpJWT, userInfoClaimNames, clientID);
 
-            SignedJWT aggregatedJWT = createAndSignAggregatedJWT(aggregatedUserInfo);
+            SignedJWT aggregatedJWT;
+            try {
+                aggregatedJWT = generateAndSignJWT(aggregatedUserInfo.toJWTClaimsSet());
+            } catch (ParseException e) {
+                throw new RuntimeException(e);
+            }
 
             JSONObject userInfoJWSAsJSON = new JSONObject();
             userInfoJWSAsJSON.put("jws", aggregatedJWT.serialize());
@@ -199,7 +237,7 @@ public class UserInfoResource {
         return userInfoClaimNames;
     }
 
-    private SignedJWT createAndSignAggregatedJWT(UserInfo aggregatedUserInfo) {
+    private SignedJWT generateAndSignJWT(JWTClaimsSet aggregatedUserInfoJWT) {
         PrivateKey privateKey = pkiService.getOrganisationPrivateKey();
 
         SignedJWT aggregatedUserInfoSignedJWT;
@@ -208,7 +246,6 @@ public class UserInfoResource {
                     .type(JOSEObjectType.JWT)
                     .keyID(configuration.getOrgID())
                     .build();
-            JWTClaimsSet aggregatedUserInfoJWT = aggregatedUserInfo.toJWTClaimsSet();
             JWSSigner signer = new RSASSASigner(privateKey);
             aggregatedUserInfoSignedJWT = new SignedJWT(jwsHeader, aggregatedUserInfoJWT);
             aggregatedUserInfoSignedJWT.sign(signer);
