@@ -1,6 +1,7 @@
 package uk.gov.ida.stuboidcbroker.services.oidcprovider;
 
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
@@ -73,7 +74,7 @@ public class TokenHandlerService {
         }
 
         JWSSigner signer = new RSASSASigner(pkiService.getOrganisationPrivateKey());
-        JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256).build();
+        JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(configuration.getOrgID()).type(JOSEObjectType.JWT).build();
         SignedJWT idToken;
 
         try {

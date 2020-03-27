@@ -211,7 +211,7 @@ public class UserInfoResource {
 
             // fetch the user info from the IDP as a JWT
             SignedJWT idpJWT = retrieveUserInfoFromIDP(authorizationCode, brokerName, brokerDomain);
-            UserInfo aggregatedUserInfo = userInfoService. createAggregatedUserInfo(idpJWT, userInfoClaimNames, clientID);
+            UserInfo aggregatedUserInfo = userInfoService.createAggregatedUserInfo(idpJWT, userInfoClaimNames, clientID);
 
             SignedJWT aggregatedJWT;
             try {
