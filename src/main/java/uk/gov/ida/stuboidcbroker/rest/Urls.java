@@ -34,4 +34,11 @@ public interface Urls {
         String AUTHENTICATION_URI = "/authentication";
         String CREDENTIAL_URI = "/issue/jwt/credential";
     }
+
+    interface ATP {
+        String DIRECT_ACCESS_HO_POSITIVE_VERIFICATION_NOTICE = "/atp/ho/positive-verification-notice";
+        String DIRECT_ACCESS_ADDRESS_HISTORY = "/atp/ho/address-covers-last-5-years";
+        String BANK_ACCOUNT_ATTRIBUTE_VC = "/user_info/vc";
+        String BANK_ACCOUNT_ATTRIBUTE_STANDARD = "/user_info";
+    }
 }

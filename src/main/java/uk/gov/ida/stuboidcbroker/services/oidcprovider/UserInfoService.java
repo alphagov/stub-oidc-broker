@@ -14,6 +14,7 @@ import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import net.minidev.json.JSONObject;
 import org.apache.commons.lang3.time.DateUtils;
 import uk.gov.ida.stuboidcbroker.configuration.StubOidcBrokerConfiguration;
+import uk.gov.ida.stuboidcbroker.rest.Urls;
 import uk.gov.ida.stuboidcbroker.services.oidcclient.AuthnResponseValidationService;
 import uk.gov.ida.stuboidcbroker.services.oidcclient.TokenRequestService;
 import uk.gov.ida.stuboidcbroker.services.shared.RedisService;
@@ -24,8 +25,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -56,12 +58,25 @@ public class UserInfoService {
         List<String> serializedVCs = new ArrayList<>();
         serializedVCs.add(idpVerifiableCredentialJwt.serialize());
         if (userInfoClaimsNames.contains("bank_account_number")) {
-            SignedJWT atpJWT = sentAttributeRequestToATPOIDC(true);
+            SignedJWT atpJWT = sentBankAccountNoRequestToATP(true);
             serializedVCs.add(atpJWT.serialize());
+        }
+        JSONObject idpClaimSet;
+        try {
+            idpClaimSet = (JSONObject) idpVerifiableCredentialJwt.getJWTClaimsSet().getClaims().get("vc");
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+
+        if (ableToRetrieveAddressHistoryAttribute(idpClaimSet, userInfoClaimsNames)) {
+            JSONObject credentialSubject = (JSONObject) idpClaimSet.get("credentialSubject");
+            JSONObject address = (JSONObject) credentialSubject.get("address");
+            SignedJWT addressHistoryJWT = retrieveAttributesFromAddressHistoryATP(address);
+            serializedVCs.add(addressHistoryJWT.serialize());
         }
 
         JWTClaimsSet verifiablePresentationClaimSet = new JWTClaimsSet.Builder()
-                .claim("@context", Arrays.asList("https://www.w3.org/2018/credentials/v1"))
+                .claim("@context", Collections.singletonList("https://www.w3.org/2018/credentials/v1"))
                 .claim("type", "VerifiablePresentation")
                 .claim("verifiableCredential", serializedVCs)
                 .build();
@@ -69,8 +84,7 @@ public class UserInfoService {
         Date exp = new Date();
         DateUtils.addMinutes(exp, 30);
 
-        JWTClaimsSet brokerClaimSet
-                = new JWTClaimsSet.Builder()
+        return new JWTClaimsSet.Builder()
                 .issuer(configuration.getOrgID())
                 .jwtID(UUID.randomUUID().toString())
                 .audience(clientID)
@@ -79,8 +93,6 @@ public class UserInfoService {
                 .expirationTime(exp)
                 .claim("nonce", "fsgfdgfdgfd")
                 .claim("vp", verifiablePresentationClaimSet.toJSONObject()).build();
-
-        return brokerClaimSet;
     }
 
     public UserInfo createAggregatedUserInfoUsingVerifiableCredential(SignedJWT verifiableCredentialJwt, Set<String> userInfoClaimNames, String clientID) {
@@ -108,7 +120,7 @@ public class UserInfoService {
 
         //Check if we have the required attributes to call the API-based ATP and if it was requested from the RP
         if (ableToRetrieveAttributesFromATPApi(identityClaimsSet, userInfoClaimNames)) {
-            SignedJWT atpJWT = retrieveAttributesFromATPApi(identityClaimsSet, false);
+            SignedJWT atpJWT = retrieveAttributesFromHoPositiveVerificationATP(identityClaimsSet);
             Set<String> attributeClaimName = new HashSet<>();
             attributeClaimName.add("ho_positive_verification_notice");
             AggregatedClaims attributeClaims = new AggregatedClaims(attributeClaimName, atpJWT);
@@ -117,7 +129,7 @@ public class UserInfoService {
 
         //Check if we should call the OIDC-based ATP (user-info)
         if (userInfoClaimNames.contains("bank_account_number")) {
-            SignedJWT atpJWT = sentAttributeRequestToATPOIDC(false);
+            SignedJWT atpJWT = sentBankAccountNoRequestToATP(false);
             Set<String> attributeClaimName = new HashSet<>();
             attributeClaimName.add("bank_account_number");
             AggregatedClaims attributeClaims = new AggregatedClaims(attributeClaimName, atpJWT);
@@ -136,9 +148,9 @@ public class UserInfoService {
         }
         String sub  = identityClaimsSet.getSubject();
         Set<String> identityClaimName = new HashSet<>();
-        for (Object claimName : identityClaimsSet.getClaims().keySet()) {
+        for (String claimName : identityClaimsSet.getClaims().keySet()) {
             if (userInfoClaimNames.contains(claimName)) {
-                identityClaimName.add(claimName.toString());
+                identityClaimName.add(claimName);
             }
         }
 
@@ -156,7 +168,7 @@ public class UserInfoService {
 
         //Check if we have the required attributes to call the API-based ATP and if it was requested from the RP
         if (ableToRetrieveAttributesFromATPApi(identityClaimsSet, userInfoClaimNames)) {
-            SignedJWT atpJWT = retrieveAttributesFromATPApi(identityClaimsSet, false);
+            SignedJWT atpJWT = retrieveAttributesFromHoPositiveVerificationATP(identityClaimsSet);
             Set<String> attributeClaimName = new HashSet<>();
             attributeClaimName.add("ho_positive_verification_notice");
             AggregatedClaims attributeClaims = new AggregatedClaims(attributeClaimName, atpJWT);
@@ -165,7 +177,7 @@ public class UserInfoService {
 
         //Check if we should call the OIDC-based ATP (user-info)
         if (userInfoClaimNames.contains("bank_account_number")) {
-            SignedJWT atpJWT = sentAttributeRequestToATPOIDC(false);
+            SignedJWT atpJWT = sentBankAccountNoRequestToATP(false);
             Set<String> attributeClaimName = new HashSet<>();
             attributeClaimName.add("bank_account_number");
             AggregatedClaims attributeClaims = new AggregatedClaims(attributeClaimName, atpJWT);
@@ -179,9 +191,8 @@ public class UserInfoService {
         String brokerName = getBrokerName(transactionID);
         String brokerDomain = getBrokerDomain(transactionID);
         AuthorizationCode authorizationCode = authnResponseValidationService.handleAuthenticationResponse(authenticationParams, getClientID(brokerName));
-        String userInfoInJson = retrieveTokenAndUserInfo(authorizationCode, brokerName, brokerDomain);
 
-        return userInfoInJson;
+        return retrieveTokenAndUserInfo(authorizationCode, brokerName, brokerDomain);
     }
 
     public String retrieveTokenAndUserInfo(AuthorizationCode authCode, String brokerName, String brokerDomain) {
@@ -196,39 +207,50 @@ public class UserInfoService {
     private boolean ableToRetrieveAttributesFromATPApi(JWTClaimsSet identityClaimsSet, Set<String> userInfoClaimNames) {
         Map<String, Object> idpClaims = identityClaimsSet.getClaims();
 
-        if (idpClaims.containsKey("given_name")
+        return idpClaims.containsKey("given_name")
                 && idpClaims.containsKey("family_name")
                 && idpClaims.containsKey("birthdate")
-                && userInfoClaimNames.contains("ho_positive_verification_notice")) {
-            return true;
-        }
-        return false;
+                && userInfoClaimNames.contains("ho_positive_verification_notice");
     }
 
-    private SignedJWT retrieveAttributesFromATPApi(JWTClaimsSet identityClaimsSet, boolean askedForVerifiableCredential) {
-            Map<String, Object> idpClaims = identityClaimsSet.getClaims();
-            String firstName = idpClaims.get("given_name").toString();
-            String familyName = idpClaims.get("family_name").toString();
-            String dateOfBirth = idpClaims.get("birthdate").toString();
+    private boolean ableToRetrieveAddressHistoryAttribute(JSONObject idpClaimSet, Set<String> userInfoClaimsNames) {
+        JSONObject credentialSubject = (JSONObject) idpClaimSet.get("credentialSubject");
+        JSONObject address = (JSONObject) credentialSubject.get("address");
+
+        return address.containsKey("street")
+                && address.containsKey("town")
+                && address.containsKey("county")
+                && address.containsKey("country")
+                && address.containsKey("postCode")
+                && userInfoClaimsNames.contains("5_year_address_history");
+    }
+
+    private SignedJWT retrieveAttributesFromHoPositiveVerificationATP(JWTClaimsSet identityClaimsSet) {
+            JSONObject jsonObject = new JSONObject();
+
+            jsonObject.put("first_name",identityClaimsSet.getClaims().get("given_name").toString());
+            jsonObject.put("family_name",identityClaimsSet.getClaims().get("family_name").toString());
+            jsonObject.put("date_of_birth", identityClaimsSet.getClaims().get("birthdate").toString());
             BearerAccessToken accessTokenFromATP = tokenRequestService.getAccessTokenFromATP();
-            SignedJWT atpJWT = sentAttributeRequestToATPApi(firstName, familyName, dateOfBirth, accessTokenFromATP, askedForVerifiableCredential);
+            URI atpURI = UriBuilder.fromUri(configuration.getAtpURI()).path(Urls.ATP.DIRECT_ACCESS_HO_POSITIVE_VERIFICATION_NOTICE).build();
 
-            return atpJWT;
+            return sendAttributeRequestToDirectAccessATP(jsonObject, atpURI, accessTokenFromATP);
     }
 
-    private SignedJWT sentAttributeRequestToATPApi(String firstName, String familyName, String dateOfBirth,
-                                                   BearerAccessToken accessToken, boolean askedForVerifiableCredential) {
-        URI atpURI;
-        if (askedForVerifiableCredential) {
-            atpURI = UriBuilder.fromUri(configuration.getAtpURI()).path("atp/ho/positive-verification-notice-vc").build();
-        } else {
-            atpURI = UriBuilder.fromUri(configuration.getAtpURI()).path("atp/ho/positive-verification-notice").build();
-        }
+    private SignedJWT retrieveAttributesFromAddressHistoryATP(JSONObject claimSet) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("first_name", firstName);
-        jsonObject.put("family_name", familyName);
-        jsonObject.put("date_of_birth", dateOfBirth);
+        jsonObject.put("street", claimSet.get("street").toString());
+        jsonObject.put("town", claimSet.get("town").toString());
+        jsonObject.put("county", claimSet.get("county").toString());
+        jsonObject.put("country", claimSet.get("country").toString());
+        jsonObject.put("postCode", claimSet.get("postCode").toString());
+        BearerAccessToken accessTokenFromATP = tokenRequestService.getAccessTokenFromATP();
+        URI atpURI = UriBuilder.fromUri(configuration.getAtpURI()).path(Urls.ATP.DIRECT_ACCESS_ADDRESS_HISTORY).build();
 
+        return sendAttributeRequestToDirectAccessATP(jsonObject, atpURI, accessTokenFromATP);
+    }
+
+    private SignedJWT sendAttributeRequestToDirectAccessATP(JSONObject jsonObject, URI atpURI, BearerAccessToken accessToken) {
         HttpRequest request = HttpRequest.newBuilder()
                 .POST(HttpRequest.BodyPublishers.ofString(jsonObject.toJSONString()))
                 .header("Content-Type", "application/json")
@@ -246,12 +268,12 @@ public class UserInfoService {
         return convertResponseBodyToJWT(responseBody.body());
     }
 
-    private SignedJWT sentAttributeRequestToATPOIDC(boolean askedForVerifiableCredential) {
+    private SignedJWT sentBankAccountNoRequestToATP(boolean askedForVerifiableCredential) {
         URI atpURI;
         if (askedForVerifiableCredential) {
-            atpURI = UriBuilder.fromUri(configuration.getAtp2URI()).path("user_info/vc").build();
+            atpURI = UriBuilder.fromUri(configuration.getAtp2URI()).path(Urls.ATP.BANK_ACCOUNT_ATTRIBUTE_VC).build();
         } else {
-            atpURI = UriBuilder.fromUri(configuration.getAtp2URI()).path("user_info").build();
+            atpURI = UriBuilder.fromUri(configuration.getAtp2URI()).path(Urls.ATP.BANK_ACCOUNT_ATTRIBUTE_STANDARD).build();
         }
 
         HttpRequest request = HttpRequest.newBuilder()

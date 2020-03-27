@@ -124,7 +124,6 @@ public class UserInfoResource {
     private AuthenticationRequest getAuthRequestFromTransactionID(String transactionID) {
         String serialisedRequest = redisService.get(transactionID);
 
-        AuthenticationRequest authenticationRequest;
         try {
             return AuthenticationRequest.parse(serialisedRequest);
         } catch (ParseException e) {
@@ -149,7 +148,6 @@ public class UserInfoResource {
     }
 
     private SignedJWT createSignedJWTFromVC(String verifiableCredentialString) {
-        SignedJWT verifiableCredentialJwt;
         try {
             String verifiableCredentialJson = JSONObjectUtils.parse(verifiableCredentialString).get("jws").toString();
             return SignedJWT.parse(verifiableCredentialJson);
@@ -232,9 +230,8 @@ public class UserInfoResource {
 
     private Set<String> createUserInfoClaimsNames(AuthenticationRequest authenticationRequest) {
         ClaimsRequest claimRequest = authenticationRequest.getClaims();
-        Set<String> userInfoClaimNames = claimRequest.getUserInfoClaimNames(false);
 
-        return userInfoClaimNames;
+        return claimRequest.getUserInfoClaimNames(false);
     }
 
     private SignedJWT generateAndSignJWT(JWTClaimsSet aggregatedUserInfoJWT) {
