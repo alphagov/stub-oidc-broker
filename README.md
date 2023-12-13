@@ -1,5 +1,9 @@
 # stub-oidc-broker
 
+>**GOV.UK Verify has closed**
+>
+>This repository is out of date and has been archived
+
 Stub OIDC Broker is a implementation of an OpenID Connect client and an OpenID Provider which uses the Hybrid flow. It makes up part of the Trust Framework prototype together with the following repos -  
 
 * [Trust-Framework-RP](https://github.com/alphagov/stub-trustframework-rp)
